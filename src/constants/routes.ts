@@ -11,6 +11,9 @@ export const ROUTES = {
   PROPERTY_DETAIL: '/property/:id',
   TEST_AUTH: '/test-auth',
   NOT_FOUND: '*',
+
+  // Routes dashboard
+  DASHBOARD: '/dashboard',
 } as const;
 
 // Types pour la sécurité des routes

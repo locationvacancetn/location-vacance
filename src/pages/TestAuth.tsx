@@ -49,6 +49,12 @@ export default function TestAuth() {
                       Retour à l'accueil
                     </Link>
                   </Button>
+                  <Button asChild>
+                    <Link to={ROUTES.DASHBOARD}>
+                      <Home className="w-4 h-4 mr-2" />
+                      Accéder au Dashboard
+                    </Link>
+                  </Button>
                 </div>
               </div>
             ) : (

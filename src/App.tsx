@@ -9,6 +9,8 @@ import LoginPage from "./pages/Login";
 import PropertyDetail from "./pages/PropertyDetail";
 import TestAuth from "./pages/TestAuth";
 import NotFound from "./pages/NotFound";
+import { DashboardRouter } from "./pages/dashboard/DashboardRouter";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ROUTES } from "./constants/routes";
 
 const queryClient = new QueryClient();
@@ -27,6 +29,16 @@ const App = () => (
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
               <Route path={ROUTES.PROPERTY_DETAIL} element={<PropertyDetail />} />
               <Route path={ROUTES.TEST_AUTH} element={<TestAuth />} />
+              
+              {/* Route dashboard protégée */}
+              <Route 
+                path={ROUTES.DASHBOARD} 
+                element={
+                  <ProtectedRoute>
+                    <DashboardRouter />
+                  </ProtectedRoute>
+                } 
+              />
               
               {/* Route 404 - doit être en dernier */}
               <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
