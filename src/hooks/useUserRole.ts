@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useLogger } from '@/lib/logger';
 import { useCache } from '@/lib/cache';
 
 // Types simplifiés pour les rôles utilisateur
-export type UserRole = 'owner' | 'tenant' | 'manager' | 'admin';
+export type UserRole = 'owner' | 'tenant' | 'advertiser' | 'admin';
 
 export interface UserProfile {
   id: string;
@@ -27,7 +27,7 @@ export const useUserRole = () => {
   const logger = useLogger('useUserRole');
   const { get: getCache, set: setCache } = useCache();
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string) => {
     // Vérifier le cache d'abord
     const cacheKey = `user_profile_${userId}`;
     const cachedProfile = getCache<UserProfile>(cacheKey);
@@ -56,20 +56,18 @@ export const useUserRole = () => {
       logger.error('Error fetching user profile', { error: err, userId });
       throw err;
     }
-  };
+  }, [getCache, setCache, logger]);
 
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     // Éviter les appels multiples
     if (isLoadingData) {
-      console.log('useUserRole - Already loading, skipping');
+      logger.debug('Already loading, skipping');
       return;
     }
     
-    console.log('useUserRole - loadUserData called', { userId: user?.id });
     logger.debug('loadUserData called', { userId: user?.id });
     
     if (!user) {
-      console.log('useUserRole - No user, setting loading false');
       logger.debug('No user, setting loading false');
       setUserRole(null);
       setUserProfile(null);
@@ -80,14 +78,12 @@ export const useUserRole = () => {
     setIsLoadingData(true);
 
     try {
-      console.log('useUserRole - Starting to fetch profile for user', { userId: user.id });
       logger.debug('Starting to fetch profile for user', { userId: user.id });
       setLoading(true);
       setError(null);
 
       // 1. Essayer d'abord de récupérer le rôle depuis le profil
       const profile = await fetchUserProfile(user.id);
-      console.log('useUserRole - Profile fetched', { profileId: profile?.id, role: profile?.role });
       logger.debug('Profile fetched', { profileId: profile?.id, role: profile?.role });
       
       if (profile) {
@@ -104,7 +100,6 @@ export const useUserRole = () => {
       } else {
         // 2. Fallback vers les métadonnées du user auth
         const roleFromAuth = user.user_metadata?.role as UserRole || 'tenant';
-        console.log('useUserRole - Using auth metadata role', { role: roleFromAuth });
         logger.debug('Using auth metadata role', { role: roleFromAuth });
         setUserRole(roleFromAuth);
         
@@ -118,7 +113,6 @@ export const useUserRole = () => {
         });
       }
     } catch (err) {
-      console.log('useUserRole - Error loading user data', { error: err });
       logger.error('Error loading user data', { error: err });
       setError('Erreur lors du chargement des données utilisateur');
       
@@ -132,17 +126,22 @@ export const useUserRole = () => {
         role: fallbackRole,
       });
     } finally {
-      console.log('useUserRole - Setting loading to false');
       setLoading(false);
       setIsLoadingData(false);
     }
-  };
+  }, [user, isLoadingData, logger, fetchUserProfile]);
 
   useEffect(() => {
     if (!authLoading && user?.id && !isLoadingData) {
       loadUserData();
+    } else if (!authLoading && !user?.id) {
+      // Si pas d'utilisateur et pas de chargement auth, réinitialiser
+      setUserRole(null);
+      setUserProfile(null);
+      setLoading(false);
+      setError(null);
     }
-  }, [user?.id, authLoading, isLoadingData]); // Ajouter isLoadingData pour éviter les appels multiples
+  }, [user?.id, authLoading]); // Retirer isLoadingData des dépendances pour éviter les boucles
 
   // Fonction pour mettre à jour le rôle
   const updateUserRole = async (newRole: UserRole) => {
@@ -175,7 +174,7 @@ export const useUserRole = () => {
     }
   };
 
-  return {
+  return useMemo(() => ({
     userRole,
     userProfile,
     loading: loading || authLoading,
@@ -184,8 +183,16 @@ export const useUserRole = () => {
     refreshUserData,
     isOwner: userRole === 'owner',
     isTenant: userRole === 'tenant',
-    isManager: userRole === 'manager',
+    isAdvertiser: userRole === 'advertiser',
     isAdmin: userRole === 'admin',
-  };
+  }), [
+    userRole,
+    userProfile,
+    loading,
+    authLoading,
+    error,
+    updateUserRole,
+    refreshUserData
+  ]);
 };
 

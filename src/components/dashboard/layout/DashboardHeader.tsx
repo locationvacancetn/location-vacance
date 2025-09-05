@@ -21,7 +21,7 @@ import {
   Shield,
   Building,
   Calendar,
-  Wrench
+  Megaphone
 } from 'lucide-react';
 
 const getRoleInfo = (role: string) => {
@@ -44,11 +44,11 @@ const getRoleInfo = (role: string) => {
         color: 'secondary',
         icon: User
       };
-    case 'manager':
+    case 'advertiser':
       return {
-        label: 'Gestionnaire',
+        label: 'Annonceur',
         color: 'outline',
-        icon: Wrench
+        icon: Megaphone
       };
     default:
       return {

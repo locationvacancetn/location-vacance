@@ -13,7 +13,7 @@ import {
   BarChart3,
   Search,
   Heart,
-  Wrench,
+  Megaphone,
   FileText,
   Users,
   Settings,
@@ -57,12 +57,12 @@ const getMenuItems = (role: string) => {
         { label: 'Favoris', path: '/dashboard/favorites', icon: Heart },
       ];
     
-    case 'manager':
+    case 'advertiser':
       return [
         ...commonItems,
-        { label: 'Propriétés Gérées', path: '/dashboard/managed-properties', icon: Building },
-        { label: 'Gérer Réservations', path: '/dashboard/manage-bookings', icon: Calendar },
-        { label: 'Maintenance', path: '/dashboard/maintenance', icon: Wrench },
+        { label: 'Mes Publicités', path: '/dashboard/ads', icon: Megaphone },
+        { label: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
+        { label: 'Campagnes', path: '/dashboard/campaigns', icon: Calendar },
         { label: 'Rapports', path: '/dashboard/reports', icon: FileText },
       ];
     

@@ -1,22 +1,35 @@
 import { useUserRole } from '@/hooks/useUserRole';
 import { DashboardLayout } from '@/components/dashboard/layout/DashboardLayout';
 import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 // Import des dashboards par rôle
 import AdminDashboard from './admin/AdminDashboard';
 import OwnerDashboard from './owner/OwnerDashboard';
 import TenantDashboard from './tenant/TenantDashboard';
-import ManagerDashboard from './manager/ManagerDashboard';
+import AdvertiserDashboard from './advertiser/AdvertiserDashboard';
 
 export const DashboardRouter = () => {
-  const { userRole, loading } = useUserRole();
+  const { userRole, loading, error } = useUserRole();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner 
+          size="lg" 
+          text="Chargement du dashboard..." 
+        />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Chargement du dashboard...</p>
+          <div className="text-red-500 mb-4">⚠️</div>
+          <p className="text-red-500 mb-4">Erreur lors du chargement</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
         </div>
       </div>
     );
@@ -43,10 +56,10 @@ export const DashboardRouter = () => {
             <TenantDashboard />
           </RoleProtectedRoute>
         );
-      case 'manager':
+      case 'advertiser':
         return (
-          <RoleProtectedRoute allowedRoles={['manager']}>
-            <ManagerDashboard />
+          <RoleProtectedRoute allowedRoles={['advertiser']}>
+            <AdvertiserDashboard />
           </RoleProtectedRoute>
         );
       default:

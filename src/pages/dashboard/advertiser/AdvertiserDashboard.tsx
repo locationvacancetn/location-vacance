@@ -3,156 +3,154 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useUserRole } from "@/hooks/useUserRole";
 import { 
-  Building, 
+  Megaphone, 
   Calendar, 
-  Wrench, 
+  Eye, 
   FileText, 
   TrendingUp,
   AlertCircle,
   CheckCircle,
   Clock,
   MapPin,
-  Star
+  Star,
+  Plus,
+  BarChart3
 } from "lucide-react";
 
-const ManagerDashboard = () => {
+const AdvertiserDashboard = () => {
   const { userProfile } = useUserRole();
 
-  // Données d'exemple pour le gestionnaire
+  // Données d'exemple pour l'annonceur
   const stats = [
     {
-      title: "Propriétés Gérées",
-      value: "15",
-      change: "+3",
+      title: "Publicités Actives",
+      value: "8",
+      change: "+2",
       changeType: "positive" as const,
-      icon: Building,
-      description: "Propriétés sous gestion"
+      icon: Megaphone,
+      description: "Campagnes en cours"
     },
     {
-      title: "Réservations",
-      value: "42",
-      change: "+12",
+      title: "Vues Total",
+      value: "24,567",
+      change: "+15%",
       changeType: "positive" as const,
-      icon: Calendar,
+      icon: Eye,
       description: "Ce mois"
     },
     {
-      title: "Maintenance",
-      value: "8",
-      change: "3 en cours",
-      changeType: "neutral" as const,
-      icon: Wrench,
-      description: "Tâches actives"
+      title: "Clics",
+      value: "1,234",
+      change: "+8%",
+      changeType: "positive" as const,
+      icon: TrendingUp,
+      description: "Engagement"
     },
     {
-      title: "Satisfaction",
-      value: "4.7",
-      change: "+0.3",
+      title: "Taux de Conversion",
+      value: "5.2%",
+      change: "+1.1%",
       changeType: "positive" as const,
-      icon: Star,
-      description: "Note moyenne"
+      icon: BarChart3,
+      description: "Performance"
     }
   ];
 
-  const maintenanceTasks = [
+  const activeCampaigns = [
     {
       id: 1,
-      property: "Villa de luxe - Sidi Bou Said",
-      task: "Réparation climatisation",
-      priority: "high",
-      dueDate: "20 Jan 2024",
-      status: "in_progress"
+      title: "Promotion Villa de Luxe",
+      type: "Banner",
+      status: "active",
+      views: "12,456",
+      clicks: "234",
+      ctr: "1.9%",
+      budget: "€500",
+      spent: "€320"
     },
     {
       id: 2,
-      property: "Appartement centre-ville",
-      task: "Nettoyage après départ",
-      priority: "medium",
-      dueDate: "18 Jan 2024",
-      status: "pending"
+      title: "Appartement Centre-Ville",
+      type: "Carousel",
+      status: "paused",
+      views: "8,234",
+      clicks: "156",
+      ctr: "1.9%",
+      budget: "€300",
+      spent: "€180"
     },
     {
       id: 3,
-      property: "Studio moderne",
-      task: "Vérification sécurité",
-      priority: "low",
-      dueDate: "25 Jan 2024",
-      status: "completed"
+      title: "Studio Moderne - Popup",
+      type: "Popup",
+      status: "active",
+      views: "15,789",
+      clicks: "445",
+      ctr: "2.8%",
+      budget: "€200",
+      spent: "€95"
     }
   ];
 
-  const recentBookings = [
+  const recentPerformance = [
     {
       id: 1,
-      property: "Villa de luxe - Sidi Bou Said",
-      guest: "Marie Dupont",
-      checkIn: "15 Jan 2024",
-      checkOut: "20 Jan 2024",
-      status: "confirmed",
-      amount: "€450"
+      campaign: "Promotion Villa de Luxe",
+      date: "15 Jan 2024",
+      impressions: "2,456",
+      clicks: "45",
+      conversions: "3",
+      revenue: "€450"
     },
     {
       id: 2,
-      property: "Appartement centre-ville",
-      guest: "Ahmed Ben Ali",
-      checkIn: "22 Jan 2024",
-      checkOut: "25 Jan 2024",
-      status: "pending",
-      amount: "€180"
+      campaign: "Appartement Centre-Ville",
+      date: "14 Jan 2024",
+      impressions: "1,789",
+      clicks: "32",
+      conversions: "2",
+      revenue: "€180"
     }
   ];
 
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return <Badge className="bg-red-100 text-red-800">Urgent</Badge>;
-      case 'medium':
-        return <Badge className="bg-yellow-100 text-yellow-800">Moyen</Badge>;
-      case 'low':
-        return <Badge className="bg-green-100 text-green-800">Faible</Badge>;
-      default:
-        return <Badge variant="secondary">{priority}</Badge>;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
+  const getCampaignStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'active':
         return (
           <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
+            <CheckCircle className="h-3 w-3" />
+            Actif
+          </Badge>
+        );
+      case 'paused':
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            En pause
+          </Badge>
+        );
+      case 'completed':
+        return (
+          <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
             Terminé
           </Badge>
         );
-      case 'in_progress':
-        return (
-          <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            En cours
-          </Badge>
-        );
-      case 'pending':
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
-            En attente
-          </Badge>
-        );
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
-  const getBookingStatusBadge = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <Badge className="bg-green-100 text-green-800">Confirmée</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-100 text-red-800">Annulée</Badge>;
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case 'Banner':
+        return <Badge className="bg-blue-100 text-blue-800">Banner</Badge>;
+      case 'Carousel':
+        return <Badge className="bg-purple-100 text-purple-800">Carousel</Badge>;
+      case 'Popup':
+        return <Badge className="bg-orange-100 text-orange-800">Popup</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="secondary">{type}</Badge>;
     }
   };
 
@@ -162,20 +160,20 @@ const ManagerDashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            Tableau de Bord Gestionnaire
+            Tableau de Bord Annonceur
           </h1>
           <p className="text-muted-foreground">
-            Bienvenue, {userProfile?.full_name || 'Gestionnaire'}
+            Bienvenue, {userProfile?.full_name || 'Annonceur'}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="flex items-center gap-2">
-            <Wrench className="h-4 w-4" />
-            Maintenance
+            <BarChart3 className="h-4 w-4" />
+            Analytics
           </Button>
           <Button className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Rapport
+            <Plus className="h-4 w-4" />
+            Nouvelle Publicité
           </Button>
         </div>
       </div>
@@ -213,68 +211,75 @@ const ManagerDashboard = () => {
 
       {/* Contenu principal */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tâches de maintenance */}
+        {/* Campagnes actives */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              Maintenance
+              <Megaphone className="h-5 w-5" />
+              Campagnes Actives
             </CardTitle>
             <CardDescription>
-              Tâches de maintenance en cours
+              Vos publicités en cours
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {maintenanceTasks.map((task) => (
-              <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
+            {activeCampaigns.map((campaign) => (
+              <div key={campaign.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex-1">
-                  <h4 className="font-medium text-foreground">{task.property}</h4>
-                  <p className="text-sm text-muted-foreground">{task.task}</p>
-                  <p className="text-xs text-muted-foreground">Échéance: {task.dueDate}</p>
+                  <h4 className="font-medium text-foreground">{campaign.title}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    {getTypeBadge(campaign.type)}
+                    <span className="text-xs text-muted-foreground">
+                      {campaign.views} vues • {campaign.clicks} clics
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                    <span>CTR: {campaign.ctr}</span>
+                    <span>Budget: {campaign.budget}</span>
+                    <span>Dépensé: {campaign.spent}</span>
+                  </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  {getPriorityBadge(task.priority)}
-                  {getStatusBadge(task.status)}
+                  {getCampaignStatusBadge(campaign.status)}
                 </div>
               </div>
             ))}
             
             <Button variant="outline" className="w-full">
-              Voir toutes les tâches
+              Voir toutes les campagnes
             </Button>
           </CardContent>
         </Card>
 
-        {/* Réservations récentes */}
+        {/* Performance récente */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Réservations Récentes
+              <BarChart3 className="h-5 w-5" />
+              Performance Récente
             </CardTitle>
             <CardDescription>
-              Dernières réservations des propriétés gérées
+              Dernières performances de vos campagnes
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentBookings.map((booking) => (
-              <div key={booking.id} className="flex items-center justify-between p-3 border rounded-lg">
+            {recentPerformance.map((perf) => (
+              <div key={perf.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex-1">
-                  <h4 className="font-medium text-foreground">{booking.property}</h4>
-                  <p className="text-sm text-muted-foreground">{booking.guest}</p>
+                  <h4 className="font-medium text-foreground">{perf.campaign}</h4>
+                  <p className="text-sm text-muted-foreground">{perf.date}</p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-                    <span>{booking.checkIn} - {booking.checkOut}</span>
-                    <span className="font-medium text-foreground">{booking.amount}</span>
+                    <span>{perf.impressions} impressions</span>
+                    <span>{perf.clicks} clics</span>
+                    <span>{perf.conversions} conversions</span>
+                    <span className="font-medium text-foreground">{perf.revenue}</span>
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  {getBookingStatusBadge(booking.status)}
                 </div>
               </div>
             ))}
             
             <Button variant="outline" className="w-full">
-              Voir toutes les réservations
+              Voir le rapport complet
             </Button>
           </CardContent>
         </Card>
@@ -285,24 +290,24 @@ const ManagerDashboard = () => {
         <CardHeader>
           <CardTitle>Actions Rapides</CardTitle>
           <CardDescription>
-            Gestion rapide de vos propriétés
+            Gestion rapide de vos publicités
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button variant="outline" className="flex items-center gap-2 h-16">
-              <Building className="h-5 w-5" />
+              <Megaphone className="h-5 w-5" />
               <div className="text-left">
-                <div className="font-medium">Propriétés Gérées</div>
-                <div className="text-xs text-muted-foreground">Gérer les propriétés</div>
+                <div className="font-medium">Mes Publicités</div>
+                <div className="text-xs text-muted-foreground">Gérer les campagnes</div>
               </div>
             </Button>
             
             <Button variant="outline" className="flex items-center gap-2 h-16">
-              <Calendar className="h-5 w-5" />
+              <BarChart3 className="h-5 w-5" />
               <div className="text-left">
-                <div className="font-medium">Réservations</div>
-                <div className="text-xs text-muted-foreground">Gérer les réservations</div>
+                <div className="font-medium">Analytics</div>
+                <div className="text-xs text-muted-foreground">Voir les performances</div>
               </div>
             </Button>
             
@@ -320,4 +325,4 @@ const ManagerDashboard = () => {
   );
 };
 
-export default ManagerDashboard;
+export default AdvertiserDashboard;
