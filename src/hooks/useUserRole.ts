@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole, UserProfile } from '@/types/dashboard';
 import { useLogger } from '@/lib/logger';
 import { useCache } from '@/lib/cache';
+
+// Types simplifiés pour les rôles utilisateur
+export type UserRole = 'owner' | 'tenant' | 'manager' | 'admin';
+
+export interface UserProfile {
+  id: string;
+  full_name: string;
+  email: string;
+  role: UserRole;
+  avatar_url?: string;
+  bio?: string;
+  phone?: string;
+}
 
 export const useUserRole = () => {
   const { user, loading: authLoading } = useAuth();

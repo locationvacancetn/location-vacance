@@ -1,7 +1,12 @@
 import { ChevronRight, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useBreadcrumbs, BreadcrumbItem } from '@/hooks/useBreadcrumbs';
+
+export interface BreadcrumbItem {
+  label: string;
+  path?: string;
+  isActive?: boolean;
+}
 
 interface BreadcrumbsProps {
   className?: string;
@@ -9,8 +14,7 @@ interface BreadcrumbsProps {
 }
 
 export const Breadcrumbs = ({ className, items }: BreadcrumbsProps) => {
-  const defaultItems = useBreadcrumbs();
-  const breadcrumbs = items || defaultItems;
+  const breadcrumbs = items || [];
 
   if (breadcrumbs.length <= 1) {
     return null;

@@ -2,7 +2,7 @@ import { AuthDebugger } from '@/components/auth/AuthDebugger';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, LogIn, Home, Settings, User, MessageSquare, HelpCircle, Building, Calendar, DollarSign, BarChart3, Search, Heart, Wrench, FileText, Users, Shield, Activity } from 'lucide-react';
+import { LogOut, LogIn, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 
@@ -44,168 +44,11 @@ export default function TestAuth() {
                     Se déconnecter
                   </Button>
                   <Button asChild variant="outline">
-                    <Link to={ROUTES.DASHBOARD}>
+                    <Link to={ROUTES.HOME}>
                       <Home className="w-4 h-4 mr-2" />
-                      Dashboard Principal
+                      Retour à l'accueil
                     </Link>
                   </Button>
-                </div>
-
-                {/* Liens vers les pages du dashboard */}
-                <div className="space-y-4">
-                  <h3 className="font-medium text-lg">Navigation Dashboard</h3>
-                  
-                  {/* Pages communes */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <Button asChild variant="outline" className="justify-start">
-                      <Link to={ROUTES.DASHBOARD_PROFILE}>
-                        <User className="w-4 h-4 mr-2" />
-                        Profil
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="justify-start">
-                      <Link to={ROUTES.DASHBOARD_MESSAGES}>
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Messages
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="justify-start">
-                      <Link to={ROUTES.DASHBOARD_SETTINGS}>
-                        <Settings className="w-4 h-4 mr-2" />
-                        Paramètres
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="justify-start">
-                      <Link to={ROUTES.DASHBOARD_HELP}>
-                        <HelpCircle className="w-4 h-4 mr-2" />
-                        Aide
-                      </Link>
-                    </Button>
-                  </div>
-
-                  {/* Pages propriétaire */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-muted-foreground">Pages Propriétaire</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_PROPERTIES}>
-                          <Building className="w-4 h-4 mr-2" />
-                          Mes Propriétés
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_BOOKINGS}>
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Réservations
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_FINANCES}>
-                          <DollarSign className="w-4 h-4 mr-2" />
-                          Finances
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_ANALYTICS}>
-                          <BarChart3 className="w-4 h-4 mr-2" />
-                          Analytics
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Pages locataire */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-muted-foreground">Pages Locataire</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_MY_BOOKINGS}>
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Mes Réservations
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_SEARCH}>
-                          <Search className="w-4 h-4 mr-2" />
-                          Recherche
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_FAVORITES}>
-                          <Heart className="w-4 h-4 mr-2" />
-                          Favoris
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Pages gestionnaire */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-muted-foreground">Pages Gestionnaire</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_MANAGED_PROPERTIES}>
-                          <Building className="w-4 h-4 mr-2" />
-                          Propriétés Gérées
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_MANAGE_BOOKINGS}>
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Gérer Réservations
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_MAINTENANCE}>
-                          <Wrench className="w-4 h-4 mr-2" />
-                          Maintenance
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_REPORTS}>
-                          <FileText className="w-4 h-4 mr-2" />
-                          Rapports
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Pages administrateur */}
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-muted-foreground">Pages Administrateur</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_USERS}>
-                          <Users className="w-4 h-4 mr-2" />
-                          Utilisateurs
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_ALL_PROPERTIES}>
-                          <Building className="w-4 h-4 mr-2" />
-                          Toutes les Propriétés
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_ALL_BOOKINGS}>
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Toutes les Réservations
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_SYSTEM}>
-                          <Shield className="w-4 h-4 mr-2" />
-                          Système
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="justify-start">
-                        <Link to={ROUTES.DASHBOARD_LOGS}>
-                          <Activity className="w-4 h-4 mr-2" />
-                          Logs
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
                 </div>
               </div>
             ) : (

@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useUserRole } from '@/hooks/useUserRole';
-import { UserRole } from '@/types/dashboard';
+import { useUserRole, UserRole } from '@/hooks/useUserRole';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Shield } from 'lucide-react';
@@ -16,7 +15,7 @@ interface RoleProtectedRouteProps {
 export const RoleProtectedRoute = ({ 
   children, 
   allowedRoles, 
-  fallbackPath = '/dashboard',
+  fallbackPath = '/',
   requireAuth = true 
 }: RoleProtectedRouteProps) => {
   const { userRole, loading, error } = useUserRole();
