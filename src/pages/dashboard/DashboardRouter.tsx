@@ -2,12 +2,19 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { DashboardLayout } from '@/components/dashboard/layout/DashboardLayout';
 import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Routes, Route } from 'react-router-dom';
 
 // Import des dashboards par rôle
 import AdminDashboard from './admin/AdminDashboard';
 import OwnerDashboard from './owner/OwnerDashboard';
 import TenantDashboard from './tenant/TenantDashboard';
 import AdvertiserDashboard from './advertiser/AdvertiserDashboard';
+
+// Import des pages Messages par rôle
+import AdminMessages from './messages/AdminMessages';
+import OwnerMessages from './messages/OwnerMessages';
+import TenantMessages from './messages/TenantMessages';
+import AdvertiserMessages from './messages/AdvertiserMessages';
 
 export const DashboardRouter = () => {
   const { userRole, loading, error } = useUserRole();
@@ -80,7 +87,23 @@ export const DashboardRouter = () => {
 
   return (
     <DashboardLayout>
-      {renderDashboard()}
+      <Routes>
+        {/* Route principale du dashboard */}
+        <Route path="/" element={renderDashboard()} />
+        
+        {/* Routes Messages par rôle */}
+        <Route 
+          path="/messages" 
+          element={
+            <RoleProtectedRoute allowedRoles={['admin', 'owner', 'tenant', 'advertiser']}>
+              {userRole === 'admin' && <AdminMessages />}
+              {userRole === 'owner' && <OwnerMessages />}
+              {userRole === 'tenant' && <TenantMessages />}
+              {userRole === 'advertiser' && <AdvertiserMessages />}
+            </RoleProtectedRoute>
+          } 
+        />
+      </Routes>
     </DashboardLayout>
   );
 };

@@ -32,7 +32,7 @@ const App = () => (
               
               {/* Route dashboard protégée */}
               <Route 
-                path={ROUTES.DASHBOARD} 
+                path={`${ROUTES.DASHBOARD}/*`} 
                 element={
                   <ProtectedRoute>
                     <DashboardRouter />
