@@ -15,6 +15,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/admin/property-types': 'Gestion des Types de Propriétés',
   '/dashboard/users': 'Gestion des Utilisateurs',
   
+  // Pages Owner
+  '/dashboard/owner/add-property': 'Nouvelle propriété',
+  
   // Dashboards par rôle (fallback)
   '/dashboard/admin': 'Tableau de bord Admin',
   '/dashboard/owner': 'Tableau de bord Propriétaire',
@@ -30,6 +33,7 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/dashboard/admin/equipments': 'Gérez les équipements des logements',
   '/dashboard/admin/property-types': 'Gérez les types de propriétés disponibles (villa, appartement, chalet...)',
   '/dashboard/users': 'Administrez les comptes utilisateurs',
+  '/dashboard/owner/add-property': 'Créez votre annonce étape par étape',
 };
 
 export const usePageTitle = () => {

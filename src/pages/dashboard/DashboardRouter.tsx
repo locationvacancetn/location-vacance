@@ -22,6 +22,11 @@ import OwnerProfile from './owner/OwnerProfile';
 import TenantProfile from './tenant/TenantProfile';
 import AdvertiserProfile from './advertiser/AdvertiserProfile';
 
+// Import des pages Owner
+import AddPropertyWizard from './owner/AddPropertyWizard';
+import TestLocationData from './owner/TestLocationData';
+import TestTables from './owner/TestTables';
+
 export const DashboardRouter = () => {
   const { userRole, loading } = useUserRole();
 
@@ -83,6 +88,11 @@ export const DashboardRouter = () => {
         <Route path="/admin/equipments" element={<EquipmentsManagement />} />
         <Route path="/admin/property-types" element={<PropertyTypesManagement />} />
         <Route path="/users" element={<UsersManagement />} />
+
+        {/* Routes Owner */}
+        <Route path="/owner/add-property" element={<AddPropertyWizard />} />
+        <Route path="/owner/test-location" element={<TestLocationData />} />
+        <Route path="/owner/test-tables" element={<TestTables />} />
       </Routes>
     </DashboardLayout>
   );
