@@ -14,51 +14,334 @@ export type Database = {
   }
   public: {
     Tables: {
+      cities: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      equipments: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      property_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
+          business_email: string | null
+          business_phone: string | null
+          company_name: string | null
+          company_website: string | null
           created_at: string
           email: string
+          facebook_url: string | null
           full_name: string | null
           id: string
+          instagram_url: string | null
+          is_active: boolean | null
+          last_sign_in_at: string | null
+          linkedin_url: string | null
+          messenger_url: string | null
           phone: string | null
           role: string
+          tiktok_url: string | null
+          twitter_url: string | null
           updated_at: string
           user_id: string
+          website_url: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          business_email?: string | null
+          business_phone?: string | null
+          company_name?: string | null
+          company_website?: string | null
           created_at?: string
           email: string
+          facebook_url?: string | null
           full_name?: string | null
           id?: string
+          instagram_url?: string | null
+          is_active?: boolean | null
+          last_sign_in_at?: string | null
+          linkedin_url?: string | null
+          messenger_url?: string | null
           phone?: string | null
           role: string
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           user_id: string
+          website_url?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          business_email?: string | null
+          business_phone?: string | null
+          company_name?: string | null
+          company_website?: string | null
           created_at?: string
           email?: string
+          facebook_url?: string | null
           full_name?: string | null
           id?: string
+          instagram_url?: string | null
+          is_active?: boolean | null
+          last_sign_in_at?: string | null
+          linkedin_url?: string | null
+          messenger_url?: string | null
           phone?: string | null
           role?: string
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           user_id?: string
+          website_url?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
+      }
+      properties: {
+        Row: {
+          amenities: string[] | null
+          bathrooms: number
+          bedrooms: number
+          city_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean
+          location: string
+          max_guests: number
+          owner_id: string
+          price_per_night: number
+          region_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amenities?: string[] | null
+          bathrooms?: number
+          city_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean
+          location: string
+          max_guests?: number
+          owner_id: string
+          price_per_night?: number
+          region_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amenities?: string[] | null
+          bathrooms?: number
+          city_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean
+          location?: string
+          max_guests?: number
+          owner_id?: string
+          price_per_night?: number
+          region_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "properties_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      regions: {
+        Row: {
+          city_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          city_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          city_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regions_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      activate_city: {
+        Args: { city_uuid: string }
+        Returns: undefined
+      }
+      deactivate_city: {
+        Args: { city_uuid: string }
+        Returns: undefined
+      }
+      get_cities_with_regions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          city_id: string
+          city_is_active: boolean
+          city_name: string
+          city_slug: string
+          region_id: string
+          region_is_active: boolean
+          region_name: string
+          region_slug: string
+        }[]
+      }
+      get_public_profile: {
+        Args: { profile_user_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          role: string
+        }[]
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -166,7 +449,7 @@ export type Enums<
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    ? DefaultSchema["Enums"][EnumName]
     : never
 
 export type CompositeTypes<

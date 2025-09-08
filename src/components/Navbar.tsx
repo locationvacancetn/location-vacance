@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Users, Home, Megaphone } from "lucide-react";
+import { Eye, EyeOff, Users, Home, Megaphone, Building, Calendar, DollarSign, BarChart3, Search, Heart, FileText, Settings, Shield, Activity } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,6 +26,7 @@ import LoginForm from "@/components/auth/LoginForm";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthError } from "@/hooks/useAuthError";
 import { AUTH_MESSAGES } from "@/constants/authMessages";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse email invalide").min(1, "L'email est requis"),
@@ -49,8 +50,62 @@ const signupSchema = z.object({
 });
 
 
+// Configuration des menus par rôle pour la navigation mobile
+const getMobileMenuItems = (role: string) => {
+  const commonItems = [
+    { label: 'Dashboard', path: '/dashboard', icon: Home },
+    { label: 'Paramètres', path: '/dashboard/settings', icon: Settings },
+  ];
+
+  switch (role) {
+    case 'admin':
+      return [
+        ...commonItems,
+        { label: 'Utilisateurs', path: '/dashboard/users', icon: Users },
+        { label: 'Toutes Propriétés', path: '/dashboard/all-properties', icon: Building },
+        { label: 'Toutes Réservations', path: '/dashboard/all-bookings', icon: Calendar },
+        { label: 'Système', path: '/dashboard/system', icon: Shield },
+        { label: 'Logs', path: '/dashboard/logs', icon: Activity },
+        { label: 'Profil', path: '/dashboard/profile', icon: Users },
+      ];
+    
+    case 'owner':
+      return [
+        ...commonItems,
+        { label: 'Mes Propriétés', path: '/dashboard/properties', icon: Building },
+        { label: 'Réservations', path: '/dashboard/bookings', icon: Calendar },
+        { label: 'Finances', path: '/dashboard/finances', icon: DollarSign },
+        { label: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
+        { label: 'Profil', path: '/dashboard/profile', icon: Users },
+      ];
+    
+    case 'tenant':
+      return [
+        ...commonItems,
+        { label: 'Mes Réservations', path: '/dashboard/my-bookings', icon: Calendar },
+        { label: 'Rechercher', path: '/dashboard/search', icon: Search },
+        { label: 'Favoris', path: '/dashboard/favorites', icon: Heart },
+        { label: 'Profil', path: '/dashboard/profile', icon: Users },
+      ];
+    
+    case 'advertiser':
+      return [
+        ...commonItems,
+        { label: 'Mes Publicités', path: '/dashboard/ads', icon: Megaphone },
+        { label: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
+        { label: 'Campagnes', path: '/dashboard/campaigns', icon: Calendar },
+        { label: 'Rapports', path: '/dashboard/reports', icon: FileText },
+        { label: 'Profil', path: '/dashboard/profile', icon: Users },
+      ];
+    
+    default:
+      return commonItems;
+  }
+};
+
 const Navbar = () => {
   const { user, signOut, signIn, /* signInWithGoogle, */ loading, forceSignOut, isLoggingIn, isLoggingOut } = useAuth();
+  const { userRole, userProfile } = useUserRole();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -108,13 +163,31 @@ const Navbar = () => {
   }, [selectedRole, signupForm]);
 
   const displayName =
-    (user?.user_metadata as any)?.full_name || user?.email || "Utilisateur";
+    userProfile?.full_name || (user?.user_metadata as any)?.full_name || user?.email || "Utilisateur";
 
   const initials = displayName
     .split(" ")
     .map((w: string) => w.charAt(0).toUpperCase())
     .slice(0, 2)
     .join("") || "U";
+
+  // Fonction pour obtenir les informations du rôle
+  const getRoleInfo = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return { label: 'Administrateur', color: 'text-red-600' };
+      case 'owner':
+        return { label: 'Propriétaire', color: 'text-blue-600' };
+      case 'tenant':
+        return { label: 'Locataire', color: 'text-green-600' };
+      case 'advertiser':
+        return { label: 'Annonceur', color: 'text-purple-600' };
+      default:
+        return { label: 'Utilisateur', color: 'text-gray-600' };
+    }
+  };
+
+  const roleInfo = getRoleInfo(userRole || 'tenant');
 
   const roles = [
     {
@@ -359,94 +432,107 @@ const Navbar = () => {
 
       {/* Modal plein écran mobile */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-white z-[9999] sm:hidden">
-          <div className="pt-4 pb-12 px-4 h-full overflow-y-auto">
-            <div className="max-w-md mx-auto">
+        <div className="fixed inset-0 bg-white z-[9999] sm:hidden flex flex-col">
+          <div className="flex-1 overflow-y-auto bg-white">
+            <div className="w-full bg-white min-h-full">
               <Card className="border-0 shadow-none bg-transparent">
-                <CardHeader className="text-center px-0 relative">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-0 right-0 h-8 w-8 text-gray-500"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </Button>
-                  <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
-                    <img src="/icons/logo.svg" alt="Logo" className="h-14 w-auto mx-auto mb-4" />
-                  </Link>
+                <CardHeader className="px-4 pt-2 pb-0">
+                  {/* Header avec logo et bouton fermer */}
+                  <div className="flex justify-between items-center mb-2 sm:mb-4">
+                    <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center">
+                      <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
+                    </Link>
+                     <Button
+                       variant="outline"
+                       size="icon"
+                       className="h-9 w-9 rounded-md text-gray-500 border-gray-300 hover:border-gray-400"
+                       onClick={() => setIsMobileMenuOpen(false)}
+                     >
+                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                       </svg>
+                     </Button>
+                   </div>
+                  {/* Section utilisateur ou connexion */}
                   {user ? (
-                    <div className="text-center">
-                      <Avatar className="h-16 w-16 mx-auto mb-2">
-                        <AvatarImage
-                          src={(user?.user_metadata as any)?.avatar_url || "/placeholder.svg"}
-                          alt={displayName}
-                        />
-                        <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-                      </Avatar>
-                      <CardTitle className="text-xl font-bold text-foreground">
-                        {displayName}
-                      </CardTitle>
-                      <p className="text-muted-foreground">
-                        {user.email}
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        className="mt-4 w-full"
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                      >
-                        {isLoggingOut ? (
-                          <>
-                            <Spinner className="mr-2" size="sm" />
-                            {AUTH_MESSAGES.LOGGING_OUT}
-                          </>
-                        ) : (
-                          "Se déconnecter"
-                        )}
-                      </Button>
+                    <div className="py-4 sm:py-[45px] mb-8 sm:mb-12">
+                      <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                        <div className="relative">
+                          <Avatar className="h-16 w-16 sm:h-20 sm:w-20 rounded-full">
+                            <AvatarImage
+                              src="https://lh3.googleusercontent.com/-H2ZNRmg2z3I/AAAAAAAAAAI/AAAAAAAAAAA/ALKGfkmm8gUv63ZaHb-oJh9xw6T0CvuUXQ/photo.jpg?sz=46"
+                              alt={displayName}
+                              className="object-cover"
+                            />
+                            <AvatarFallback className="text-lg sm:text-xl rounded-full">{initials}</AvatarFallback>
+                          </Avatar>
+                        </div>
+                        <div className="flex-1">
+                          <CardTitle className="text-base sm:text-lg font-bold text-foreground mb-1">
+                            {displayName}
+                          </CardTitle>
+                          <p className="text-muted-foreground text-xs sm:text-sm mb-1">
+                            {userProfile?.email || user.email}
+                          </p>
+                          <p className={`text-xs font-medium ${roleInfo.color}`}>
+                            {roleInfo.label}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   ) : (
-                    <>
-                      <CardTitle className="text-2xl font-bold text-foreground">
+                    <div className="text-center mb-6">
+                      <CardTitle className="text-2xl font-bold text-foreground mb-2">
                         {isSignupMode ? "Créer votre compte" : "Connexion"}
                       </CardTitle>
-                      <p className="text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {isSignupMode ? "Rejoignez location-vacance.tn et commencez votre parcours" : "Bienvenue ! Connectez-vous à votre compte"}
                       </p>
-                    </>
+                    </div>
                   )}
                 </CardHeader>
-                <CardContent className="space-y-6 px-0">
+                <CardContent className="px-4 pb-4">
                   {user ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 gap-4">
-                        <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                          <Button variant="outline" className="w-full justify-start">
-                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Mon profil
-                          </Button>
-                        </Link>
-                        <Link to="/reservations" onClick={() => setIsMobileMenuOpen(false)}>
-                          <Button variant="outline" className="w-full justify-start">
-                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Mes réservations
-                          </Button>
-                        </Link>
-                        <Link to="/favorites" onClick={() => setIsMobileMenuOpen(false)}>
-                          <Button variant="outline" className="w-full justify-start">
-                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                            Mes favoris
-                          </Button>
-                        </Link>
+                    <div className="space-y-2 sm:space-y-4">
+                      {/* Navigation basée sur le rôle */}
+                      <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                        {getMobileMenuItems(userRole || 'tenant').map((item) => {
+                          const isActive = location.pathname === item.path;
+                          return (
+                            <Link 
+                              key={item.path} 
+                              to={item.path} 
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              <Button 
+                                variant={isActive ? "default" : "outline"} 
+                                className={`w-full justify-start text-sm sm:text-base py-2 sm:py-3 ${isActive ? "bg-primary text-primary-foreground" : ""}`}
+                              >
+                                <item.icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                                {item.label}
+                              </Button>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                      
+                      {/* Bouton de déconnexion en bas du contenu */}
+                      <div className="mt-6 pt-4 border-t border-gray-200">
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={handleLogout}
+                          disabled={isLoggingOut}
+                        >
+                          {isLoggingOut ? (
+                            <>
+                              <Spinner className="mr-2" size="sm" />
+                              {AUTH_MESSAGES.LOGGING_OUT}
+                            </>
+                          ) : (
+                            "Se déconnecter"
+                          )}
+                        </Button>
                       </div>
                     </div>
                   ) : isSignupMode ? (
@@ -511,6 +597,7 @@ const Navbar = () => {
               </Card>
             </div>
           </div>
+          
         </div>
       )}
     </nav>

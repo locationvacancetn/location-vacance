@@ -13,16 +13,25 @@ import {
   XCircle
 } from "lucide-react";
 
+type ChangeType = 'positive' | 'negative' | 'neutral';
+
 const TenantDashboard = () => {
   const { userProfile } = useUserRole();
 
   // Données d'exemple pour le locataire
-  const stats = [
+  const stats: Array<{
+    title: string;
+    value: string;
+    change: string;
+    changeType: ChangeType;
+    icon: any;
+    description: string;
+  }> = [
     {
       title: "Mes Réservations",
       value: "5",
       change: "+2",
-      changeType: "positive" as const,
+      changeType: "positive",
       icon: Calendar,
       description: "Réservations actives"
     },
@@ -30,7 +39,7 @@ const TenantDashboard = () => {
       title: "Favoris",
       value: "12",
       change: "+3",
-      changeType: "positive" as const,
+      changeType: "positive",
       icon: Heart,
       description: "Propriétés sauvegardées"
     },
@@ -38,7 +47,7 @@ const TenantDashboard = () => {
       title: "Prochain Voyage",
       value: "3 jours",
       change: "Dans 2 semaines",
-      changeType: "neutral" as const,
+      changeType: "neutral",
       icon: Clock,
       description: "Villa de luxe à Sidi Bou Said"
     },
@@ -46,7 +55,7 @@ const TenantDashboard = () => {
       title: "Note Moyenne",
       value: "4.9",
       change: "+0.1",
-      changeType: "positive" as const,
+      changeType: "positive",
       icon: Star,
       description: "Vos évaluations"
     }
@@ -123,15 +132,7 @@ const TenantDashboard = () => {
   return (
     <div className="space-y-6">
       {/* En-tête */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Tableau de Bord Locataire
-          </h1>
-          <p className="text-muted-foreground">
-            Bienvenue, {userProfile?.full_name || 'Locataire'}
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button className="flex items-center gap-2">
           <Search className="h-4 w-4" />
           Rechercher
@@ -155,7 +156,8 @@ const TenantDashboard = () => {
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 <span className={`font-medium ${
                   stat.changeType === 'positive' ? 'text-green-600' : 
-                  stat.changeType === 'negative' ? 'text-red-600' : 'text-blue-600'
+                  stat.changeType === 'negative' ? 'text-red-600' : 
+                  stat.changeType === 'neutral' ? 'text-gray-600' : 'text-blue-600'
                 }`}>
                   {stat.change}
                 </span>

@@ -157,15 +157,7 @@ const AdvertiserDashboard = () => {
   return (
     <div className="space-y-6">
       {/* En-tête */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Tableau de Bord Annonceur
-          </h1>
-          <p className="text-muted-foreground">
-            Bienvenue, {userProfile?.full_name || 'Annonceur'}
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <div className="flex gap-2">
           <Button variant="outline" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />

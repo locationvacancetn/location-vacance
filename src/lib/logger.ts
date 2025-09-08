@@ -25,6 +25,7 @@ class Logger {
   private currentLevel: LogLevel;
   private logs: LogEntry[] = [];
   private maxLogs = 1000; // Limite pour éviter les fuites mémoire
+  private ignoredContexts: string[] = ['useUserRole']; // Contextes à ignorer
 
   private constructor() {
     this.currentLevel = process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG;
@@ -39,6 +40,11 @@ class Logger {
 
   private log(level: LogLevel, message: string, context?: string, data?: any): void {
     if (level > this.currentLevel) return;
+
+    // Ignorer les contextes dans la liste noire
+    if (context && this.ignoredContexts.includes(context)) {
+      return;
+    }
 
     const entry: LogEntry = {
       level,
@@ -143,6 +149,20 @@ class Logger {
 
   public setLevel(level: LogLevel): void {
     this.currentLevel = level;
+  }
+
+  public addIgnoredContext(context: string): void {
+    if (!this.ignoredContexts.includes(context)) {
+      this.ignoredContexts.push(context);
+    }
+  }
+
+  public removeIgnoredContext(context: string): void {
+    this.ignoredContexts = this.ignoredContexts.filter(ctx => ctx !== context);
+  }
+
+  public getIgnoredContexts(): string[] {
+    return [...this.ignoredContexts];
   }
 }
 

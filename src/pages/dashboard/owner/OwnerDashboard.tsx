@@ -98,15 +98,7 @@ const OwnerDashboard = () => {
   return (
     <div className="space-y-6">
       {/* En-tête */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Tableau de Bord Propriétaire
-          </h1>
-          <p className="text-muted-foreground">
-            Bienvenue, {userProfile?.full_name || 'Propriétaire'}
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Ajouter une Propriété

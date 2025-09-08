@@ -146,8 +146,6 @@ export function useAuth() {
       setUser(null);
       setSession(null);
       setLoading(false);
-      
-      console.log('Invalid session cleared successfully');
     } catch (error) {
       console.error('Error clearing invalid session:', error);
       // En cas d'erreur, forcer quand même la déconnexion locale

@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -12,17 +12,86 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  Bell, 
-  Search, 
   User, 
   Settings, 
   LogOut,
   Shield,
   Building,
   Calendar,
-  Megaphone
+  Megaphone,
+  Menu,
+  Home,
+  DollarSign,
+  BarChart3,
+  Search,
+  Heart,
+  FileText,
+  Users,
+  Activity,
+  HomeIcon,
+  MapPin,
+  Wrench
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useState } from 'react';
+
+// Configuration des menus par rôle pour la navigation mobile
+const getMobileMenuItems = (role: string) => {
+  const commonItems = [
+    { label: 'Dashboard', path: '/dashboard', icon: Home },
+    { label: 'Paramètres', path: '/dashboard/settings', icon: Settings },
+  ];
+
+  switch (role) {
+    case 'admin':
+      return [
+        ...commonItems,
+        { label: 'Utilisateurs', path: '/dashboard/users', icon: Users },
+        { label: 'Propriétés', path: '/dashboard/all-properties', icon: Building },
+        { label: 'Réservations', path: '/dashboard/all-bookings', icon: Calendar },
+        { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
+        { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
+        { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
+        { label: 'Système', path: '/dashboard/system', icon: Shield },
+        { label: 'Logs', path: '/dashboard/logs', icon: Activity },
+        { label: 'Profil', path: '/dashboard/profile', icon: User },
+      ];
+    
+    case 'owner':
+      return [
+        ...commonItems,
+        { label: 'Mes Propriétés', path: '/dashboard/properties', icon: Building },
+        { label: 'Réservations', path: '/dashboard/bookings', icon: Calendar },
+        { label: 'Finances', path: '/dashboard/finances', icon: DollarSign },
+        { label: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
+        { label: 'Profil', path: '/dashboard/profile', icon: Users },
+      ];
+    
+    case 'tenant':
+      return [
+        ...commonItems,
+        { label: 'Mes Réservations', path: '/dashboard/my-bookings', icon: Calendar },
+        { label: 'Rechercher', path: '/dashboard/search', icon: Search },
+        { label: 'Favoris', path: '/dashboard/favorites', icon: Heart },
+        { label: 'Profil', path: '/dashboard/profile', icon: Users },
+      ];
+    
+    case 'advertiser':
+      return [
+        ...commonItems,
+        { label: 'Mes Publicités', path: '/dashboard/ads', icon: Megaphone },
+        { label: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
+        { label: 'Campagnes', path: '/dashboard/campaigns', icon: Calendar },
+        { label: 'Rapports', path: '/dashboard/reports', icon: FileText },
+        { label: 'Profil', path: '/dashboard/profile', icon: Users },
+      ];
+    
+    default:
+      return commonItems;
+  }
+};
 
 const getRoleInfo = (role: string) => {
   switch (role) {
@@ -59,99 +128,216 @@ const getRoleInfo = (role: string) => {
   }
 };
 
-export const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  onMobileMenuToggle?: () => void;
+}
+
+export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) => {
   const { userProfile, userRole } = useUserRole();
   const { signOut } = useAuth();
-  const [notifications] = useState(3); // Mock notifications
+  const { title, description } = usePageTitle();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const roleInfo = getRoleInfo(userRole || 'tenant');
+  const menuItems = getMobileMenuItems(userRole || 'tenant');
 
   const handleSignOut = async () => {
     await signOut();
   };
 
+  const displayName = userProfile?.full_name || 'Utilisateur';
+  const initials = displayName
+    .split(" ")
+    .map((w: string) => w.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join("") || "U";
+
   return (
-    <header className="bg-background border-b border-border px-6 py-4">
+    <header className="bg-background px-6 py-4">
       <div className="flex items-center justify-between">
-        {/* Search */}
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              className="w-full pl-10 pr-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+        {/* Logo à gauche sur mobile, titre sur desktop */}
+        <div className="flex items-center gap-4 flex-1">
+          {/* Logo sur mobile */}
+          <div className="md:hidden">
+            <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
+          </div>
+          
+          {/* Titre sur desktop */}
+          <div className="hidden md:block flex-1">
+            <h1 className="text-2xl font-bold text-foreground">
+              {title}
+            </h1>
+            {description && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {description}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Right side */}
         <div className="flex items-center gap-4">
-          {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-4 w-4" />
-            {notifications > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-              >
-                {notifications}
-              </Badge>
-            )}
-          </Button>
+          {/* Bouton kebab sur mobile */}
+          <div className="md:hidden">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-md text-green-600 hover:text-green-700 border-green-600 hover:border-green-700 active:bg-green-600 active:text-white active:border-green-600"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </Button>
+          </div>
 
-          {/* User menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-3 p-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={userProfile?.avatar_url} />
-                  <AvatarFallback>
-                    {userProfile?.full_name?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-foreground">
-                    {userProfile?.full_name || 'Utilisateur'}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <roleInfo.icon className="h-3 w-3" />
-                    <p className="text-xs text-muted-foreground">
-                      {roleInfo.label}
+          {/* Profil sur desktop */}
+          <div className="hidden md:block">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-3 p-2 hover:bg-transparent">
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Bonjour,</p>
+                    <p className="text-base font-medium text-foreground">
+                      {userProfile?.full_name || 'Utilisateur'}
                     </p>
                   </div>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {userProfile?.full_name || 'Utilisateur'}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {userProfile?.email || 'email@example.com'}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profil</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Paramètres</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Se déconnecter</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <div className="relative">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={userProfile?.avatar_url} className="object-cover" />
+                      <AvatarFallback className="bg-gray-200 text-gray-600">
+                        {userProfile?.full_name?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {userProfile?.full_name || 'Utilisateur'}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {userProfile?.email || 'email@example.com'}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profil</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Paramètres</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Se déconnecter</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
+
+      {/* Modal plein écran mobile */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-white z-[9999] md:hidden flex flex-col">
+          <div className="flex-1 overflow-y-auto bg-white">
+            <div className="w-full bg-white min-h-full">
+              <Card className="border-0 shadow-none bg-transparent">
+                <CardHeader className="px-6 py-4">
+                  {/* Header avec logo et bouton fermer */}
+                  <div className="flex items-center justify-between">
+                    <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center">
+                      <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
+                    </Link>
+                     <Button
+                       variant="outline"
+                       size="icon"
+                       className="h-9 w-9 rounded-md text-green-600 hover:text-green-700 border-green-600 hover:border-green-700 active:bg-green-600 active:text-white active:border-green-600"
+                       onClick={() => setIsMobileMenuOpen(false)}
+                     >
+                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                       </svg>
+                     </Button>
+                   </div>
+                  {/* Section utilisateur */}
+                  <div className="py-4 sm:py-[45px] mb-8 sm:mb-12">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                      <div className="relative">
+                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20 rounded-full">
+                          <AvatarImage
+                            src={userProfile?.avatar_url || "/placeholder.svg"}
+                            alt={displayName}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="text-lg sm:text-xl rounded-full">{initials}</AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-base sm:text-lg font-bold text-foreground mb-1">
+                          {displayName}
+                        </CardTitle>
+                        <p className="text-muted-foreground text-xs sm:text-sm mb-1">
+                          {userProfile?.email || 'email@example.com'}
+                        </p>
+                        <p className={`text-xs font-medium ${roleInfo.color}`}>
+                          {roleInfo.label}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="space-y-2 sm:space-y-4">
+                    
+                    {/* Navigation basée sur le rôle */}
+                    <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                      {menuItems.map((item) => {
+                        const isActive = window.location.pathname === item.path;
+                        return (
+                          <Link 
+                            key={item.path} 
+                            to={item.path} 
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Button 
+                              variant={isActive ? "default" : "outline"} 
+                              className={`w-full justify-start text-sm sm:text-base py-2 sm:py-3 ${isActive ? "bg-primary text-primary-foreground" : ""}`}
+                            >
+                              <item.icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                              {item.label}
+                            </Button>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Bouton de déconnexion en bas du contenu */}
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          handleSignOut();
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        Se déconnecter
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

@@ -12,14 +12,8 @@ export const ProtectedRoute = ({
   children, 
   redirectTo = '/login' 
 }: ProtectedRouteProps) => {
-  console.log('ProtectedRoute - Component rendered');
   const { user, loading } = useAuth();
   const location = useLocation();
-  
-  console.log('ProtectedRoute - user:', user);
-  console.log('ProtectedRoute - loading:', loading);
-  console.log('ProtectedRoute - user exists:', !!user);
-  console.log('ProtectedRoute - user id:', user?.id);
 
   // Affichage du loader pendant la vérification de l'authentification
   if (loading) {

@@ -10,7 +10,8 @@ import {
   Activity, 
   Shield,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  MapPin
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -86,15 +87,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       {/* En-tête */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Tableau de Bord Administrateur
-          </h1>
-          <p className="text-muted-foreground">
-            Bienvenue, {userProfile?.full_name || 'Administrateur'}
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Badge variant="destructive" className="flex items-center gap-2">
           <Shield className="h-4 w-4" />
           Administrateur
@@ -136,7 +129,7 @@ const AdminDashboard = () => {
         {/* Activités récentes */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Activity className="h-5 w-5" />
               Activités Récentes
             </CardTitle>
@@ -166,7 +159,7 @@ const AdminDashboard = () => {
         {/* Actions rapides */}
         <Card>
           <CardHeader>
-            <CardTitle>Actions Rapides</CardTitle>
+            <CardTitle className="text-lg">Actions Rapides</CardTitle>
             <CardDescription>
               Gestion rapide de la plateforme
             </CardDescription>
@@ -187,6 +180,24 @@ const AdminDashboard = () => {
             <Button className="w-full justify-start" variant="outline">
               <Settings className="mr-2 h-4 w-4" />
               Paramètres Système
+            </Button>
+            <Button className="w-full justify-start" variant="outline" asChild>
+              <a href="/dashboard/admin/cities">
+                <MapPin className="mr-2 h-4 w-4" />
+                Gestion Villes & Régions
+              </a>
+            </Button>
+            <Button className="w-full justify-start" variant="outline" asChild>
+              <a href="/dashboard/admin/equipments">
+                <Settings className="mr-2 h-4 w-4" />
+                Gestion des Équipements
+              </a>
+            </Button>
+            <Button className="w-full justify-start" variant="outline" asChild>
+              <a href="/dashboard/admin/property-types">
+                <Building className="mr-2 h-4 w-4" />
+                Gestion des Types de Propriétés
+              </a>
             </Button>
           </CardContent>
         </Card>
