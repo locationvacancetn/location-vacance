@@ -34,6 +34,8 @@ export interface UserProfile {
   business_email?: string;
   linkedin_url?: string;
   twitter_url?: string;
+  // Langues parlées
+  spoken_languages?: string[];
 }
 
 export const useUserRole = () => {
@@ -168,6 +170,8 @@ export const useUserRole = () => {
           business_email: profile.business_email,
           linkedin_url: profile.linkedin_url,
           twitter_url: profile.twitter_url,
+          // Langues parlées
+          spoken_languages: profile.spoken_languages,
         });
         setUserRole(profile.role as UserRole);
       } else {

@@ -13,6 +13,15 @@ import {
   CheckCircle
 } from "lucide-react";
 
+// Fonction pour nettoyer le localStorage
+const clearPropertyWizardData = () => {
+  try {
+    localStorage.removeItem('property-wizard-data');
+  } catch (error) {
+    console.error('Erreur lors du nettoyage du localStorage:', error);
+  }
+};
+
 const PropertyWizardDemo = () => {
   const navigate = useNavigate();
 
@@ -79,7 +88,10 @@ const PropertyWizardDemo = () => {
             Interface mobile-friendly pour créer facilement une nouvelle propriété
           </p>
           <Button
-            onClick={() => navigate('/dashboard/owner/add-property')}
+            onClick={() => {
+              clearPropertyWizardData();
+              navigate('/dashboard/owner/add-property');
+            }}
             size="lg"
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
           >
@@ -176,7 +188,10 @@ const PropertyWizardDemo = () => {
               Le wizard vous guide étape par étape pour créer une annonce complète et attractive
             </p>
             <Button
-              onClick={() => navigate('/dashboard/owner/add-property')}
+              onClick={() => {
+                clearPropertyWizardData();
+                navigate('/dashboard/owner/add-property');
+              }}
               size="lg"
               className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3"
             >

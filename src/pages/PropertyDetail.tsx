@@ -6,14 +6,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import Navbar from "@/components/Navbar";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { format, isAfter, isBefore, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { PropertyService, Property } from "@/lib/propertyService";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Configuration des icônes Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -52,6 +57,21 @@ import {
 } from "lucide-react";
 
 const PropertyDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
+  
+  // États pour les données de la propriété
+  const [property, setProperty] = useState<Property | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // États pour la disponibilité des propriétés
+  const [propertyAvailability, setPropertyAvailability] = useState<Array<{
+    id: string;
+    date: string;
+    is_available: boolean;
+    reason: string | null;
+  }>>([]);
+  
   // États pour la galerie d'images
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
@@ -95,13 +115,70 @@ const PropertyDetail = () => {
   // État pour le modal de réservation mobile
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
+  // Charger les données de la propriété et les réservations
+  useEffect(() => {
+    const loadProperty = async () => {
+      if (!id) {
+        toast({
+          title: "Erreur",
+          description: "ID de propriété manquant",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const propertyData = await PropertyService.getPropertyById(id);
+        setProperty(propertyData);
+        
+        // Charger la disponibilité pour cette propriété
+        await loadPropertyAvailability(id);
+      } catch (error) {
+        console.error("Erreur lors du chargement de la propriété:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les détails de la propriété",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProperty();
+  }, [id, toast]);
+
+  // Fonction pour charger la disponibilité depuis la base de données
+  const loadPropertyAvailability = async (propertyId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('property_availability')
+        .select('*')
+        .eq('property_id', propertyId)
+        .order('date', { ascending: true });
+
+      if (error) {
+        console.error("Erreur lors du chargement de la disponibilité:", error);
+        throw error;
+      }
+
+      setPropertyAvailability(data || []);
+    } catch (error) {
+      console.error("Erreur lors du chargement de la disponibilité:", error);
+    }
+  };
+
   // Navigation de la galerie
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % propertyImages.length);
+    const images = property?.images || propertyImages;
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + propertyImages.length) % propertyImages.length);
+    const images = property?.images || propertyImages;
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
   // Logique de sélection des dates
@@ -138,7 +215,14 @@ const PropertyDetail = () => {
 
   // Navigation du calendrier
   const goToPreviousMonth = () => {
-    setCurrentMonth(subMonths(currentMonth, 1));
+    const today = new Date();
+    const currentMonthStart = startOfMonth(currentMonth);
+    const todayMonthStart = startOfMonth(today);
+    
+    // Ne pas permettre de revenir en arrière si on est déjà au mois actuel
+    if (currentMonthStart > todayMonthStart) {
+      setCurrentMonth(subMonths(currentMonth, 1));
+    }
   };
 
   const goToNextMonth = () => {
@@ -157,37 +241,45 @@ const PropertyDetail = () => {
     const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     startCalendar.setDate(startDate.getDate() - daysToSubtract);
     
-    // Générer 42 jours (6 semaines)
+    // Calculer la fin du calendrier pour s'arrêter à la fin du mois
+    const endCalendar = new Date(monthEnd);
+    const endDayOfWeek = getDay(monthEnd);
+    const daysToAdd = endDayOfWeek === 0 ? 0 : 7 - endDayOfWeek;
+    endCalendar.setDate(monthEnd.getDate() + daysToAdd);
+    
+    // Générer les jours nécessaires (pas forcément 42)
     const days = [];
-    for (let i = 0; i < 42; i++) {
-      const day = new Date(startCalendar);
-      day.setDate(startCalendar.getDate() + i);
-      days.push(day);
+    const currentDate = new Date(startCalendar);
+    while (currentDate <= endCalendar) {
+      days.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
     }
     
     return days;
   };
 
-  // Vérifier l'état d'une date
+  // Vérifier l'état d'une date basé sur la disponibilité réelle
   const getDateStatus = (date: Date) => {
-    const availableDates = [
-      new Date(2025, 8, 3), new Date(2025, 8, 4), new Date(2025, 8, 5), new Date(2025, 8, 6),
-      new Date(2025, 8, 15), new Date(2025, 8, 16), new Date(2025, 8, 20), new Date(2025, 8, 21),
-      new Date(2025, 8, 25), new Date(2025, 8, 28), new Date(2025, 8, 29)
-    ];
+    const today = startOfDay(new Date());
+    const checkDate = startOfDay(date);
     
-    const pendingDates = [
-      new Date(2025, 8, 17), new Date(2025, 8, 18), new Date(2025, 8, 22), new Date(2025, 8, 30)
-    ];
+    // Si la date est dans le passé, elle n'est pas disponible
+    if (isBefore(checkDate, today)) {
+      return 'past';
+    }
     
-    const reservedDates = [
-      new Date(2025, 8, 19), new Date(2025, 8, 23), new Date(2025, 8, 24), new Date(2025, 8, 26), new Date(2025, 8, 27)
-    ];
-
-    if (availableDates.some(d => isSameDay(d, date))) return 'available';
-    if (pendingDates.some(d => isSameDay(d, date))) return 'pending';
-    if (reservedDates.some(d => isSameDay(d, date))) return 'reserved';
-    return 'normal';
+    // Vérifier si la date a une entrée dans property_availability
+    const availabilityEntry = propertyAvailability.find(entry => 
+      isSameDay(new Date(entry.date), checkDate)
+    );
+    
+    if (availabilityEntry) {
+      // Si la date est marquée comme non disponible, elle est réservée
+      return availabilityEntry.is_available ? 'available' : 'reserved';
+    }
+    
+    // Par défaut, la date est disponible
+    return 'available';
   };
 
   // Gérer le clic sur une date
@@ -213,6 +305,42 @@ const PropertyDetail = () => {
     }
   };
 
+  // Afficher le chargement
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Chargement de la propriété...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Afficher l'erreur si pas de propriété
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Propriété non trouvée</h1>
+            <p className="text-muted-foreground mb-4">Cette propriété n'existe pas ou a été supprimée.</p>
+            <Button onClick={() => window.history.back()}>
+              Retour
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Utiliser les images de la propriété ou les images par défaut
+  const displayImages = property.images && property.images.length > 0 ? property.images : propertyImages;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -224,32 +352,32 @@ const PropertyDetail = () => {
             {/* Layout desktop: 1 grande photo à gauche, 4 petites à droite */}
             <div className="hidden md:grid md:grid-cols-2 gap-2 h-[500px]">
               {/* Image principale statique (plus grande, à gauche) */}
-              <div className="relative group">
-                                  <img
-                    src={propertyImages[0]}
-                    alt="Villa Curubia - Piscine principale"
-                    className="w-full h-full object-cover rounded-lg cursor-pointer"
-                    onClick={() => {
-                      setCurrentImageIndex(0);
-                      setIsGalleryOpen(true);
-                    }}
-                  />
+              <div className="relative group overflow-hidden rounded-lg">
+                <img
+                  src={displayImages[0]}
+                  alt={`${property.title} - Image principale`}
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={() => {
+                    setCurrentImageIndex(0);
+                    setIsGalleryOpen(true);
+                  }}
+                />
               </div>
               
               {/* Grille d'images secondaires (2x2, à droite) */}
-              <div className="grid grid-cols-2 gap-2">
-                {propertyImages.slice(1, 5).map((image, index) => (
-                  <div key={index} className="relative group cursor-pointer">
+              <div className="grid grid-cols-2 gap-2 h-full">
+                {displayImages.slice(1, 5).map((image, index) => (
+                  <div key={index} className="relative group cursor-pointer overflow-hidden rounded-lg h-[248px]">
                     <img
                       src={image}
-                      alt={`Villa Curubia ${index + 2}`}
-                      className="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity"
+                      alt={`${property.title} ${index + 2}`}
+                      className="w-full h-full object-cover hover:opacity-90 transition-opacity"
                       onClick={() => {
                         setCurrentImageIndex(index + 1);
                         setIsGalleryOpen(true);
                       }}
                     />
-                    {index === 3 && (
+                    {index === 3 && displayImages.length > 5 && (
                       <div 
                         className="absolute bottom-2 right-2"
                       >
@@ -273,32 +401,32 @@ const PropertyDetail = () => {
             {/* Layout mobile: 1 grande photo en haut, 4 petites en dessous */}
             <div className="md:hidden space-y-2">
               {/* Image principale mobile statique */}
-              <div className="relative group">
-                                  <img
-                    src={propertyImages[0]}
-                    alt="Villa Curubia"
-                    className="w-full h-64 object-cover rounded-lg cursor-pointer"
-                    onClick={() => {
-                      setCurrentImageIndex(0);
-                      setIsGalleryOpen(true);
-                    }}
-                  />
+              <div className="relative group overflow-hidden rounded-lg">
+                <img
+                  src={displayImages[0]}
+                  alt={property.title}
+                  className="w-full h-64 object-cover cursor-pointer"
+                  onClick={() => {
+                    setCurrentImageIndex(0);
+                    setIsGalleryOpen(true);
+                  }}
+                />
               </div>
               
               {/* Grille mobile 2x2 */}
               <div className="grid grid-cols-2 gap-2">
-                {propertyImages.slice(1, 5).map((image, index) => (
-                  <div key={index} className="relative group cursor-pointer">
+                {displayImages.slice(1, 5).map((image, index) => (
+                  <div key={index} className="relative group cursor-pointer overflow-hidden rounded-lg h-32">
                     <img
                       src={image}
-                      alt={`Villa Curubia ${index + 2}`}
-                      className="w-full h-32 object-cover rounded-lg hover:opacity-90 transition-opacity"
+                      alt={`${property.title} ${index + 2}`}
+                      className="w-full h-full object-cover hover:opacity-90 transition-opacity"
                       onClick={() => {
                         setCurrentImageIndex(index + 1);
                         setIsGalleryOpen(true);
                       }}
                     />
-                    {index === 3 && (
+                    {index === 3 && displayImages.length > 5 && (
                       <div 
                         className="absolute bottom-1 right-1"
                       >
@@ -328,20 +456,22 @@ const PropertyDetail = () => {
               {/* En-tête de la propriété */}
               <div className="mb-6">
                 <h1 className="text-2xl sm:text-3xl font-bold text-primaryText mb-3">
-                  Villa Curubia{" "}
-                  <Badge className="bg-green-600 text-white px-2 py-0.5 text-xs rounded-full inline-block align-middle">
-                    En vedette
-                  </Badge>
+                  {property.title}{" "}
+                  {property.is_public && (
+                    <Badge className="bg-green-600 text-white px-2 py-0.5 text-xs rounded-full inline-block align-middle">
+                      En vedette
+                    </Badge>
+                  )}
                 </h1>
                 
                 <div className="flex items-center justify-between text-gray-600 mb-3">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    <span className="text-base">Korba, Nabeul</span>
+                    <span className="text-base">{property.location || "Localisation non spécifiée"}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Eye className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">1692 vues</span>
+                    <span className="text-sm text-gray-600">0 vues</span>
                   </div>
                 </div>
                 
@@ -350,11 +480,11 @@ const PropertyDetail = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <House className="h-4 w-4 text-gray-500" />
-                      <span className="text-base text-gray-700">Villa de luxe</span>
+                      <span className="text-base text-gray-700">{property.property_type || "Type non spécifié"}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-gray-500" />
-                      <span className="text-base text-gray-700">8 Invités</span>
+                      <span className="text-base text-gray-700">{property.max_guests} Invités</span>
                     </div>
                   </div>
                   
@@ -362,11 +492,11 @@ const PropertyDetail = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Bed className="h-4 w-4 text-gray-500" />
-                      <span className="text-base text-gray-700">4 Chambres</span>
+                      <span className="text-base text-gray-700">{property.bedrooms} Chambres</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <ShowerHead className="h-4 w-4 text-gray-500" />
-                      <span className="text-base text-gray-700">3 Salle de Bain</span>
+                      <span className="text-base text-gray-700">{property.bathrooms} Salle{property.bathrooms > 1 ? 's' : ''} de Bain</span>
                     </div>
                   </div>
                 </div>
@@ -377,51 +507,52 @@ const PropertyDetail = () => {
               <div className="mb-8">
                 <h2 className="text-xl font-bold mb-3 text-primaryText">À propos de cette annonce</h2>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Une très belle villa, de style, moderne, pratique, luxueuse, très hautement équipée, 200m de l'une des plus belles plages de Tunisie.
+                  {property.description || "Aucune description disponible pour cette propriété."}
                 </p>
               </div>
 
-                             {/* Prix */}
-               <div className="mb-8">
-                 <h2 className="text-xl font-bold mb-3 text-primaryText">Prix</h2>
-                 <div className="space-y-2">
-                   <div className="flex justify-between items-center">
-                     <span className="text-gray-600 text-sm flex-1 min-w-0 pr-2">Nuitée</span>
-                     <span className="font-semibold flex-shrink-0">1300 <sup className="text-xs font-bold">TND</sup><span className="font-normal text-xs">/nuitée</span></span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-gray-600 text-sm flex-1 min-w-0 pr-2">Weekends (Vendredi, Samedi Et Dimanche)</span>
-                     <span className="font-semibold flex-shrink-0">1500 <sup className="text-xs font-bold">TND</sup><span className="font-normal text-xs">/nuitée</span></span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-gray-600 text-sm flex-1 min-w-0 pr-2">Semaine +7j</span>
-                     <span className="font-semibold flex-shrink-0">1100 <sup className="text-xs font-bold">TND</sup><span className="font-normal text-xs">/nuitée</span></span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-gray-600 text-sm flex-1 min-w-0 pr-2">Mois +30j</span>
-                     <span className="font-semibold flex-shrink-0">1000 <sup className="text-xs font-bold">TND</sup><span className="font-normal text-xs">/nuitée</span></span>
-                   </div>
-                 </div>
-               </div>
-
-                             {/* Services supplémentaires */}
-               <div className="mb-8">
-                 <h2 className="text-xl font-bold mb-3 text-primaryText">Services supplémentaires</h2>
-                 <div className="space-y-2">
-                   <div className="flex justify-between items-center">
-                     <span className="text-gray-600 text-sm flex-1 min-w-0 pr-2">Jardinage</span>
-                     <span className="font-semibold flex-shrink-0">30 <sup className="text-xs font-bold">TND</sup><span className="font-normal text-xs">/nuitée</span></span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-gray-600 text-sm flex-1 min-w-0 pr-2">Frais De Nettoyage</span>
-                     <span className="font-semibold flex-shrink-0">50 <sup className="text-xs font-bold">TND</sup><span className="font-normal text-xs">/séjour</span></span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-gray-600 text-sm flex-1 min-w-0 pr-2">Femme De Ménage</span>
-                     <span className="font-semibold flex-shrink-0">80 <sup className="text-xs font-bold">TND</sup><span className="font-normal text-xs">/nuitée</span></span>
-                   </div>
-                 </div>
-               </div>
+              {/* Détails */}
+              <div className="mb-8">
+                <h2 className="text-xl font-bold mb-3 text-primaryText">Détails</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <House className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium">{property.property_type || "Type non spécifié"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm">{property.max_guests} Invités</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Bed className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm">{property.bedrooms} Chambres</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Bed className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm">{property.bedrooms} Lits</span>
+                  </div>
+                  <div className="flex items-center gap-2 col-span-2">
+                    <ShowerHead className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm">{property.bathrooms} Salle{property.bathrooms > 1 ? 's' : ''} de bains</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm">Check-in: {property.check_in_time || "14:00"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm">Check-out: {property.check_out_time || "12:00"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm">Séjour min: {property.min_nights || 1} Nuitée{property.min_nights > 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm">Séjour max: 30 Nuitées</span>
+                  </div>
+                </div>
+              </div>
 
               {/* Équipements */}
               <div className="mb-8">
@@ -450,49 +581,6 @@ const PropertyDetail = () => {
                   <div className="flex items-center gap-3">
                     <TreePine className="h-5 w-5 text-gray-600" />
                     <span className="text-sm">Jardin</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Détails */}
-              <div className="mb-8">
-                <h2 className="text-xl font-bold mb-3 text-primaryText">Détails</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <House className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm font-medium">Villa</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm">8 Invités</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Bed className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm">3 Chambres</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Bed className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm">4 Lits</span>
-                  </div>
-                  <div className="flex items-center gap-2 col-span-2">
-                    <ShowerHead className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm">3 Salles de bains</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm">Check-in: 14:00</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm">Check-out: 12:00</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm">Séjour min: 2 Nuitées</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm">Séjour max: 30 Nuitées</span>
                   </div>
                 </div>
               </div>
@@ -556,7 +644,7 @@ const PropertyDetail = () => {
                     }
                   `}</style>
                   <MapContainer
-                    center={[36.8763, 10.3247]} // Coordonnées de La Marsa, Tunis
+                    center={[parseFloat(property.latitude) || 36.8763, parseFloat(property.longitude) || 10.3247]}
                     zoom={14}
                     style={{ height: '100%', width: '100%', zIndex: 0 }}
                     zoomControl={true}
@@ -566,7 +654,7 @@ const PropertyDetail = () => {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <Circle
-                      center={[36.8763, 10.3247]}
+                      center={[parseFloat(property.latitude) || 36.8763, parseFloat(property.longitude) || 10.3247]}
                       radius={160}
                       pathOptions={{
                         color: 'hsl(145, 71%, 40%)',
@@ -577,7 +665,7 @@ const PropertyDetail = () => {
                       }}
                     />
                     <Marker 
-                      position={[36.8763, 10.3247]}
+                      position={[parseFloat(property.latitude) || 36.8763, parseFloat(property.longitude) || 10.3247]}
                       icon={L.divIcon({
                         className: 'custom-marker',
                         iconSize: [20, 20],
@@ -587,16 +675,24 @@ const PropertyDetail = () => {
                       })}
                     >
                       <Popup>
-                        <div className="text-center">
-                          <strong>Villa Curubia</strong><br />
-                          Zone approximative - La Marsa, Tunis
+                        <div 
+                          className="text-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                          onClick={() => {
+                            const lat = parseFloat(property.latitude) || 36.8763;
+                            const lng = parseFloat(property.longitude) || 10.3247;
+                            const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+                            window.open(googleMapsUrl, '_blank');
+                          }}
+                        >
+                          <strong>{property.title}</strong><br />
+                          {property.location || "Localisation non spécifiée"}
                         </div>
                       </Popup>
                     </Marker>
                   </MapContainer>
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Cliquez sur le marqueur pour afficher l'itinéraire Google Maps
+                  Cliquez sur la carte d'information pour ouvrir dans Google Maps
                 </p>
               </div>
 
@@ -656,47 +752,69 @@ const PropertyDetail = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600 text-sm">Autorisation de fumer</span>
-                    <span className="font-semibold">Oui</span>
+                    <span className="font-semibold">{property.smoking_allowed ? "Oui" : "Non"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 text-sm">Animaux acceptés</span>
-                    <span className="font-semibold">Oui</span>
+                    <span className="font-semibold">{property.pets_allowed ? "Oui" : "Non"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 text-sm">Fête autorisée</span>
-                    <span className="font-semibold">Non</span>
+                    <span className="font-semibold">{property.parties_allowed ? "Oui" : "Non"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 text-sm">Enfants autorisés</span>
-                    <span className="font-semibold">Oui</span>
+                    <span className="font-semibold">{property.children_allowed ? "Oui" : "Non"}</span>
                   </div>
                 </div>
                 
-                <div className="mt-4">
-                  <h3 className="font-semibold mb-2 text-primaryText">Règles supplémentaires</h3>
-                  <p className="text-gray-600 text-sm">
-                    Location familiale uniquement – pas de groupes d'amis
-                  </p>
-                </div>
               </div>
 
               {/* À propos de l'hôte */}
               <div className="mb-8">
                 <h2 className="text-xl font-bold mb-4 text-primaryText">À propos de l'hôte</h2>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-base">
-                    MH
-                  </div>
+                  {property.owner_avatar_url ? (
+                    <img
+                      src={property.owner_avatar_url}
+                      alt={`Photo de ${property.owner_name || "Propriétaire"}`}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                      onError={(e) => {
+                        // Fallback vers l'initiale si l'image ne charge pas
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-base">${property.owner_name ? property.owner_name.charAt(0).toUpperCase() : "P"}</div>`;
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-base">
+                      {property.owner_name ? property.owner_name.charAt(0).toUpperCase() : "P"}
+                    </div>
+                  )}
                   <div className="flex-1">
-                    <h3 className="font-semibold text-primaryText text-base">Mohamed Haddad</h3>
+                    <h3 className="font-semibold text-primaryText text-base">{property.owner_name || "Propriétaire"}</h3>
                     <p className="text-muted-foreground text-sm">Propriétaire</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-primaryText">Langues:</span>
-                  <span className="text-sm text-muted-foreground">Français, Arabe, Anglais</span>
-                </div>
+                {property.owner_languages && property.owner_languages.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-primaryText">Langues parlées:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {property.owner_languages.map((language) => (
+                        <span
+                          key={language}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                        >
+                          {language.charAt(0).toUpperCase() + language.slice(1)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Boutons d'action - Mobile uniquement */}
@@ -718,12 +836,12 @@ const PropertyDetail = () => {
                 <Card className="border border-gray-200 bg-white">
                   <CardContent className="p-5">
                     <div className="space-y-5">
-                                             {/* Prix */}
-                       <div className="pb-3 border-b">
-                             <div className="text-2xl font-bold mb-1 text-primaryText">
-                             950<sup className="text-sm font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
-                           </div>
-                       </div>
+              {/* Prix */}
+              <div className="pb-3 border-b">
+                <div className="text-2xl font-bold mb-1 text-primaryText">
+                  {property.price_per_night}<sup className="text-sm font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
+                </div>
+              </div>
 
                       {/* Calendrier de disponibilité */}
                       <div className="space-y-4 -mx-5 px-5">
@@ -734,6 +852,7 @@ const PropertyDetail = () => {
                             size="icon"
                             className="h-8 w-8"
                             onClick={goToPreviousMonth}
+                            disabled={startOfMonth(currentMonth) <= startOfMonth(new Date())}
                           >
                             <ChevronLeft className="h-4 w-4" />
                           </Button>
@@ -775,7 +894,7 @@ const PropertyDetail = () => {
                               
                               if (!isCurrentMonth) {
                                 className += "text-gray-400 ";
-                              } else if (isPast) {
+                              } else if (isPast || status === 'past') {
                                 className += "text-gray-300 cursor-not-allowed ";
                               } else if (isSelected) {
                                 className += "bg-primary text-primary-foreground ";
@@ -784,13 +903,11 @@ const PropertyDetail = () => {
                               } else if (isToday) {
                                 className += "bg-gray-100 text-primaryText font-medium border border-gray-300 ";
                               } else if (status === 'available') {
-                                className += "bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer ";
-                              } else if (status === 'pending') {
-                                className += "bg-yellow-50 text-yellow-600 hover:bg-yellow-100 cursor-pointer ";
-                              } else if (status === 'reserved') {
-                                className += "bg-red-50 text-red-600 cursor-not-allowed ";
+                                className += "bg-gray-100 text-gray-900 hover:bg-gray-200 cursor-pointer ";
+                            } else if (status === 'reserved') {
+                                className += "bg-green-50 text-green-600 cursor-not-allowed ";
                               } else {
-                                className += "text-gray-900 hover:bg-gray-100 cursor-pointer ";
+                                className += "bg-gray-100 text-gray-900 hover:bg-gray-200 cursor-pointer ";
                               }
                               
                               return (
@@ -809,15 +926,11 @@ const PropertyDetail = () => {
                         {/* Légende */}
                         <div className="flex items-center justify-center gap-6 text-xs">
                           <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-green-50 border border-green-200 rounded-sm"></div>
+                            <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded-sm"></div>
                             <span className="text-gray-600">Disponible</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-yellow-50 border border-yellow-200 rounded-sm"></div>
-                            <span className="text-gray-600">En attente</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-red-50 border border-red-200 rounded-sm"></div>
+                            <div className="w-3 h-3 bg-green-50 border border-green-200 rounded-sm"></div>
                             <span className="text-gray-600">Réservé</span>
                           </div>
                         </div>
@@ -880,7 +993,7 @@ const PropertyDetail = () => {
             <div className="flex items-center justify-between p-4 bg-black/50 backdrop-blur-sm">
               <div className="text-white">
                 <span className="text-sm font-medium">
-                  {currentImageIndex + 1} / {propertyImages.length}
+                  {currentImageIndex + 1} / {displayImages.length}
                 </span>
               </div>
               <Button
@@ -896,11 +1009,12 @@ const PropertyDetail = () => {
             </div>
 
             {/* Image principale */}
-            <div className="flex-1 flex items-center justify-center relative p-4">
+            <div className="flex-1 flex items-center justify-center relative p-4 overflow-hidden">
               <img
-                src={propertyImages[currentImageIndex]}
-                alt={`Villa Curubia - Photo ${currentImageIndex + 1}`}
+                src={displayImages[currentImageIndex]}
+                alt={`${property.title} - Photo ${currentImageIndex + 1}`}
                 className="max-w-full max-h-full object-contain"
+                style={{ maxHeight: 'calc(100vh - 200px)' }}
               />
               
               {/* Bouton précédent */}
@@ -920,7 +1034,7 @@ const PropertyDetail = () => {
                 size="icon"
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full h-12 w-12"
                 onClick={nextImage}
-                disabled={currentImageIndex === propertyImages.length - 1}
+                disabled={currentImageIndex === displayImages.length - 1}
               >
                 <ChevronRight className="h-6 w-6" />
               </Button>
@@ -929,10 +1043,10 @@ const PropertyDetail = () => {
             {/* Miniatures en bas */}
             <div className="bg-black/50 backdrop-blur-sm p-4">
               <div className="flex gap-2 overflow-x-auto max-w-full">
-                {propertyImages.map((image, index) => (
+                {displayImages.map((image, index) => (
                   <div
                     key={index}
-                    className={`relative flex-shrink-0 cursor-pointer ${
+                    className={`relative flex-shrink-0 cursor-pointer overflow-hidden rounded-md ${
                       index === currentImageIndex 
                         ? 'ring-2 ring-primary' 
                         : 'opacity-70 hover:opacity-100'
@@ -942,7 +1056,7 @@ const PropertyDetail = () => {
                     <img
                       src={image}
                       alt={`Miniature ${index + 1}`}
-                      className="w-16 h-16 object-cover rounded-md"
+                      className="w-16 h-16 object-cover"
                     />
                   </div>
                 ))}
@@ -958,7 +1072,7 @@ const PropertyDetail = () => {
           {/* Prix */}
           <div className="flex flex-col">
             <div className="text-2xl font-bold text-primaryText">
-              950<sup className="text-base font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
+              {property.price_per_night}<sup className="text-base font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
             </div>
           </div>
           
@@ -972,15 +1086,21 @@ const PropertyDetail = () => {
                 Réserver
               </Button>
             </DialogTrigger>
-            <DialogContent 
-              className="w-full h-full max-w-none max-h-none m-0 rounded-none p-0 border-0 shadow-none md:max-w-md md:max-h-[90vh] md:mx-4 md:rounded-lg md:p-6 md:border md:shadow-lg [&>button]:hidden"
-              style={{
-                border: 'none',
-                boxShadow: 'none',
-                zIndex: 95
-              }}
-            >
-              <div className="flex flex-col h-full">
+             <DialogContent 
+               className="!fixed !top-0 !left-0 !right-0 !bottom-0 !w-full !h-screen !max-w-none !max-h-none !m-0 !rounded-none !p-0 !border-0 !shadow-none !transform-none !fade-in-0 !fade-out-0 md:!max-w-md md:!h-auto md:!max-h-[90vh] md:!mx-4 md:!rounded-lg md:!p-6 md:!border md:!shadow-lg [&>button]:hidden"
+               style={{
+                 border: 'none',
+                 boxShadow: 'none',
+                 zIndex: 95
+               }}
+             >
+               <VisuallyHidden>
+                 <DialogTitle>Réservation - {property.title}</DialogTitle>
+                 <DialogDescription>
+                   Calendrier de disponibilité et options de contact pour réserver cette propriété
+                 </DialogDescription>
+               </VisuallyHidden>
+               <div className="flex flex-col h-full">
                 {/* Contenu scrollable */}
                 <div className="flex-1 overflow-y-auto p-4">
                   <div className="space-y-5">
@@ -989,7 +1109,7 @@ const PropertyDetail = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="text-2xl font-bold mb-1 text-primaryText">
-                            950<sup className="text-sm font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
+                            {property.price_per_night}<sup className="text-sm font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
                           </div>
                           <div className="text-xs text-gray-500 italic">
                             Prix à vérifier directement avec le propriétaire.
@@ -1017,6 +1137,7 @@ const PropertyDetail = () => {
                           size="icon"
                           className="h-8 w-8"
                           onClick={goToPreviousMonth}
+                          disabled={startOfMonth(currentMonth) <= startOfMonth(new Date())}
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -1058,7 +1179,7 @@ const PropertyDetail = () => {
                             
                             if (!isCurrentMonth) {
                               className += "text-gray-400 ";
-                            } else if (isPast) {
+                            } else if (isPast || status === 'past') {
                               className += "text-gray-300 cursor-not-allowed ";
                             } else if (isSelected) {
                               className += "bg-primary text-primary-foreground ";
@@ -1067,13 +1188,11 @@ const PropertyDetail = () => {
                             } else if (isToday) {
                               className += "bg-gray-100 text-primaryText font-medium border border-gray-300 ";
                             } else if (status === 'available') {
-                              className += "bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer ";
-                            } else if (status === 'pending') {
-                              className += "bg-yellow-50 text-yellow-600 hover:bg-yellow-100 cursor-pointer ";
+                              className += "bg-gray-100 text-gray-900 hover:bg-gray-200 cursor-pointer ";
                             } else if (status === 'reserved') {
-                              className += "bg-red-50 text-red-600 cursor-not-allowed ";
+                              className += "bg-green-50 text-green-600 cursor-not-allowed ";
                             } else {
-                              className += "text-gray-900 hover:bg-gray-100 cursor-pointer ";
+                              className += "bg-gray-100 text-gray-900 hover:bg-gray-200 cursor-pointer ";
                             }
                             
                             return (
@@ -1092,15 +1211,11 @@ const PropertyDetail = () => {
                       {/* Légende */}
                       <div className="flex items-center justify-center gap-6 text-xs">
                         <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-50 border border-green-200 rounded-sm"></div>
+                          <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded-sm"></div>
                           <span className="text-gray-600">Disponible</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-yellow-50 border border-yellow-200 rounded-sm"></div>
-                          <span className="text-gray-600">En attente</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-red-50 border border-red-200 rounded-sm"></div>
+                          <div className="w-3 h-3 bg-green-50 border border-green-200 rounded-sm"></div>
                           <span className="text-gray-600">Réservé</span>
                         </div>
                       </div>

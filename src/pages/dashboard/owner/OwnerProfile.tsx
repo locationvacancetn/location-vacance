@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,8 @@ const OwnerProfile = () => {
     instagramUrl: '',
     tiktokUrl: '',
     messengerUrl: '',
+    // Langues parlées
+    spokenLanguages: [] as string[],
   });
   const [avatarUrl, setAvatarUrl] = useState('');
 
@@ -66,6 +69,8 @@ const OwnerProfile = () => {
         instagramUrl: extractUrlPart(userProfile.instagram_url, 'https://instagram.com/'),
         tiktokUrl: extractUrlPart(userProfile.tiktok_url, 'https://tiktok.com/@'),
         messengerUrl: extractUrlPart(userProfile.messenger_url, 'https://m.me/'),
+        // Langues parlées
+        spokenLanguages: userProfile.spoken_languages || [],
       });
 
       setAvatarUrl(userProfile.avatar_url || '');
@@ -76,6 +81,15 @@ const OwnerProfile = () => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handleLanguageChange = (language: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      spokenLanguages: checked
+        ? [...prev.spokenLanguages, language]
+        : prev.spokenLanguages.filter(lang => lang !== language)
     }));
   };
 
@@ -299,6 +313,8 @@ const OwnerProfile = () => {
           instagram_url: instagramUrl,
           tiktok_url: tiktokUrl,
           messenger_url: messengerUrl,
+          // Langues parlées
+          spoken_languages: formData.spokenLanguages,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
@@ -708,6 +724,60 @@ const OwnerProfile = () => {
             </p>
           </div>
 
+        </CardContent>
+      </Card>
+
+      {/* Section Langues parlées */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Langues parlées</CardTitle>
+          <CardDescription>
+            Indiquez les langues que vous parlez pour faciliter la communication avec les locataires.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { id: 'arabe', label: 'Arabe' },
+              { id: 'français', label: 'Français' },
+              { id: 'anglais', label: 'Anglais' },
+              { id: 'espagnol', label: 'Espagnol' },
+              { id: 'allemand', label: 'Allemand' },
+              { id: 'italien', label: 'Italien' }
+            ].map((language) => (
+              <div key={language.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={language.id}
+                  checked={formData.spokenLanguages.includes(language.id)}
+                  onCheckedChange={(checked) => 
+                    handleLanguageChange(language.id, checked as boolean)
+                  }
+                />
+                <Label 
+                  htmlFor={language.id}
+                  className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {language.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+          
+          {formData.spokenLanguages.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-muted-foreground mb-2">Langues sélectionnées :</p>
+              <div className="flex flex-wrap gap-2">
+                {formData.spokenLanguages.map((language) => (
+                  <span
+                    key={language}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >
+                    {language.charAt(0).toUpperCase() + language.slice(1)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

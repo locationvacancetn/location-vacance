@@ -32,7 +32,8 @@ import {
   Activity,
   HomeIcon,
   MapPin,
-  Wrench
+  Wrench,
+  CreditCard
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
@@ -54,6 +55,7 @@ const getMobileMenuItems = (role: string) => {
         { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
         { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
         { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
+        { label: 'Configuration Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
         { label: 'Système', path: '/dashboard/system', icon: Shield },
         { label: 'Logs', path: '/dashboard/logs', icon: Activity },
         { label: 'Profil', path: '/dashboard/profile', icon: User },

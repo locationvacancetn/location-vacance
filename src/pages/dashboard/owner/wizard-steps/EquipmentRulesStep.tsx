@@ -120,11 +120,9 @@ const EquipmentRulesStep = ({ formData, updateFormData }: EquipmentRulesStepProp
           <Label className="text-sm font-medium text-foreground">
             Équipements disponibles
           </Label>
-          <p className="text-xs text-muted-foreground mt-1 mb-3">
-            Sélectionnez tous les équipements disponibles dans votre propriété
-          </p>
           
-          {/* Liste des équipements */}
+          <div className="mt-3">
+            {/* Liste des équipements */}
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               Chargement des équipements...
@@ -162,14 +160,13 @@ const EquipmentRulesStep = ({ formData, updateFormData }: EquipmentRulesStepProp
               })}
             </div>
           )}
+          </div>
         </div>
       </div>
 
       {/* Règles de la propriété */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-         
-          Règles de la propriété
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground">Règles de la propriété
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -243,23 +240,6 @@ const EquipmentRulesStep = ({ formData, updateFormData }: EquipmentRulesStepProp
         </div>
       </div>
 
-      {/* Résumé des sélections */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start">
-          <div className="flex-shrink-0">
-            <ShieldCheck className="h-5 w-5 text-blue-400" />
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-900">
-              Résumé de vos sélections
-            </h3>
-            <div className="text-sm text-blue-800 mt-1">
-              <p>• {formData.equipmentIds.length} équipement{formData.equipmentIds.length > 1 ? 's' : ''} sélectionné{formData.equipmentIds.length > 1 ? 's' : ''}</p>
-              <p>• Règles définies pour fumer, animaux, fêtes et enfants</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

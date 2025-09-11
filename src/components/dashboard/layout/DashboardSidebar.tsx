@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -36,7 +36,8 @@ import {
   MapPin,
   Wrench,
   X,
-  HomeIcon
+  HomeIcon,
+  CreditCard
 } from 'lucide-react';
 
 // Configuration des menus par rôle
@@ -57,6 +58,7 @@ const getMenuItems = (role: string) => {
         { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
         { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
         { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
+        { label: 'Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
         { label: 'Système', path: '/dashboard/system', icon: Shield },
         { label: 'Logs', path: '/dashboard/logs', icon: Activity },
       ];
@@ -65,6 +67,7 @@ const getMenuItems = (role: string) => {
       return [
         ...commonItems,
         { label: 'Mes Propriétés', path: '/dashboard/properties', icon: Building },
+        { label: 'Calendrier', path: '/dashboard/calendar', icon: Calendar },
         { label: 'Réservations', path: '/dashboard/bookings', icon: Calendar },
         { label: 'Finances', path: '/dashboard/finances', icon: DollarSign },
         { label: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
@@ -112,10 +115,13 @@ export const DashboardSidebar = ({ onMobileClose }: DashboardSidebarProps) => {
   };
 
   return (
-    <div className={cn(
-      "bg-card transition-all duration-300 flex flex-col h-full",
-      isCollapsed ? "w-16" : "w-64"
-    )}>
+    <div 
+      className={cn(
+        "bg-card transition-all duration-300 flex flex-col h-full group",
+        isCollapsed ? "w-16" : "w-56"
+      )}
+      data-collapsed={isCollapsed}
+    >
       <div className="p-4 flex-1">
         {/* Header avec logo et bouton fermer mobile */}
         <div className="flex items-center justify-between mb-6">

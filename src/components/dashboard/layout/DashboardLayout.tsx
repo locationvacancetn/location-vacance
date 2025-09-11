@@ -42,7 +42,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {/* Main content */}
         <div className="flex-1 flex flex-col w-full md:w-auto">
           <DashboardHeader onMobileMenuToggle={toggleMobileSidebar} />
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 px-6 pb-6 pt-0 overflow-auto">
             {/* Titre de la page sur mobile */}
             <div className="md:hidden mb-6">
               <h1 className="text-2xl font-bold text-foreground">

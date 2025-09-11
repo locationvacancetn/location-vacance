@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 
 // Configuration des titres par route
 const PAGE_TITLES: Record<string, string> = {
@@ -13,10 +13,14 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/admin/cities': 'Gestion des Villes',
   '/dashboard/admin/equipments': 'Gestion des Équipements',
   '/dashboard/admin/property-types': 'Gestion des Types de Propriétés',
+  '/dashboard/admin/konnect': 'Configuration Konnect',
   '/dashboard/users': 'Gestion des Utilisateurs',
   
   // Pages Owner
-  '/dashboard/owner/add-property': 'Nouvelle propriété',
+  '/dashboard/add-property': 'Nouvelle propriété',
+  '/dashboard/edit-property': 'Modification propriété',
+  '/dashboard/properties': 'Mes Propriétés',
+  '/dashboard/calendar': 'Calendrier de Blocage',
   
   // Dashboards par rôle (fallback)
   '/dashboard/admin': 'Tableau de bord Admin',
@@ -32,15 +36,26 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/dashboard/admin/cities': 'Ajoutez et modifiez les villes disponibles',
   '/dashboard/admin/equipments': 'Gérez les équipements des logements',
   '/dashboard/admin/property-types': 'Gérez les types de propriétés disponibles (villa, appartement, chalet...)',
+  '/dashboard/admin/konnect': 'Configurez les paramètres de l\'intégration avec le service de paiement Konnect',
   '/dashboard/users': 'Administrez les comptes utilisateurs',
-  '/dashboard/owner/add-property': 'Créez votre annonce étape par étape',
+  '/dashboard/add-property': 'Créez votre annonce étape par étape',
+  '/dashboard/edit-property': 'Modifiez votre annonce étape par étape',
+  '/dashboard/properties': 'Gérez vos propriétés et leurs statuts',
+  '/dashboard/calendar': 'Gérez la disponibilité de vos propriétés en bloquant ou libérant des dates',
 };
 
 export const usePageTitle = () => {
   const location = useLocation();
+  const [customTitle, setCustomTitle] = useState<string | null>(null);
+  const [customDescription, setCustomDescription] = useState<string | null>(null);
   
   const { title, description } = useMemo(() => {
     const pathname = location.pathname;
+    
+    // Si un titre personnalisé est défini, l'utiliser
+    if (customTitle) {
+      return { title: customTitle, description: customDescription || '' };
+    }
     
     // Chercher une correspondance exacte d'abord
     let title = PAGE_TITLES[pathname];
@@ -65,7 +80,15 @@ export const usePageTitle = () => {
     }
     
     return { title, description };
-  }, [location.pathname]);
+  }, [location.pathname, customTitle, customDescription]);
   
-  return { title, description };
+  const setPageTitle = useCallback((newTitle: string) => {
+    setCustomTitle(newTitle);
+  }, []);
+  
+  const setPageDescription = useCallback((newDescription: string) => {
+    setCustomDescription(newDescription);
+  }, []);
+  
+  return { title, description, setPageTitle, setPageDescription };
 };

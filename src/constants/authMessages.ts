@@ -3,11 +3,11 @@ export const AUTH_MESSAGES = {
   // Messages de succès
   LOGIN_SUCCESS: {
     title: "Connexion réussie !",
-    description: "Bienvenue sur NestStayHub"
+    description: "Bienvenue sur Location-vacance.tn"
   },
   SIGNUP_SUCCESS: {
     title: "Inscription réussie !",
-    description: "Bienvenue sur NestStayHub"
+    description: "Bienvenue sur Location-vacance.tn"
   },
   SIGNUP_EMAIL_VERIFICATION: {
     title: "Inscription réussie !",

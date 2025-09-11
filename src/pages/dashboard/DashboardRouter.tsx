@@ -14,6 +14,7 @@ import CitiesManagement from './admin/CitiesManagement';
 import EquipmentsManagement from './admin/EquipmentsManagement';
 import PropertyTypesManagement from './admin/PropertyTypesManagement';
 import UsersManagement from './admin/UsersManagement';
+import KonnectConfigPage from './admin/KonnectConfigPage';
 
 
 // Import des pages Profil par rôle
@@ -24,6 +25,8 @@ import AdvertiserProfile from './advertiser/AdvertiserProfile';
 
 // Import des pages Owner
 import AddPropertyWizard from './owner/AddPropertyWizard';
+import PropertiesManagement from './owner/PropertiesManagement';
+import CalendarManagement from './owner/CalendarManagement';
 import TestLocationData from './owner/TestLocationData';
 import TestTables from './owner/TestTables';
 
@@ -87,10 +90,14 @@ export const DashboardRouter = () => {
         <Route path="/admin/cities" element={<CitiesManagement />} />
         <Route path="/admin/equipments" element={<EquipmentsManagement />} />
         <Route path="/admin/property-types" element={<PropertyTypesManagement />} />
+        <Route path="/admin/konnect" element={<KonnectConfigPage />} />
         <Route path="/users" element={<UsersManagement />} />
 
         {/* Routes Owner */}
-        <Route path="/owner/add-property" element={<AddPropertyWizard />} />
+        <Route path="/add-property" element={<AddPropertyWizard />} />
+        <Route path="/edit-property/:id" element={<AddPropertyWizard />} />
+        <Route path="/properties" element={<PropertiesManagement />} />
+        <Route path="/calendar" element={<CalendarManagement />} />
         <Route path="/owner/test-location" element={<TestLocationData />} />
         <Route path="/owner/test-tables" element={<TestTables />} />
       </Routes>

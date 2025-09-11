@@ -14,6 +14,15 @@ import {
   MapPin
 } from "lucide-react";
 
+// Fonction pour nettoyer le localStorage
+const clearPropertyWizardData = () => {
+  try {
+    localStorage.removeItem('property-wizard-data');
+  } catch (error) {
+    console.error('Erreur lors du nettoyage du localStorage:', error);
+  }
+};
+
 const OwnerDashboard = () => {
   const { userProfile } = useUserRole();
   const navigate = useNavigate();
@@ -103,7 +112,10 @@ const OwnerDashboard = () => {
       <div className="flex items-center justify-end">
         <Button 
           className="flex items-center gap-2"
-          onClick={() => navigate('/dashboard/owner/add-property')}
+          onClick={() => {
+            clearPropertyWizardData();
+            navigate('/dashboard/owner/add-property');
+          }}
         >
           <Plus className="h-4 w-4" />
           Ajouter une Propriété

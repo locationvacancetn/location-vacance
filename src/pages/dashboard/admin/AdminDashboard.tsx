@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import { 
   Users, 
@@ -11,7 +12,8 @@ import {
   Shield,
   TrendingUp,
   AlertTriangle,
-  MapPin
+  MapPin,
+  CreditCard
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -182,22 +184,28 @@ const AdminDashboard = () => {
               Paramètres Système
             </Button>
             <Button className="w-full justify-start" variant="outline" asChild>
-              <a href="/dashboard/admin/cities">
+              <Link to="/dashboard/admin/cities">
                 <MapPin className="mr-2 h-4 w-4" />
                 Gestion Villes & Régions
-              </a>
+              </Link>
             </Button>
             <Button className="w-full justify-start" variant="outline" asChild>
-              <a href="/dashboard/admin/equipments">
+              <Link to="/dashboard/admin/equipments">
                 <Settings className="mr-2 h-4 w-4" />
                 Gestion des Équipements
-              </a>
+              </Link>
             </Button>
             <Button className="w-full justify-start" variant="outline" asChild>
-              <a href="/dashboard/admin/property-types">
+              <Link to="/dashboard/admin/property-types">
                 <Building className="mr-2 h-4 w-4" />
                 Gestion des Types de Propriétés
-              </a>
+              </Link>
+            </Button>
+            <Button className="w-full justify-start" variant="outline" asChild>
+              <Link to="/dashboard/admin/konnect">
+                <CreditCard className="mr-2 h-4 w-4" />
+                Configuration Konnect
+              </Link>
             </Button>
           </CardContent>
         </Card>
