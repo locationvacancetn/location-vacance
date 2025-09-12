@@ -37,7 +37,8 @@ import {
   Wrench,
   X,
   HomeIcon,
-  CreditCard
+  CreditCard,
+  Mail
 } from 'lucide-react';
 
 // Configuration des menus par rôle
@@ -59,6 +60,7 @@ const getMenuItems = (role: string) => {
         { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
         { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
         { label: 'Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
+        { label: 'Email', path: '/dashboard/admin/email', icon: Mail },
         { label: 'Système', path: '/dashboard/system', icon: Shield },
         { label: 'Logs', path: '/dashboard/logs', icon: Activity },
       ];

@@ -114,56 +114,6 @@ const EquipmentRulesStep = ({ formData, updateFormData }: EquipmentRulesStepProp
         </p>
       </div>
 
-      {/* Équipements */}
-      <div className="space-y-4">
-        <div>
-          <Label className="text-sm font-medium text-foreground">
-            Équipements disponibles
-          </Label>
-          
-          <div className="mt-3">
-            {/* Liste des équipements */}
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Chargement des équipements...
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {equipments.map((equipment) => {
-                const isSelected = formData.equipmentIds.includes(equipment.id);
-                return (
-                  <div
-                    key={equipment.id}
-                    className="flex items-center space-x-3 p-3 hover:bg-muted/50 rounded"
-                  >
-                    <div className="flex-shrink-0 text-muted-foreground">
-                      {getIcon(equipment.icon)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm text-foreground">
-                        {equipment.name}
-                      </div>
-                      {equipment.description && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {equipment.description}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-shrink-0">
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => toggleEquipment(equipment.id)}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          </div>
-        </div>
-      </div>
-
       {/* Règles de la propriété */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm font-medium text-foreground">Règles de la propriété
@@ -236,6 +186,56 @@ const EquipmentRulesStep = ({ formData, updateFormData }: EquipmentRulesStepProp
                 onCheckedChange={(checked) => updateFormData({ childrenAllowed: checked })}
               />
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Équipements */}
+      <div className="space-y-4">
+        <div>
+          <Label className="text-sm font-medium text-foreground">
+            Équipements disponibles
+          </Label>
+          
+          <div className="mt-3">
+            {/* Liste des équipements */}
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Chargement des équipements...
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {equipments.map((equipment) => {
+                const isSelected = formData.equipmentIds.includes(equipment.id);
+                return (
+                  <div
+                    key={equipment.id}
+                    className="flex items-center space-x-3 p-3 hover:bg-muted/50 rounded"
+                  >
+                    <div className="flex-shrink-0 text-muted-foreground">
+                      {getIcon(equipment.icon)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-foreground">
+                        {equipment.name}
+                      </div>
+                      {equipment.description && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {equipment.description}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-shrink-0">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleEquipment(equipment.id)}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           </div>
         </div>
       </div>

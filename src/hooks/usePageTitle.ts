@@ -14,6 +14,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/admin/equipments': 'Gestion des Équipements',
   '/dashboard/admin/property-types': 'Gestion des Types de Propriétés',
   '/dashboard/admin/konnect': 'Configuration Konnect',
+  '/dashboard/admin/email': 'Configuration Email',
   '/dashboard/users': 'Gestion des Utilisateurs',
   
   // Pages Owner
@@ -37,6 +38,7 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/dashboard/admin/equipments': 'Gérez les équipements des logements',
   '/dashboard/admin/property-types': 'Gérez les types de propriétés disponibles (villa, appartement, chalet...)',
   '/dashboard/admin/konnect': 'Configurez les paramètres de l\'intégration avec le service de paiement Konnect',
+  '/dashboard/admin/email': 'Gérez l\'envoi d\'emails et les paramètres SMTP',
   '/dashboard/users': 'Administrez les comptes utilisateurs',
   '/dashboard/add-property': 'Créez votre annonce étape par étape',
   '/dashboard/edit-property': 'Modifiez votre annonce étape par étape',

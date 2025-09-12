@@ -11,7 +11,7 @@ interface PricingRulesStepProps {
 
 const PricingRulesStep = ({ formData, updateFormData }: PricingRulesStepProps) => {
   const handleNumberChange = (field: keyof PropertyFormData, value: string) => {
-    const numValue = parseFloat(value) || 0;
+    const numValue = parseInt(value) || 0;
     if (numValue >= 0) {
       updateFormData({ [field]: numValue });
     }
@@ -55,14 +55,14 @@ const PricingRulesStep = ({ formData, updateFormData }: PricingRulesStepProps) =
             <Input
               id="base-price"
               type="number"
-              min="10.01"
-              step="0.01"
-              value={formData.basePrice || ""}
+              min="10"
+              step="1"
+              value={formData.basePrice > 0 ? formData.basePrice : ""}
               onChange={(e) => handleNumberChange('basePrice', e.target.value)}
               className="mt-1 text-sm placeholder:text-muted-foreground/70"
               required
             />
-            {formData.basePrice > 0 && formData.basePrice < 10 && (
+            {formData.basePrice > 0 && formData.basePrice <= 10 && (
               <div className="flex justify-end mt-1">
                 <p className="text-xs font-medium text-error">
                   Le prix doit être supérieur à 10 DT
@@ -81,7 +81,7 @@ const PricingRulesStep = ({ formData, updateFormData }: PricingRulesStepProps) =
               type="number"
               min="1"
               max="365"
-              value={formData.minNights || ""}
+              value={formData.minNights > 0 ? formData.minNights : ""}
               onChange={(e) => handleMinNightsChange(e.target.value)}
               className="mt-1 text-sm placeholder:text-muted-foreground/70"
               required

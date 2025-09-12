@@ -15,6 +15,7 @@ import EquipmentsManagement from './admin/EquipmentsManagement';
 import PropertyTypesManagement from './admin/PropertyTypesManagement';
 import UsersManagement from './admin/UsersManagement';
 import KonnectConfigPage from './admin/KonnectConfigPage';
+import EmailSettings from './admin/EmailSettings';
 
 
 // Import des pages Profil par rôle
@@ -91,6 +92,7 @@ export const DashboardRouter = () => {
         <Route path="/admin/equipments" element={<EquipmentsManagement />} />
         <Route path="/admin/property-types" element={<PropertyTypesManagement />} />
         <Route path="/admin/konnect" element={<KonnectConfigPage />} />
+        <Route path="/admin/email" element={<EmailSettings />} />
         <Route path="/users" element={<UsersManagement />} />
 
         {/* Routes Owner */}

@@ -99,7 +99,7 @@ const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) =
                 disabled={loading}
               >
                 <SelectTrigger className="pl-10 text-sm">
-                  <SelectValue placeholder={loading ? "Chargement..." : "Sélectionnez un type"} />
+                  <SelectValue placeholder={loading ? "Chargement..." : ""} />
                 </SelectTrigger>
                 <SelectContent>
                   {propertyTypes.map((type) => (
@@ -126,7 +126,7 @@ const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) =
                 type="number"
                 min="1"
                 max="50"
-                value={formData.maxGuests || ""}
+                value={formData.maxGuests > 0 ? formData.maxGuests : ""}
                 onChange={(e) => {
                   const numValue = parseInt(e.target.value) || 0;
                   if (numValue >= 0) {
@@ -163,7 +163,7 @@ const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) =
                 type="number"
                 min="1"
                 max="20"
-                value={formData.bedrooms || ""}
+                value={formData.bedrooms > 0 ? formData.bedrooms : ""}
                 onChange={(e) => handleNumberChange('bedrooms', e.target.value)}
                 className="pl-10 text-sm"
                 required
@@ -192,7 +192,7 @@ const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) =
                 type="number"
                 min="1"
                 max="20"
-                value={formData.bathrooms || ""}
+                value={formData.bathrooms > 0 ? formData.bathrooms : ""}
                 onChange={(e) => handleNumberChange('bathrooms', e.target.value)}
                 className="pl-10 text-sm"
                 required

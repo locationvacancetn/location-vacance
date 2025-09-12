@@ -161,7 +161,9 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
         <div className="flex items-center gap-4 flex-1">
           {/* Logo sur mobile */}
           <div className="md:hidden">
-            <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
+            <Link to="/">
+              <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
+            </Link>
           </div>
           
           {/* Titre sur desktop */}

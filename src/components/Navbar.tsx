@@ -354,8 +354,8 @@ const Navbar = () => {
 
   return (
     <nav className="relative z-50 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex justify-between items-center py-4">
           <Link to="/" className="flex items-center">
             <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
           </Link>
@@ -436,9 +436,9 @@ const Navbar = () => {
           <div className="flex-1 overflow-y-auto bg-white">
             <div className="w-full bg-white min-h-full">
               <Card className="border-0 shadow-none bg-transparent">
-                <CardHeader className="px-4 pt-2 pb-0">
+                <CardHeader className="px-6 py-4">
                   {/* Header avec logo et bouton fermer */}
-                  <div className="flex justify-between items-center mb-2 sm:mb-4">
+                  <div className="flex justify-between items-center">
                     <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center">
                       <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
                     </Link>
