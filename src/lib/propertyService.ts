@@ -20,6 +20,8 @@ export interface Property {
   check_out_time: string;
   images: string[];
   amenities: string[];
+  equipment_ids: string[];
+  characteristic_ids: string[];
   smoking_allowed: boolean;
   pets_allowed: boolean;
   parties_allowed: boolean;
@@ -217,17 +219,15 @@ export class PropertyService {
         throw new Error('La latitude doit être entre -90 et 90');
       }
 
-      // Validation de l'adresse
-      if (!formData.address || formData.address.trim() === '') {
-        throw new Error('L\'adresse est obligatoire');
-      }
-      
-      if (formData.address.trim().length < 3) {
-        throw new Error('L\'adresse doit contenir au moins 3 caractères');
-      }
-      
-      if (formData.address.length > 500) {
-        throw new Error('L\'adresse ne peut pas dépasser 500 caractères');
+      // Validation de l'adresse (optionnelle)
+      if (formData.address && formData.address.trim() !== '') {
+        if (formData.address.trim().length < 3) {
+          throw new Error('L\'adresse doit contenir au moins 3 caractères');
+        }
+        
+        if (formData.address.length > 500) {
+          throw new Error('L\'adresse ne peut pas dépasser 500 caractères');
+        }
       }
 
       // 1. D'abord créer la propriété sans images
@@ -249,6 +249,7 @@ export class PropertyService {
         p_check_out_time: formData.checkOutTime,
         p_images: [], // Images vides pour l'instant
         p_equipment_ids: formData.equipmentIds,
+        p_characteristic_ids: formData.characteristicIds,
         p_smoking_allowed: formData.smokingAllowed,
         p_pets_allowed: formData.petsAllowed,
         p_parties_allowed: formData.partiesAllowed,
@@ -380,9 +381,23 @@ export class PropertyService {
    */
   static async getOwnerProperties(): Promise<Property[]> {
     try {
+      // Récupérer l'utilisateur actuel
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.error('Erreur d\'authentification:', authError);
+        throw new Error('Utilisateur non authentifié');
+      }
+
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
+        .select(`
+          *,
+          property_types!inner(name),
+          cities!inner(name),
+          regions!inner(name)
+        `)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -390,7 +405,15 @@ export class PropertyService {
         throw new Error(`Erreur lors de la récupération: ${error.message}`);
       }
 
-      return data || [];
+      // Enrichir les données avec les noms des relations
+      const enrichedData = data?.map(property => ({
+        ...property,
+        property_type: property.property_types?.name,
+        city_name: property.cities?.name,
+        region_name: property.regions?.name,
+      })) || [];
+
+      return enrichedData;
     } catch (error) {
       console.error('Erreur dans PropertyService.getOwnerProperties:', error);
       throw error;
@@ -512,17 +535,15 @@ export class PropertyService {
         throw new Error('La latitude doit être entre -90 et 90');
       }
 
-      // Validation de l'adresse
-      if (!formData.address || formData.address.trim() === '') {
-        throw new Error('L\'adresse est obligatoire');
-      }
-      
-      if (formData.address.trim().length < 3) {
-        throw new Error('L\'adresse doit contenir au moins 3 caractères');
-      }
-      
-      if (formData.address.length > 500) {
-        throw new Error('L\'adresse ne peut pas dépasser 500 caractères');
+      // Validation de l'adresse (optionnelle)
+      if (formData.address && formData.address.trim() !== '') {
+        if (formData.address.trim().length < 3) {
+          throw new Error('L\'adresse doit contenir au moins 3 caractères');
+        }
+        
+        if (formData.address.length > 500) {
+          throw new Error('L\'adresse ne peut pas dépasser 500 caractères');
+        }
       }
 
       // 1. Mettre à jour les données de base de la propriété
@@ -543,6 +564,7 @@ export class PropertyService {
         p_check_in_time: formData.checkInTime,
         p_check_out_time: formData.checkOutTime,
         p_equipment_ids: formData.equipmentIds,
+        p_characteristic_ids: formData.characteristicIds,
         p_smoking_allowed: formData.smokingAllowed,
         p_pets_allowed: formData.petsAllowed,
         p_parties_allowed: formData.partiesAllowed,
@@ -712,6 +734,21 @@ export class PropertyService {
         }
       }
 
+      // Récupérer les caractéristiques de la propriété
+      let characteristicIds: string[] = [];
+      try {
+        const { data: characteristicsData } = await supabase
+          .from('property_characteristic_assignments')
+          .select('characteristic_id')
+          .eq('property_id', propertyId);
+        
+        if (characteristicsData) {
+          characteristicIds = characteristicsData.map(item => item.characteristic_id);
+        }
+      } catch (e) {
+        console.log('Impossible de récupérer les caractéristiques:', e);
+      }
+
       // Récupérer les informations du propriétaire
       // owner_id dans properties fait référence à profiles.user_id, pas profiles.id
       const ownerUserId = data.owner_id;
@@ -765,7 +802,8 @@ export class PropertyService {
         location: location,
         owner_name: ownerName,
         owner_avatar_url: ownerAvatarUrl,
-        owner_languages: ownerLanguages
+        owner_languages: ownerLanguages,
+        characteristic_ids: characteristicIds
       };
 
       console.log('Propriété récupérée:', {

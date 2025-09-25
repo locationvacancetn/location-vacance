@@ -210,7 +210,8 @@ const EquipmentRulesStep = ({ formData, updateFormData }: EquipmentRulesStepProp
                 return (
                   <div
                     key={equipment.id}
-                    className="flex items-center space-x-3 p-3 hover:bg-muted/50 rounded"
+                    className="flex items-center space-x-3 p-3 hover:bg-muted/50 rounded border border-border/50 cursor-pointer transition-colors"
+                    onClick={() => toggleEquipment(equipment.id)}
                   >
                     <div className="flex-shrink-0 text-muted-foreground">
                       {getIcon(equipment.icon)}

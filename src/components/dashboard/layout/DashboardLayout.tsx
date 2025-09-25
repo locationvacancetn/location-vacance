@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardHeader } from './DashboardHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -10,6 +10,7 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { title, description } = usePageTitle();
 
   const toggleMobileSidebar = () => {
@@ -19,6 +20,18 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const closeMobileSidebar = () => {
     setIsMobileSidebarOpen(false);
   };
+
+  // Écouter les changements de l'état collapsed de la sidebar
+  useEffect(() => {
+    const handleSidebarToggle = (event: CustomEvent) => {
+      setIsSidebarCollapsed(event.detail.isCollapsed);
+    };
+
+    window.addEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
+    return () => {
+      window.removeEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,16 +44,21 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           />
         )}
 
-        {/* Sidebar */}
+        {/* Sidebar - Fixe sur desktop */}
         <div className={cn(
-          "fixed md:relative z-50 md:z-auto transition-transform duration-300 ease-in-out",
+          "fixed md:fixed z-50 md:z-30 transition-transform duration-300 ease-in-out",
+          "md:top-0 md:left-0 md:h-screen",
           isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}>
           <DashboardSidebar onMobileClose={closeMobileSidebar} />
         </div>
         
-        {/* Main content */}
-        <div className="flex-1 w-full md:w-auto">
+        {/* Main content - Avec marge pour la sidebar sur desktop */}
+        <div className={cn(
+          "flex-1 w-full transition-all duration-300",
+          "md:ml-56", // Marge par défaut pour sidebar étendue
+          isSidebarCollapsed && "md:ml-16" // Marge réduite quand sidebar est collapsed
+        )}>
           <DashboardHeader onMobileMenuToggle={toggleMobileSidebar} />
           <main className="px-6 pb-6 pt-0">
             {/* Titre de la page sur mobile */}

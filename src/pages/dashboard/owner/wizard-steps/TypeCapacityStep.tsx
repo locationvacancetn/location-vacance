@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PropertyFormData } from "../AddPropertyWizard";
 import { supabase } from "@/integrations/supabase/client";
-import { Home, Bed, ShowerHead, Users } from "lucide-react";
+import { Home, Bed, ShowerHead, Users, Star, Wifi, Car, Snowflake, Thermometer, ChefHat, Tv, ShieldCheck, Dog, Waves, TreePine, ArrowUpDown, Cigarette } from "lucide-react";
 
 interface TypeCapacityStepProps {
   formData: PropertyFormData;
@@ -20,31 +21,73 @@ interface PropertyType {
   is_active: boolean;
 }
 
+interface Characteristic {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  is_active: boolean;
+}
+
+// Mapping des icônes pour les caractéristiques
+const iconMap: { [key: string]: any } = {
+  'wifi': Wifi,
+  'swimming-pool': Waves,
+  'car': Car,
+  'snowflake': Snowflake,
+  'thermometer': Thermometer,
+  'chef-hat': ChefHat,
+  'washing-machine': Car,
+  'dishwasher': Car,
+  'tv': Tv,
+  'balcony': TreePine,
+  'tree-pine': TreePine,
+  'elevator': ArrowUpDown,
+  'shield-check': ShieldCheck,
+  'dog': Dog,
+  'no-smoking': Cigarette,
+  'star': Star,
+};
+
 const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) => {
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
+  const [characteristics, setCharacteristics] = useState<Characteristic[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Charger les types de propriétés actifs
+  // Charger les types de propriétés et caractéristiques actifs
   useEffect(() => {
-    const fetchPropertyTypes = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        
+        // Charger les types de propriétés
+        const { data: propertyTypesData, error: propertyTypesError } = await supabase
           .from('property_types')
           .select('*')
           .eq('is_active', true)
           .order('name');
 
-        if (error) throw error;
-        setPropertyTypes(data || []);
+        if (propertyTypesError) throw propertyTypesError;
+        setPropertyTypes(propertyTypesData || []);
+
+        // Charger les caractéristiques
+        const { data: characteristicsData, error: characteristicsError } = await supabase
+          .from('property_characteristics')
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
+
+        if (characteristicsError) throw characteristicsError;
+        setCharacteristics(characteristicsData || []);
       } catch (error) {
-        console.error('Erreur lors du chargement des types de propriétés:', error);
+        console.error('Erreur lors du chargement des données:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPropertyTypes();
+    fetchData();
   }, []);
 
   const handleNumberChange = (field: keyof PropertyFormData, value: string) => {
@@ -67,6 +110,25 @@ const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) =
     }
   };
 
+  const toggleCharacteristic = (characteristicId: string) => {
+    const currentIds = formData.characteristicIds || [];
+    const isSelected = currentIds.includes(characteristicId);
+    if (isSelected) {
+      updateFormData({
+        characteristicIds: currentIds.filter(id => id !== characteristicId)
+      });
+    } else {
+      updateFormData({
+        characteristicIds: [...currentIds, characteristicId]
+      });
+    }
+  };
+
+  const getIcon = (iconName: string) => {
+    const IconComponent = iconMap[iconName] || Star;
+    return <IconComponent className="h-4 w-4" />;
+  };
+
   return (
     <div className="space-y-6">
         <div className="mb-6 scroll-target">
@@ -77,7 +139,7 @@ const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) =
             </h2>
           </div>
         <p className="text-sm text-muted-foreground">
-          Quel type de propriété et combien de personnes peut-elle accueillir ?
+          Quel type de propriété, combien de personnes peut-elle accueillir et quelles sont ses caractéristiques ?
         </p>
       </div>
 
@@ -203,6 +265,59 @@ const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) =
                 <p className="text-xs font-medium text-error">
                   Le nombre de salles de bain doit être entre 1 et 20
                 </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Caractéristiques de la propriété */}
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium text-foreground">
+              Caractéristiques de la propriété
+            </Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Sélectionnez les caractéristiques qui décrivent votre propriété
+            </p>
+          </div>
+          
+          <div className="mt-3">
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Chargement des caractéristiques...
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {characteristics.map((characteristic) => {
+                  const isSelected = formData.characteristicIds?.includes(characteristic.id) || false;
+                  return (
+                    <div
+                      key={characteristic.id}
+                      className="flex items-center space-x-3 p-3 hover:bg-muted/50 rounded border border-border/50 cursor-pointer transition-colors"
+                      onClick={() => toggleCharacteristic(characteristic.id)}
+                    >
+                      <div className={`flex-shrink-0 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
+                        {getIcon(characteristic.icon || 'star')}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-foreground">
+                          {characteristic.name}
+                        </div>
+                        {characteristic.description && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {characteristic.description}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleCharacteristic(characteristic.id)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

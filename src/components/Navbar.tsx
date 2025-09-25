@@ -6,7 +6,15 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Users, Home, Megaphone, Building, Calendar, DollarSign, BarChart3, Search, Heart, FileText, Settings, Shield, Activity } from "lucide-react";
+import { Eye, EyeOff, Users, Home, Megaphone, User, Settings, LogOut, UserCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,6 +35,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { useAuthError } from "@/hooks/useAuthError";
 import { AUTH_MESSAGES } from "@/constants/authMessages";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useNavigation } from "@/hooks/useNavigation";
+import { Z_INDEX, ROLE_COLORS } from "@/lib/breakpoints";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse email invalide").min(1, "L'email est requis"),
@@ -50,62 +60,12 @@ const signupSchema = z.object({
 });
 
 
-// Configuration des menus par rôle pour la navigation mobile
-const getMobileMenuItems = (role: string) => {
-  const commonItems = [
-    { label: 'Dashboard', path: '/dashboard', icon: Home },
-    { label: 'Paramètres', path: '/dashboard/settings', icon: Settings },
-  ];
-
-  switch (role) {
-    case 'admin':
-      return [
-        ...commonItems,
-        { label: 'Utilisateurs', path: '/dashboard/users', icon: Users },
-        { label: 'Toutes Propriétés', path: '/dashboard/all-properties', icon: Building },
-        { label: 'Toutes Réservations', path: '/dashboard/all-bookings', icon: Calendar },
-        { label: 'Système', path: '/dashboard/system', icon: Shield },
-        { label: 'Logs', path: '/dashboard/logs', icon: Activity },
-        { label: 'Profil', path: '/dashboard/profile', icon: Users },
-      ];
-    
-    case 'owner':
-      return [
-        ...commonItems,
-        { label: 'Mes Propriétés', path: '/dashboard/properties', icon: Building },
-        { label: 'Réservations', path: '/dashboard/bookings', icon: Calendar },
-        { label: 'Finances', path: '/dashboard/finances', icon: DollarSign },
-        { label: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
-        { label: 'Profil', path: '/dashboard/profile', icon: Users },
-      ];
-    
-    case 'tenant':
-      return [
-        ...commonItems,
-        { label: 'Mes Réservations', path: '/dashboard/my-bookings', icon: Calendar },
-        { label: 'Rechercher', path: '/dashboard/search', icon: Search },
-        { label: 'Favoris', path: '/dashboard/favorites', icon: Heart },
-        { label: 'Profil', path: '/dashboard/profile', icon: Users },
-      ];
-    
-    case 'advertiser':
-      return [
-        ...commonItems,
-        { label: 'Mes Publicités', path: '/dashboard/ads', icon: Megaphone },
-        { label: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
-        { label: 'Campagnes', path: '/dashboard/campaigns', icon: Calendar },
-        { label: 'Rapports', path: '/dashboard/reports', icon: FileText },
-        { label: 'Profil', path: '/dashboard/profile', icon: Users },
-      ];
-    
-    default:
-      return commonItems;
-  }
-};
+// La logique getMobileMenuItems est maintenant centralisée dans useNavigation
 
 const Navbar = () => {
   const { user, signOut, signIn, /* signInWithGoogle, */ loading, forceSignOut, isLoggingIn, isLoggingOut } = useAuth();
   const { userRole, userProfile } = useUserRole();
+  const { mobileMenuItems, roleInfo } = useNavigation();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -113,6 +73,7 @@ const Navbar = () => {
   const [isSignupMode, setIsSignupMode] = useState(false);
   const [selectedRole, setSelectedRole] = useState("");
   const [isSigningUp, setIsSigningUp] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   const { showSuccess, handleAuthError, handleNetworkError } = useAuthError();
 
   const loginForm = useForm({
@@ -162,32 +123,45 @@ const Navbar = () => {
     }
   }, [selectedRole, signupForm]);
 
-  const displayName =
+  // Gérer le chargement de l'image
+  useEffect(() => {
+    if (userProfile?.avatar_url) {
+      setIsImageLoading(true);
+    } else {
+      setIsImageLoading(false);
+    }
+  }, [userProfile?.avatar_url]);
+
+  // Éviter les erreurs pendant le loading
+  const displayName = loading ? "Chargement..." : 
     userProfile?.full_name || (user?.user_metadata as any)?.full_name || user?.email || "Utilisateur";
 
-  const initials = displayName
+  const initials = loading ? "..." : displayName
     .split(" ")
+    .filter((w: string) => w.length > 0)
     .map((w: string) => w.charAt(0).toUpperCase())
     .slice(0, 2)
     .join("") || "U";
 
-  // Fonction pour obtenir les informations du rôle
-  const getRoleInfo = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return { label: 'Administrateur', color: 'text-red-600' };
-      case 'owner':
-        return { label: 'Propriétaire', color: 'text-blue-600' };
-      case 'tenant':
-        return { label: 'Locataire', color: 'text-green-600' };
-      case 'advertiser':
-        return { label: 'Annonceur', color: 'text-purple-600' };
-      default:
-        return { label: 'Utilisateur', color: 'text-gray-600' };
-    }
+  // Déterminer si on doit afficher les initiales ou une icône
+  const hasValidInitials = !loading && initials !== "U" && initials.length > 0;
+
+  // Générer une couleur de fond basée sur les initiales (comme Gmail)
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 
+      'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500',
+      'bg-orange-500', 'bg-cyan-500', 'bg-lime-500', 'bg-amber-500'
+    ];
+    const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[hash % colors.length];
   };
 
-  const roleInfo = getRoleInfo(userRole || 'tenant');
+  // Utiliser une couleur stable basée sur l'ID utilisateur ou email pour éviter les changements
+  const stableIdentifier = user?.id || user?.email || displayName;
+  const avatarColor = loading ? 'bg-gray-300' : getAvatarColor(stableIdentifier);
+
+  // roleInfo est maintenant fourni par useNavigation
 
   const roles = [
     {
@@ -362,37 +336,88 @@ const Navbar = () => {
           
           <div className="flex items-center space-x-3">
             {/* Version desktop */}
-            <div className="hidden sm:flex items-center space-x-3">
-              {user ? (
+            <div className="hidden md:flex items-center space-x-3">
+              {loading ? (
                 <div className="flex items-center space-x-3">
                   <div className="flex flex-col leading-tight">
-                    <span className="text-sm text-muted-foreground">Bonjour</span>
-                    <span className="font-semibold text-foreground">{displayName}</span>
+                    <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mt-1"></div>
                   </div>
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage
-                      src={(user?.user_metadata as any)?.avatar_url || "/placeholder.svg"}
-                      alt={displayName}
-                    />
-                    <AvatarFallback>{initials}</AvatarFallback>
-                  </Avatar>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="h-8 px-3 text-xs"
-                  >
-                    {isLoggingOut ? (
-                      <>
-                        <Spinner className="mr-1" size="sm" />
-                        {AUTH_MESSAGES.LOGGING_OUT}
-                      </>
-                    ) : (
-                      "Déconnexion"
-                    )}
-                  </Button>
+                  <div className="h-9 w-9 bg-gray-200 rounded-full animate-pulse"></div>
                 </div>
+              ) : user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-3 p-2 hover:bg-transparent">
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Bonjour,</p>
+                        <p className="text-base font-medium text-foreground">
+                          {displayName}
+                        </p>
+                      </div>
+                      <div className="relative">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage
+                            src={userProfile?.avatar_url || "/placeholder.svg"}
+                            alt={displayName}
+                            className="object-cover"
+                            onLoad={() => setIsImageLoading(false)}
+                            onError={() => setIsImageLoading(false)}
+                          />
+                          <AvatarFallback 
+                            className={`${avatarColor} text-white font-semibold flex items-center justify-center transition-opacity duration-200 ${
+                              isImageLoading ? 'opacity-100' : 'opacity-0'
+                            }`}
+                          >
+                            {hasValidInitials ? (
+                              initials
+                            ) : (
+                              <UserCircle className="h-6 w-6" />
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {displayName}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {userProfile?.email || user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profil</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="flex items-center">
+                        <Home className="mr-2 h-4 w-4" />
+                        <span>Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>
+                        {isLoggingOut ? (
+                          <>
+                            <Spinner className="mr-1" size="sm" />
+                            {AUTH_MESSAGES.LOGGING_OUT}
+                          </>
+                        ) : (
+                          "Se déconnecter"
+                        )}
+                      </span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <>
                   {location.pathname !== '/signup' && (
@@ -414,7 +439,7 @@ const Navbar = () => {
             </div>
 
             {/* Version mobile - Bouton menu carré */}
-            <div className="sm:hidden">
+            <div className="md:hidden">
               <Button
                 variant="outline"
                 size="icon"
@@ -432,7 +457,10 @@ const Navbar = () => {
 
       {/* Modal plein écran mobile */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-white z-[9999] sm:hidden flex flex-col">
+        <div 
+          className="fixed inset-0 bg-white md:hidden flex flex-col"
+          style={{ zIndex: Z_INDEX.mobileMenu }}
+        >
           <div className="flex-1 overflow-y-auto bg-white">
             <div className="w-full bg-white min-h-full">
               <Card className="border-0 shadow-none bg-transparent">
@@ -454,17 +482,40 @@ const Navbar = () => {
                      </Button>
                    </div>
                   {/* Section utilisateur ou connexion */}
-                  {user ? (
+                  {loading ? (
+                    <div className="py-4 sm:py-[45px] mb-8 sm:mb-12">
+                      <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                        <div className="h-16 w-16 sm:h-20 sm:w-20 bg-gray-200 rounded-full animate-pulse"></div>
+                        <div className="flex-1">
+                          <div className="h-5 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+                          <div className="h-4 w-40 bg-gray-200 rounded animate-pulse mb-1"></div>
+                          <div className="h-3 w-20 bg-gray-200 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : user ? (
                     <div className="py-4 sm:py-[45px] mb-8 sm:mb-12">
                       <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
                         <div className="relative">
                           <Avatar className="h-16 w-16 sm:h-20 sm:w-20 rounded-full">
                             <AvatarImage
-                              src="https://lh3.googleusercontent.com/-H2ZNRmg2z3I/AAAAAAAAAAI/AAAAAAAAAAA/ALKGfkmm8gUv63ZaHb-oJh9xw6T0CvuUXQ/photo.jpg?sz=46"
+                              src={userProfile?.avatar_url || "/placeholder.svg"}
                               alt={displayName}
                               className="object-cover"
+                              onLoad={() => setIsImageLoading(false)}
+                              onError={() => setIsImageLoading(false)}
                             />
-                            <AvatarFallback className="text-lg sm:text-xl rounded-full">{initials}</AvatarFallback>
+                            <AvatarFallback 
+                              className={`text-lg sm:text-xl rounded-full ${avatarColor} text-white font-semibold flex items-center justify-center transition-opacity duration-200 ${
+                                isImageLoading ? 'opacity-100' : 'opacity-0'
+                              }`}
+                            >
+                              {hasValidInitials ? (
+                                initials
+                              ) : (
+                                <UserCircle className="h-8 w-8 sm:h-10 sm:w-10" />
+                              )}
+                            </AvatarFallback>
                           </Avatar>
                         </div>
                         <div className="flex-1">
@@ -474,9 +525,9 @@ const Navbar = () => {
                           <p className="text-muted-foreground text-xs sm:text-sm mb-1">
                             {userProfile?.email || user.email}
                           </p>
-                          <p className={`text-xs font-medium ${roleInfo.color}`}>
-                            {roleInfo.label}
-                          </p>
+                        <p className={`text-xs font-medium ${ROLE_COLORS[roleInfo.color as keyof typeof ROLE_COLORS] || ROLE_COLORS.secondary}`}>
+                          {roleInfo.label}
+                        </p>
                         </div>
                       </div>
                     </div>
@@ -493,10 +544,10 @@ const Navbar = () => {
                 </CardHeader>
                 <CardContent className="px-4 pb-4">
                   {user ? (
-                    <div className="space-y-2 sm:space-y-4">
+                    <div className="space-y-2 md:space-y-4">
                       {/* Navigation basée sur le rôle */}
-                      <div className="grid grid-cols-1 gap-2 sm:gap-3">
-                        {getMobileMenuItems(userRole || 'tenant').map((item) => {
+                      <div className="grid grid-cols-1 gap-2 md:gap-3">
+                        {mobileMenuItems.map((item) => {
                           const isActive = location.pathname === item.path;
                           return (
                             <Link 
@@ -506,9 +557,9 @@ const Navbar = () => {
                             >
                               <Button 
                                 variant={isActive ? "default" : "outline"} 
-                                className={`w-full justify-start text-sm sm:text-base py-2 sm:py-3 ${isActive ? "bg-primary text-primary-foreground" : ""}`}
-                              >
-                                <item.icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                              className={`w-full justify-start text-sm md:text-base py-2 md:py-3 ${isActive ? "bg-primary text-primary-foreground" : ""}`}
+                            >
+                              <item.icon className="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3" />
                                 {item.label}
                               </Button>
                             </Link>

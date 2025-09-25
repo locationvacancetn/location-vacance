@@ -375,7 +375,7 @@ const PropertiesManagement = () => {
          <Button 
            onClick={() => {
              clearPropertyWizardData();
-             navigate('/dashboard/add-property');
+             navigate('/dashboard/owner/add-property');
            }}
            className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white border border-green-600 hover:border-green-700 px-4 py-2 rounded-md font-medium transition-colors"
          >
@@ -401,7 +401,7 @@ const PropertiesManagement = () => {
             <Button 
               onClick={() => {
                 clearPropertyWizardData();
-                navigate('/dashboard/add-property');
+                navigate('/dashboard/owner/add-property');
               }}
               className="bg-green-600 hover:bg-green-700 text-white border border-green-600 hover:border-green-700 px-4 py-2 rounded-md font-medium transition-colors"
             >
@@ -415,18 +415,9 @@ const PropertiesManagement = () => {
          {/* Version Desktop - Card avec encadrement */}
          <Card className="hidden md:block border border-gray-200 shadow-sm">
            <CardHeader className="pb-4">
-             <div className="flex justify-between items-center mb-4">
-               <div>
-                 <CardTitle className="text-lg font-medium">Liste des Propriétés</CardTitle>
-                 <CardDescription className="text-sm text-muted-foreground">
-                   {filteredProperties.length} propriété{filteredProperties.length !== 1 ? 's' : ''} trouvée{filteredProperties.length !== 1 ? 's' : ''}
-                 </CardDescription>
-               </div>
-             </div>
-             
-             {/* Barre de recherche - Pleine largeur sur mobile */}
+             {/* Barre de recherche - Élargie */}
              <div className="flex items-center justify-between mb-4">
-               <div className="relative w-full md:w-64">
+               <div className="relative w-full md:w-96">
                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                  <input
                    type="text"
@@ -436,7 +427,6 @@ const PropertiesManagement = () => {
                    className="w-full pl-10 pr-4 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                  />
                </div>
-               
              </div>
            </CardHeader>
           <CardContent>
@@ -552,7 +542,10 @@ const PropertiesManagement = () => {
                           variant="outline"
                           size="sm"
                           className="h-8 w-8 p-0 border border-[#385aa2] hover:border-[#385aa2] bg-transparent hover:bg-[#385aa2] text-[#385aa2] hover:text-white transition-colors"
-                          onClick={() => navigate(`/dashboard/edit-property/${property.id}`)}
+                          onClick={() => {
+                            console.log('Navigation vers modification:', `/dashboard/owner/edit-property/${property.id}`);
+                            navigate(`/dashboard/owner/edit-property/${property.id}`);
+                          }}
                           title="Modifier"
                         >
                           <Edit className="h-4 w-4" />
@@ -618,14 +611,7 @@ const PropertiesManagement = () => {
          <div className="md:hidden space-y-4">
            {/* En-tête mobile */}
            <div className="space-y-4">
-             <div>
-               <h2 className="text-lg font-medium">Liste des Propriétés</h2>
-               <p className="text-sm text-muted-foreground">
-                 {filteredProperties.length} propriété{filteredProperties.length !== 1 ? 's' : ''} trouvée{filteredProperties.length !== 1 ? 's' : ''}
-               </p>
-             </div>
-             
-             {/* Barre de recherche - Pleine largeur sur mobile */}
+             {/* Barre de recherche - Élargie sur mobile */}
              <div className="relative w-full">
                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                <input
@@ -671,7 +657,8 @@ const PropertiesManagement = () => {
                          title="Modifier"
                          onClick={(e) => {
                            e.stopPropagation();
-                           navigate(`/dashboard/edit-property/${property.id}`);
+                           console.log('Navigation vers modification (mobile):', `/dashboard/owner/edit-property/${property.id}`);
+                           navigate(`/dashboard/owner/edit-property/${property.id}`);
                          }}
                        >
                          <Edit className="h-4 w-4" />
@@ -800,7 +787,7 @@ const PropertiesManagement = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="hover:bg-transparent hover:text-current hover:border-current">Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="hover:border-[#32323a] active:border-[#32323a]">Annuler</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmDeactivation}
               className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
@@ -816,28 +803,18 @@ const PropertiesManagement = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer définitivement</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <p>Êtes-vous sûr de vouloir supprimer définitivement cette propriété ?</p>
-                <br />
-                <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                  <p className="text-sm text-red-800 font-medium">⚠️ Cette action est irréversible</p>
-                  <ul className="text-sm text-red-700 mt-2 space-y-1">
-                    <li>• La propriété sera supprimée de la base de données</li>
-                    <li>• Toutes les photos associées seront supprimées</li>
-                  </ul>
-                </div>
-                {propertyToDelete && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Propriété : <strong>{propertyToDelete.title}</strong>
-                  </p>
-                )}
-              </div>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer définitivement cette propriété ?
+              {propertyToDelete && (
+                <span className="block mt-2 text-sm text-muted-foreground">
+                  Propriété : <strong>{propertyToDelete.title}</strong>
+                </span>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel 
-              className="hover:bg-transparent hover:text-current hover:border-current"
+              className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]"
               disabled={isDeleting}
             >
               Annuler
@@ -847,7 +824,7 @@ const PropertiesManagement = () => {
               disabled={isDeleting}
               className="bg-[#bc2d2b] hover:bg-[#a82523] text-white disabled:opacity-50"
             >
-              {isDeleting ? "Suppression..." : "Supprimer définitivement"}
+              {isDeleting ? "Suppression..." : "Supprimer"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -8,9 +8,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useCallback, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { format, isAfter, isBefore, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -38,7 +40,8 @@ import {
   Clock,
   Eye,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from "lucide-react";
 
 const HomePage = () => {
@@ -53,12 +56,16 @@ const HomePage = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isGuestsOpen, setIsGuestsOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isMobileCalendarOpen, setIsMobileCalendarOpen] = useState(false);
+  const [propertyAvailability, setPropertyAvailability] = useState<any[]>([]);
 
   // Fonction pour fermer tous les panels
   const closeAllPanels = useCallback(() => {
     setIsCalendarOpen(false);
     setIsFilterOpen(false);
     setIsGuestsOpen(false);
+    setIsMobileCalendarOpen(false);
   }, []);
 
   // Fonction pour ouvrir uniquement le calendrier
@@ -78,8 +85,30 @@ const HomePage = () => {
     closeAllPanels();
     setIsGuestsOpen(true);
   }, [closeAllPanels]);
+
+  // Fonction pour charger les dates disponibles
+  const loadPropertyAvailability = useCallback(async () => {
+    try {
+      // Pour l'instant, on charge toutes les propriétés disponibles
+      // Dans une vraie implémentation, on filtrerait par propriété sélectionnée
+      const { data, error } = await supabase
+        .from('property_availability')
+        .select('*')
+        .eq('is_available', true)
+        .gte('date', new Date().toISOString().split('T')[0]);
+
+      if (error) {
+        console.error('Erreur lors du chargement des dates disponibles:', error);
+        return;
+      }
+
+      setPropertyAvailability(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement:', error);
+    }
+  }, []);
   const [guests, setGuests] = useState({
-    adults: 2,
+    adults: 0,
     children: 0,
     pets: 0
   });
@@ -164,6 +193,15 @@ const HomePage = () => {
     setIsSelectingCheckOut(false);
   }, []);
 
+  // Fonction pour réinitialiser les invités
+  const handleClearGuests = useCallback(() => {
+    setGuests({
+      adults: 2,
+      children: 0,
+      pets: 0
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -182,7 +220,9 @@ const HomePage = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   placeholder="Commencez votre recherche"
-                  className="pl-10 h-12 rounded-xl"
+                  className="pl-10 h-12 rounded-xl cursor-pointer"
+                  onClick={() => setIsSearchModalOpen(true)}
+                  readOnly
                 />
                 <Mic className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               </div>
@@ -195,19 +235,22 @@ const HomePage = () => {
             <div className="mt-4 hidden md:block relative">
               <div className="flex items-center gap-2">
                 {/* Destination */}
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <Input
+                <div className="flex-1">
+                  <LocationAutocomplete
                     placeholder="Où allez-vous ?"
-                    className="pl-10 h-9 rounded-lg"
+                    className="h-9 rounded-lg"
+                    onLocationSelect={(location) => {
+                      console.log('Localisation sélectionnée:', location);
+                      // Ici vous pouvez gérer la sélection de localisation
+                    }}
                   />
                 </div>
                 
                 {/* Dates (Arrivée & Départ) */}
                 <TooltipProvider>
-                  <Popover open={isCalendarOpen} onOpenChange={(open) => open ? openCalendar() : setIsCalendarOpen(false)}>
+                  <Popover open={isCalendarOpen && !isSearchModalOpen} onOpenChange={(open) => open ? openCalendar() : setIsCalendarOpen(false)}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="h-9 px-4 justify-start text-left font-normal w-[260px] border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                      <Button variant="outline" className="h-9 px-4 justify-start text-left font-normal w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80 border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2">
                         <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
                         {checkIn && checkOut 
                           ? `${format(checkIn, "dd-MM-yyyy", { locale: fr })} au ${format(checkOut, "dd-MM-yyyy", { locale: fr })}`
@@ -231,17 +274,17 @@ const HomePage = () => {
                           <div className="flex items-center gap-2">
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
                               onClick={handleClearDates}
-                              className="text-muted-foreground"
+                              className="h-6 w-6 text-muted-foreground border border-transparent hover:border-muted-foreground/20"
                             >
-                              Vider
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={closeAllPanels}
-                              className="h-6 w-6 text-muted-foreground"
+                              className="h-6 w-6 text-muted-foreground border border-transparent hover:border-muted-foreground/20"
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -280,19 +323,52 @@ const HomePage = () => {
                 </TooltipProvider>
                 
                 {/* Invités */}
-                <Popover open={isGuestsOpen} onOpenChange={(open) => open ? openGuests() : setIsGuestsOpen(false)}>
+                <Popover open={isGuestsOpen && !isSearchModalOpen} onOpenChange={(open) => open ? openGuests() : setIsGuestsOpen(false)}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="h-9 px-4 justify-start text-left font-normal w-[200px] border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                    <Button variant="outline" className="h-9 px-4 justify-start text-left font-normal w-36 sm:w-40 md:w-44 lg:w-48 xl:w-52 border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2">
                       <Users className="mr-2 h-5 w-5 text-muted-foreground" />
-                      Invités ?
+                      {guests.adults !== 2 || guests.children > 0 || guests.pets > 0 ? (
+                        <span className="truncate">
+                          {guests.adults > 0 && `${guests.adults} adulte${guests.adults > 1 ? 's' : ''}`}
+                          {guests.adults > 0 && (guests.children > 0 || guests.pets > 0) && ', '}
+                          {guests.children > 0 && `${guests.children} enfant${guests.children > 1 ? 's' : ''}`}
+                          {guests.children > 0 && guests.pets > 0 && ', '}
+                          {guests.pets > 0 && `${guests.pets} animal${guests.pets > 1 ? 'aux' : ''}`}
+                        </span>
+                      ) : (
+                        'Invités ?'
+                      )}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80 p-4" align="start" sideOffset={8}>
+                    <div className="flex items-center justify-between mb-4">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Sélectionnez vos invités
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleClearGuests}
+                          className="h-6 w-6 text-muted-foreground border border-transparent hover:border-muted-foreground/20"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={closeAllPanels}
+                          className="h-6 w-6 text-muted-foreground border border-transparent hover:border-muted-foreground/20"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">Adultes</p>
-                          <p className="text-sm text-muted-foreground">13 ans et plus</p>
+                          <p className="text-sm font-medium">Adultes</p>
+                          <p className="text-xs text-muted-foreground">13 ans et plus</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <Button
@@ -317,8 +393,8 @@ const HomePage = () => {
                       
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">Enfants</p>
-                          <p className="text-sm text-muted-foreground">2-12 ans</p>
+                          <p className="text-sm font-medium">Enfants</p>
+                          <p className="text-xs text-muted-foreground">2-12 ans</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <Button
@@ -344,8 +420,8 @@ const HomePage = () => {
                       
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">Animaux</p>
-                          <p className="text-sm text-muted-foreground">Animaux de compagnie</p>
+                          <p className="text-sm font-medium">Animaux</p>
+                          <p className="text-xs text-muted-foreground">Animaux de compagnie</p>
                         </div>
                         <div className="flex items-center gap-3">
                   <Button
@@ -983,6 +1059,254 @@ const HomePage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Modal de recherche plein page pour mobile */}
+      {isSearchModalOpen && (
+        <div className="fixed inset-0 z-50 bg-background md:hidden">
+          {/* Header du modal */}
+          <div className="flex items-center justify-between p-4">
+            <h2 className="text-lg font-semibold">Rechercher</h2>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsSearchModalOpen(false)}
+              className="h-9 w-9 rounded-md text-gray-500 border-gray-300 hover:border-gray-400"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Contenu du modal */}
+          <div className="flex-1 p-4 max-w-md mx-auto">
+            {/* Barre de recherche principale */}
+            <div className="relative mb-4">
+              <LocationAutocomplete
+                placeholder="Où voulez-vous aller ?"
+                className="h-12 rounded-xl"
+                useRelativePositioning={true}
+                onLocationSelect={(location) => {
+                  console.log('Localisation sélectionnée:', location);
+                  // Ici vous pouvez gérer la sélection de localisation
+                }}
+                onClick={() => {
+                  closeAllPanels();
+                }}
+              />
+            </div>
+
+            {/* Input Quand ? */}
+            <div className="relative mb-4">
+              <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="Quand ?"
+                className="pl-10 h-12 rounded-xl cursor-pointer"
+                onClick={() => {
+                  closeAllPanels();
+                  loadPropertyAvailability();
+                  setIsMobileCalendarOpen(true);
+                }}
+                readOnly
+                value={checkIn && checkOut 
+                  ? `${format(checkIn, "dd-MM-yyyy")} au ${format(checkOut, "dd-MM-yyyy")}`
+                  : checkIn 
+                    ? `${format(checkIn, "dd-MM-yyyy")}`
+                    : ""
+                }
+              />
+            </div>
+
+            {/* Calendrier mobile - Dans le même modal */}
+            {isMobileCalendarOpen && (
+              <div className="relative mb-4 bg-white border border-gray-200 rounded-lg">
+                <Calendar
+                  mode="single"
+                  numberOfMonths={1}
+                  selected={checkIn}
+                  onSelect={handleDateSelect}
+                  disabled={(date) => isBefore(startOfDay(date), startOfDay(new Date()))}
+                  locale={fr}
+                  className="rounded-md w-full"
+                  classNames={{
+                    day_today: "bg-muted text-muted-foreground font-normal",
+                    day_selected: "bg-feedback-success text-white hover:bg-feedback-success hover:text-white focus:bg-feedback-success focus:text-white",
+                    day_disabled: "text-muted-foreground opacity-30",
+                    months: "w-full",
+                    month: "w-full",
+                    caption: "flex justify-center pt-1 pb-6 relative items-center",
+                    caption_label: "text-sm font-medium",
+                    nav: "space-x-1 flex items-center",
+                    nav_button: "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+                    table: "w-full border-collapse space-y-1",
+                    head_row: "flex w-full",
+                    head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem] text-center",
+                    row: "flex w-full mt-2",
+                    cell: "flex-1 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                    day: "h-10 w-full p-0 font-normal aria-selected:opacity-100 flex items-center justify-center rounded-md",
+                  }}
+                  modifiers={{
+                    checkOut: checkOut ? [checkOut] : [],
+                    rangeMiddle: checkIn && checkOut ? 
+                      Array.from({ length: Math.max(0, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) - 1) }, (_, i) => {
+                        const date = new Date(checkIn);
+                        date.setDate(date.getDate() + i + 1);
+                        return date;
+                      }) : []
+                  }}
+                  modifiersClassNames={{
+                    checkOut: "bg-feedback-success text-white hover:bg-feedback-success hover:text-white focus:bg-feedback-success focus:text-white",
+                    rangeMiddle: "bg-feedback-success/20 hover:bg-feedback-success/30",
+                  }}
+                />
+                
+                {/* Légende du calendrier */}
+                <div className="mt-4 p-4 flex flex-wrap gap-4 text-xs text-muted-foreground justify-center">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded bg-feedback-success"></div>
+                    <span>Dates sélectionnées</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded bg-feedback-success/20"></div>
+                    <span>Période sélectionnée</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded bg-muted"></div>
+                    <span>Aujourd'hui</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Input Invités */}
+            <div className="relative mb-4">
+              <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="Combien d'invités ?"
+                className="pl-10 h-12 rounded-xl cursor-pointer"
+                onClick={() => {
+                  closeAllPanels();
+                  setIsGuestsOpen(true);
+                }}
+                readOnly
+                value={guests.adults + guests.children + guests.pets > 0
+                  ? [
+                      guests.adults > 0 ? `${guests.adults} adulte${guests.adults !== 1 ? 's' : ''}` : '',
+                      guests.children > 0 ? `${guests.children} enfant${guests.children !== 1 ? 's' : ''}` : '',
+                      guests.pets > 0 ? `${guests.pets} ${guests.pets !== 1 ? 'animaux' : 'animal'}` : ''
+                    ].filter(Boolean).join(', ')
+                  : ""
+                }
+              />
+            </div>
+
+            {/* Panneau Invités mobile - Dans le même modal */}
+            {isGuestsOpen && (
+              <div className="relative mb-4 bg-white border border-gray-200 rounded-lg p-4">
+                <div className="space-y-4">
+                  {/* Adultes */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">Adultes</h3>
+                      <p className="text-sm text-muted-foreground">13 ans et plus</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => setGuests(prev => ({ ...prev, adults: Math.max(1, prev.adults - 1) }))}
+                        disabled={guests.adults <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-8 text-center">{guests.adults}</span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => setGuests(prev => ({ ...prev, adults: prev.adults + 1 }))}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                      {/* Enfants */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium">Enfants</h3>
+                          <p className="text-sm text-muted-foreground">2-12 ans</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                            onClick={() => setGuests(prev => ({ ...prev, children: Math.max(0, prev.children - 1) }))}
+                            disabled={guests.children <= 0}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="w-8 text-center">{guests.children}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                            onClick={() => setGuests(prev => ({ ...prev, children: prev.children + 1 }))}
+                            disabled={guests.adults < 1}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                  {/* Animaux */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">Animaux</h3>
+                      <p className="text-sm text-muted-foreground">Animaux de compagnie</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => setGuests(prev => ({ ...prev, pets: Math.max(0, prev.pets - 1) }))}
+                        disabled={guests.pets <= 0}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-8 text-center">{guests.pets}</span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => setGuests(prev => ({ ...prev, pets: prev.pets + 1 }))}
+                        disabled={guests.adults < 1}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Bouton de recherche */}
+            <div className="pt-4">
+              <Button 
+                className="w-full h-12 rounded-xl"
+                onClick={() => {
+                  // Logique de recherche à implémenter
+                  setIsSearchModalOpen(false);
+                }}
+              >
+                <Search className="mr-2 h-4 w-4" />
+                Rechercher
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

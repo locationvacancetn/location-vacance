@@ -446,8 +446,8 @@ const CitiesManagement = () => {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteCity(city.id)}>
+                        <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteCity(city.id)} className="bg-[#bc2d2b] hover:bg-[#a82523] text-white">
                           Supprimer
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -522,8 +522,8 @@ const CitiesManagement = () => {
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteRegion(region.id)}>
+                                  <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteRegion(region.id)} className="bg-[#bc2d2b] hover:bg-[#a82523] text-white">
                                     Supprimer
                                   </AlertDialogAction>
                                 </AlertDialogFooter>

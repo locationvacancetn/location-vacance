@@ -56,6 +56,7 @@ export interface PropertyFormData {
   
   // Étape 6: Équipements et règles
   equipmentIds: string[];
+  characteristicIds: string[];
   smokingAllowed: boolean;
   petsAllowed: boolean;
   partiesAllowed: boolean;
@@ -96,9 +97,10 @@ const initialFormData: PropertyFormData = {
   checkOutTime: "",
   minNights: 0,
   equipmentIds: [],
-  smokingAllowed: false,
-  petsAllowed: false,
-  partiesAllowed: false,
+  characteristicIds: [],
+  smokingAllowed: true,
+  petsAllowed: true,
+  partiesAllowed: true,
   childrenAllowed: true,
 };
 
@@ -204,6 +206,14 @@ const AddPropertyWizard = () => {
     clearLocalStorage();
     setFormData(initialFormData);
     setCurrentStep(1);
+    
+    // Remettre à zéro tous les états liés aux images
+    setExistingImageUrls([]);
+    setTotalDisplayedImages(0);
+    setDisplayedImages([]);
+    setIsExistingImage([]);
+    setFinalImageUrls([]);
+    
     toast({
       title: "Données effacées",
       description: "Toutes les données sauvegardées ont été supprimées.",
@@ -338,13 +348,19 @@ const AddPropertyWizard = () => {
         checkOutTime: property.check_out_time || "",
         minNights: property.min_nights || 1,
         equipmentIds: property.amenities || [],
-        smokingAllowed: property.smoking_allowed || false,
-        petsAllowed: property.pets_allowed || false,
-        partiesAllowed: property.parties_allowed || false,
-        childrenAllowed: property.children_allowed || true,
+        characteristicIds: property.characteristic_ids || [],
+        smokingAllowed: property.smoking_allowed ?? true,
+        petsAllowed: property.pets_allowed ?? true,
+        partiesAllowed: property.parties_allowed ?? true,
+        childrenAllowed: property.children_allowed ?? true,
       };
       
       setFormData(propertyFormData);
+      
+      console.log('Données de la propriété chargées:', {
+        characteristicIds: property.characteristic_ids,
+        equipmentIds: property.amenities
+      });
       
       // Stocker les URLs des images existantes pour PhotosStep
       if (property.images && property.images.length > 0) {
@@ -469,7 +485,7 @@ const AddPropertyWizard = () => {
         });
         
         // Redirection vers la gestion des propriétés
-        navigate('/dashboard/properties');
+        navigate('/dashboard/owner/properties');
       } else {
         // Mode création
         console.log("Création de la propriété avec les données:", formData);
@@ -483,11 +499,11 @@ const AddPropertyWizard = () => {
         
         showSuccess({
           title: "Succès",
-          description: `Propriété "${createdProperty.title}" créée avec succès ! Elle est maintenant en attente de paiement.`,
+          description: `Propriété "${createdProperty.title}" créée avec succès !`,
         });
         
-        // Redirection vers le dashboard
-        navigate('/dashboard');
+        // Redirection vers la gestion des propriétés
+        navigate('/dashboard/properties');
       }
     } catch (error) {
       console.error("Erreur lors de la soumission:", error);
@@ -610,10 +626,10 @@ const AddPropertyWizard = () => {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="hover:!bg-transparent hover:!text-foreground hover:!border-border">Annuler</AlertDialogCancel>
+                <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleClearData}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
                 >
                   Effacer
                 </AlertDialogAction>
@@ -662,8 +678,8 @@ const AddPropertyWizard = () => {
                     document.body.scrollTop = 0;
                   }, 10);
                 }}
-                disabled={currentStep === 1}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:!text-white px-4 py-2 bg-[#32323A] text-white hover:bg-[#3a3a42] h-10 w-10 p-0"
+                disabled={currentStep === 1 || isSubmitting}
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:!text-white px-4 py-2 bg-[#32323a] text-white hover:bg-[#3a3a42] h-10 w-10 p-0"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -709,8 +725,8 @@ const AddPropertyWizard = () => {
          <Button
            type="button"
            onClick={prevStep}
-           disabled={currentStep === 1}
-           className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:!text-white px-4 py-2 bg-[#32323A] text-white hover:bg-[#3a3a42] min-w-[120px]"
+           disabled={currentStep === 1 || isSubmitting}
+           className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:!text-white px-4 py-2 bg-[#32323a] text-white hover:bg-[#3a3a42] min-w-[120px]"
          >
            <ArrowLeft className="h-4 w-4" />
            Précédent

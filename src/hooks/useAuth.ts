@@ -102,6 +102,12 @@ export function useAuth() {
     setIsLoggingOut(true);
     try {
       const { error } = await supabase.auth.signOut();
+      
+      // Mettre à jour l'état local même en cas d'erreur
+      setUser(null);
+      setSession(null);
+      setLoading(false);
+      
       return { error };
     } finally {
       setIsLoggingOut(false);

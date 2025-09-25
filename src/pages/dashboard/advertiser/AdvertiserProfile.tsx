@@ -8,6 +8,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { 
   User,
   Upload,
@@ -19,6 +20,7 @@ const AdvertiserProfile = () => {
   const { userProfile, refreshUserData } = useUserRole();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { title, description } = usePageTitle();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isLoading, setIsLoading] = useState(false);
@@ -302,7 +304,6 @@ const AdvertiserProfile = () => {
       {/* Section Photo de profil */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Photo de profil</CardTitle>
           <CardDescription>
             Votre photo apparaîtra sur votre profil et dans vos interactions.
           </CardDescription>
@@ -367,7 +368,6 @@ const AdvertiserProfile = () => {
       {/* Section Informations personnelles */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Informations personnelles</CardTitle>
           <CardDescription>
             Vos informations de base.
           </CardDescription>
@@ -647,7 +647,6 @@ const AdvertiserProfile = () => {
       {/* Section Contacts sociaux */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Contacts sociaux</CardTitle>
           <CardDescription>
             Vos informations de contact pour les locataires et prospects.
           </CardDescription>

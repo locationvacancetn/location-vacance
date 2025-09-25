@@ -8,6 +8,10 @@ const PAGE_TITLES: Record<string, string> = {
   
   // Profils
   '/dashboard/profile': 'Mon Profil',
+  '/dashboard/admin/profile': 'Profil Administrateur',
+  '/dashboard/owner/profile': 'Profil Propriétaire',
+  '/dashboard/tenant/profile': 'Profil Locataire',
+  '/dashboard/advertiser/profile': 'Profil Annonceur',
   
   // Gestion admin
   '/dashboard/admin/cities': 'Gestion des Villes',
@@ -15,13 +19,18 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/admin/property-types': 'Gestion des Types de Propriétés',
   '/dashboard/admin/konnect': 'Configuration Konnect',
   '/dashboard/admin/email': 'Configuration Email',
+  '/dashboard/admin/seo': 'Gestion SEO',
   '/dashboard/users': 'Gestion des Utilisateurs',
   
   // Pages Owner
   '/dashboard/add-property': 'Nouvelle propriété',
+  '/dashboard/owner/add-property': 'Nouvelle propriété',
   '/dashboard/edit-property': 'Modification propriété',
+  '/dashboard/owner/edit-property': 'Modification propriété',
   '/dashboard/properties': 'Mes Propriétés',
+  '/dashboard/owner/properties': 'Mes Propriétés',
   '/dashboard/calendar': 'Calendrier de Blocage',
+  '/dashboard/owner/calendar': 'Calendrier de Blocage',
   
   // Dashboards par rôle (fallback)
   '/dashboard/admin': 'Tableau de bord Admin',
@@ -34,16 +43,25 @@ const PAGE_TITLES: Record<string, string> = {
 const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/dashboard': 'Vue d\'ensemble de votre compte',
   '/dashboard/profile': 'Gérez vos informations personnelles',
+  '/dashboard/admin/profile': 'Gérez vos informations personnelles et vos privilèges administrateur',
+  '/dashboard/owner/profile': 'Gérez vos informations personnelles et vos contacts pour les locataires',
+  '/dashboard/tenant/profile': 'Gérez vos informations personnelles et vos préférences',
+  '/dashboard/advertiser/profile': 'Gérez vos informations personnelles et professionnelles',
   '/dashboard/admin/cities': 'Ajoutez et modifiez les villes disponibles',
   '/dashboard/admin/equipments': 'Gérez les équipements des logements',
   '/dashboard/admin/property-types': 'Gérez les types de propriétés disponibles (villa, appartement, chalet...)',
   '/dashboard/admin/konnect': 'Configurez les paramètres de l\'intégration avec le service de paiement Konnect',
   '/dashboard/admin/email': 'Gérez l\'envoi d\'emails et les paramètres SMTP',
+  '/dashboard/admin/seo': 'Optimisez le référencement de vos annonces pour améliorer leur visibilité',
   '/dashboard/users': 'Administrez les comptes utilisateurs',
   '/dashboard/add-property': 'Créez votre annonce étape par étape',
+  '/dashboard/owner/add-property': 'Créez votre annonce étape par étape',
   '/dashboard/edit-property': 'Modifiez votre annonce étape par étape',
+  '/dashboard/owner/edit-property': 'Modifiez votre annonce étape par étape',
   '/dashboard/properties': 'Gérez vos propriétés et leurs statuts',
+  '/dashboard/owner/properties': 'Gérez vos propriétés et leurs statuts',
   '/dashboard/calendar': 'Gérez la disponibilité de vos propriétés en bloquant ou libérant des dates',
+  '/dashboard/owner/calendar': 'Gérez la disponibilité de vos propriétés en bloquant ou libérant des dates',
 };
 
 export const usePageTitle = () => {

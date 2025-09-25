@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -34,12 +35,24 @@ import {
   Phone,
   Mail,
   Calendar,
-  Filter
+  Filter,
+  Trash2,
+  HomeIcon,
+  MegaphoneIcon,
+  X,
+  UserPlus
 } from "lucide-react";
+import { useState, useEffect } from 'react';
 import { useUsersManagement } from '@/hooks/useUsersManagement';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { USER_ROLES } from '@/lib/constants';
+import { useNavigate } from 'react-router-dom';
 
 const UsersManagement = () => {
+  const { toast } = useToast();
+  const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const {
     users,
     loading,
@@ -48,7 +61,8 @@ const UsersManagement = () => {
     stats,
     setSearchTerm,
     setRoleFilter,
-    toggleUserStatus
+    toggleUserStatus,
+    deleteUser
   } = useUsersManagement();
 
 
@@ -164,189 +178,490 @@ const UsersManagement = () => {
         </Card>
       </div>
 
-      {/* Filtres et recherche */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filtres et Recherche</CardTitle>
-          <CardDescription>
-            Recherchez des utilisateurs par nom, email, téléphone ou filtrez par rôle.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher par nom, email ou téléphone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <select
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 pl-10 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="all">Tous les rôles</option>
-                  <option value={USER_ROLES.ADMIN}>Administrateur</option>
-                  <option value={USER_ROLES.OWNER}>Propriétaire</option>
-                  <option value={USER_ROLES.TENANT}>Locataire</option>
-                  <option value={USER_ROLES.ADVERTISER}>Publicitaire</option>
-                </select>
-              </div>
-            </div>
+      {/* Barre de recherche et bouton d'ajout */}
+      <div className="space-y-4">
+        {/* Barre de recherche et bouton d'ajout sur la même ligne */}
+        <div className="flex justify-between items-center gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom, email ou téléphone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10 placeholder:text-sm placeholder:text-muted-foreground"
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
+          
+          <Button 
+            onClick={() => navigate('/dashboard/admin/add-user')}
+            className="bg-primary hover:bg-primary/90 text-white flex items-center gap-2"
+          >
+            <UserPlus className="h-4 w-4" />
+            Ajouter un utilisateur
+          </Button>
+        </div>
 
-      {/* Tableau des utilisateurs */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">
-            Liste des Utilisateurs ({users.length})
-          </CardTitle>
-          <CardDescription>
-            Gérez les utilisateurs et leurs permissions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Rôle</TableHead>
-                  <TableHead>Dernière connexion</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      <div className="flex flex-col items-center space-y-2">
-                        <Users className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          {searchTerm || roleFilter !== 'all' 
-                            ? 'Aucun utilisateur trouvé avec ces critères' 
-                            : 'Aucun utilisateur trouvé'
-                          }
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={user.avatar_url || undefined} />
-                            <AvatarFallback>
-                              {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{user.full_name || 'N/A'}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          {user.phone && <Phone className="h-3 w-3" />}
-                          <span>{user.phone || 'N/A'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center gap-1 w-fit">
-                          {getRoleIcon(user.role)}
-                          {getRoleLabel(user.role)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(user.last_sign_in_at)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.is_active ? 'default' : 'destructive'}>
-                          {user.is_active ? 'Actif' : 'Désactivé'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end items-center gap-2">
-                          {!user.is_active ? (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="text-green-600 hover:text-green-700">
-                                  <UserCheck className="mr-2 h-4 w-4" />
-                                  Réactiver
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                <AlertDialogTitle>Réactiver le compte ?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Êtes-vous sûr de vouloir réactiver ce compte ?
-                                  L'utilisateur pourra à nouveau se connecter à la plateforme.
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => toggleUserStatus(user.user_id, true)}
-                                  >
-                                    Réactiver
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          ) : (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm">
-                                  <UserX className="mr-2 h-4 w-4" />
-                                  Désactiver
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                <AlertDialogTitle>Désactiver le compte ?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Êtes-vous sûr de vouloir désactiver ce compte ?
-                                  L'utilisateur ne pourra plus se connecter à la plateforme.
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => toggleUserStatus(user.user_id, false)}
-                                  >
-                                    Désactiver
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+        {/* Filtre par rôle */}
+        <div className="max-w-md">
+          <Select value={roleFilter} onValueChange={(value: string) => setRoleFilter(value)}>
+            <SelectTrigger className="w-full">
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Filtrer par rôle" className="text-sm text-muted-foreground" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les rôles</SelectItem>
+              <SelectItem value={USER_ROLES.ADMIN}>Administrateur</SelectItem>
+              <SelectItem value={USER_ROLES.OWNER}>Propriétaire</SelectItem>
+              <SelectItem value={USER_ROLES.TENANT}>Locataire</SelectItem>
+              <SelectItem value={USER_ROLES.ADVERTISER}>Publicitaire</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Statistiques des résultats */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {users.length} utilisateur{users.length !== 1 ? 's' : ''} 
+            {searchTerm && ` trouvé${users.length !== 1 ? 's' : ''}`}
+            {roleFilter !== "all" && ` (${getRoleLabel(roleFilter)}s)`}
+          </span>
+          {(searchTerm || roleFilter !== "all") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchTerm("");
+                setRoleFilter("all");
+              }}
+              className="h-6 text-xs"
+            >
+              Effacer les filtres
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Liste des utilisateurs */}
+      {users.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="flex flex-col items-center space-y-2">
+            <Users className="h-8 w-8 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              {searchTerm || roleFilter !== 'all' 
+                ? 'Aucun utilisateur ne correspond aux critères de recherche.' 
+                : 'Aucun utilisateur trouvé.'
+              }
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      ) : (
+        <>
+          {/* Version desktop - Table complète avec Card */}
+          <div className="hidden lg:block">
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Utilisateur</TableHead>
+                        <TableHead>Rôle</TableHead>
+                        <TableHead>Activité</TableHead>
+                        <TableHead>Dernière connexion</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={user.avatar_url || undefined} />
+                                <AvatarFallback>
+                                  {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">{user.full_name || 'N/A'}</p>
+                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center gap-1 w-fit">
+                              {getRoleIcon(user.role)}
+                              {getRoleLabel(user.role)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 text-sm">
+                              {user.role === USER_ROLES.OWNER && (
+                                <div className="flex items-center gap-1 text-blue-600">
+                                  <HomeIcon className="h-4 w-4" />
+                                  <span className="font-medium">{user.properties_count || 0}</span>
+                                  <span className="text-muted-foreground">annonce{user.properties_count !== 1 ? 's' : ''}</span>
+                                </div>
+                              )}
+                              {user.role === USER_ROLES.ADVERTISER && (
+                                <div className="flex items-center gap-1 text-purple-600">
+                                  <MegaphoneIcon className="h-4 w-4" />
+                                  <span className="font-medium">{user.advertisements_count || 0}</span>
+                                  <span className="text-muted-foreground">publicité{(user.advertisements_count || 0) !== 1 ? 's' : ''}</span>
+                                </div>
+                              )}
+                              {(user.role === USER_ROLES.TENANT || user.role === USER_ROLES.ADMIN) && (
+                                <span className="text-muted-foreground text-sm">-</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-muted-foreground">
+                              {formatDate(user.last_sign_in_at)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              {user.phone ? (
+                                <>
+                                  <Phone className="h-3 w-3" />
+                                  <a 
+                                    href={`tel:${user.phone}`}
+                                    className="hover:underline cursor-pointer"
+                                    title={`Appeler ${user.phone}`}
+                                  >
+                                    {user.phone}
+                                  </a>
+                                </>
+                              ) : (
+                                <span>N/A</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.is_active ? 'default' : 'destructive'}>
+                              {user.is_active ? 'Actif' : 'Désactivé'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end items-center gap-2">
+                              {!user.is_active ? (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      size="sm" 
+                                      className="h-8 w-8 p-0 text-white hover:opacity-90 transition-opacity"
+                                      style={{ backgroundColor: 'rgb(30 174 90)' }}
+                                      title="Réactiver le compte"
+                                    >
+                                      <UserCheck className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Réactiver le compte ?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Êtes-vous sûr de vouloir réactiver ce compte ?
+                                      L'utilisateur pourra à nouveau se connecter à la plateforme.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => toggleUserStatus(user.user_id, true)}
+                                        className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                                      >
+                                        Réactiver
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              ) : (
+                                // Ne pas afficher le bouton de désactivation pour les administrateurs
+                                user.role !== USER_ROLES.ADMIN && (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button 
+                                        size="sm" 
+                                        className="h-8 w-8 p-0 text-white hover:opacity-90 transition-opacity"
+                                        style={{ backgroundColor: '#d2ac21' }}
+                                        title="Désactiver le compte"
+                                      >
+                                        <UserX className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                      <AlertDialogTitle>Désactiver le compte ?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Êtes-vous sûr de vouloir désactiver ce compte ?
+                                        L'utilisateur ne pourra plus se connecter à la plateforme.
+                                      </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => toggleUserStatus(user.user_id, false)}
+                                          className="bg-[#d2ac21] hover:bg-[#b8941f] text-white"
+                                        >
+                                          Désactiver
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                )
+                              )}
+                              
+                              {/* Bouton de suppression - seulement si ce n'est pas un admin et pas l'utilisateur actuel */}
+                              {user.role !== USER_ROLES.ADMIN && user.user_id !== currentUser?.id && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      size="sm" 
+                                      className="h-8 w-8 p-0 text-white hover:opacity-90 transition-opacity"
+                                      style={{ backgroundColor: '#bc2d2b' }}
+                                      title="Supprimer l'utilisateur"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Supprimer l'utilisateur</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Êtes-vous sûr de vouloir supprimer le compte de <strong>{user.full_name || user.email}</strong> ? 
+                                        <br />
+                                        Cette action est irréversible.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteUser(user.user_id)}
+                                        className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                                      >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Supprimer
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Version mobile - Cards */}
+          <div className="lg:hidden space-y-4">
+            {users.map((user) => (
+              <div key={user.id} className="p-4 border rounded-lg bg-card">
+                <div className="space-y-3">
+                  {/* En-tête avec avatar, nom, email et statut */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={user.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-medium text-sm">{user.full_name || 'N/A'}</h3>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                      </div>
+                    </div>
+                    <Badge variant={user.is_active ? 'default' : 'destructive'}>
+                      {user.is_active ? 'Actif' : 'Désactivé'}
+                    </Badge>
+                  </div>
+
+                  {/* Rôle et activité sur la même ligne */}
+                  <div className="flex items-center justify-between">
+                    <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center gap-1 w-fit">
+                      {getRoleIcon(user.role)}
+                      {getRoleLabel(user.role)}
+                    </Badge>
+                    
+                    {/* Activité */}
+                    <div className="flex items-center gap-1 text-sm">
+                      {user.role === USER_ROLES.OWNER && (
+                        <div className="flex items-center gap-1 text-blue-600">
+                          <HomeIcon className="h-4 w-4" />
+                          <span className="font-medium">{user.properties_count || 0}</span>
+                          <span className="text-muted-foreground">annonce{user.properties_count !== 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                      {user.role === USER_ROLES.ADVERTISER && (
+                        <div className="flex items-center gap-1 text-purple-600">
+                          <MegaphoneIcon className="h-4 w-4" />
+                          <span className="font-medium">{user.advertisements_count || 0}</span>
+                          <span className="text-muted-foreground">publicité{(user.advertisements_count || 0) !== 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                      {(user.role === USER_ROLES.TENANT || user.role === USER_ROLES.ADMIN) && (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Dernière connexion sur sa propre ligne */}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                    <Calendar className="h-3 w-3" />
+                    <span>Dernière connexion: {formatDate(user.last_sign_in_at)}</span>
+                  </div>
+
+                  {/* Séparateur */}
+                  <div className="border-t border-gray-200"></div>
+
+                  {/* Actions et contact */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {/* Actions */}
+                      {!user.is_active ? (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              className="h-8 w-8 p-0 text-white hover:opacity-90 transition-opacity"
+                              style={{ backgroundColor: 'rgb(30 174 90)' }}
+                              title="Réactiver le compte"
+                            >
+                              <UserCheck className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>Réactiver le compte ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Êtes-vous sûr de vouloir réactiver ce compte ?
+                              L'utilisateur pourra à nouveau se connecter à la plateforme.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => toggleUserStatus(user.user_id, true)}
+                                className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                              >
+                                Réactiver
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      ) : (
+                        // Ne pas afficher le bouton de désactivation pour les administrateurs
+                        user.role !== USER_ROLES.ADMIN && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                className="h-8 w-8 p-0 text-white hover:opacity-90 transition-opacity"
+                                style={{ backgroundColor: '#d2ac21' }}
+                                title="Désactiver le compte"
+                              >
+                                <UserX className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                              <AlertDialogTitle>Désactiver le compte ?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Êtes-vous sûr de vouloir désactiver ce compte ?
+                                L'utilisateur ne pourra plus se connecter à la plateforme.
+                              </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => toggleUserStatus(user.user_id, false)}
+                                  className="bg-[#d2ac21] hover:bg-[#b8941f] text-white"
+                                >
+                                  Désactiver
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )
+                      )}
+                      
+                      {/* Bouton de suppression - seulement si ce n'est pas un admin et pas l'utilisateur actuel */}
+                      {user.role !== USER_ROLES.ADMIN && user.user_id !== currentUser?.id && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              className="h-8 w-8 p-0 text-white hover:opacity-90 transition-opacity"
+                              style={{ backgroundColor: '#bc2d2b' }}
+                              title="Supprimer l'utilisateur"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer l'utilisateur</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Êtes-vous sûr de vouloir supprimer le compte de <strong>{user.full_name || user.email}</strong> ? 
+                                <br />
+                                Cette action est irréversible.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteUser(user.user_id)}
+                                className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+                    
+                    {/* Contact */}
+                    {user.phone && (
+                      <div className="flex items-center gap-1 text-sm">
+                        <Phone className="h-3 w-3 text-muted-foreground" />
+                        <a 
+                          href={`tel:${user.phone}`}
+                          className="hover:underline cursor-pointer text-sm"
+                          title={`Appeler ${user.phone}`}
+                        >
+                          {user.phone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 };

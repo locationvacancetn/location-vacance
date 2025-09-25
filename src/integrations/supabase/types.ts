@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      advertisements: {
+        Row: {
+          ad_type: string
+          advertiser_id: string
+          created_at: string | null
+          description: string
+          id: string
+          image_url: string | null
+          link_url: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          ad_type: string
+          advertiser_id: string
+          created_at?: string | null
+          description: string
+          id?: string
+          image_url?: string | null
+          link_url: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          ad_type?: string
+          advertiser_id?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          image_url?: string | null
+          link_url?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cities: {
         Row: {
           created_at: string | null
@@ -38,6 +77,54 @@ export type Database = {
           name?: string
           slug?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      email_config: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          from_email: string
+          from_name: string | null
+          id: number
+          is_active: boolean | null
+          is_ssl: boolean | null
+          smtp_host: string
+          smtp_password: string
+          smtp_port: number
+          smtp_user: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          from_email: string
+          from_name?: string | null
+          id?: number
+          is_active?: boolean | null
+          is_ssl?: boolean | null
+          smtp_host: string
+          smtp_password: string
+          smtp_port?: number
+          smtp_user: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          from_email?: string
+          from_name?: string | null
+          id?: number
+          is_active?: boolean | null
+          is_ssl?: boolean | null
+          smtp_host?: string
+          smtp_password?: string
+          smtp_port?: number
+          smtp_user?: string
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -236,6 +323,7 @@ export type Database = {
           property_type_id: string | null
           published_at: string | null
           region_id: string | null
+          slug: string | null
           smoking_allowed: boolean | null
           status: string
           subscription_end_date: string | null
@@ -273,6 +361,7 @@ export type Database = {
           property_type_id?: string | null
           published_at?: string | null
           region_id?: string | null
+          slug?: string | null
           smoking_allowed?: boolean | null
           status?: string
           subscription_end_date?: string | null
@@ -310,6 +399,7 @@ export type Database = {
           property_type_id?: string | null
           published_at?: string | null
           region_id?: string | null
+          slug?: string | null
           smoking_allowed?: boolean | null
           status?: string
           subscription_end_date?: string | null
@@ -401,6 +491,194 @@ export type Database = {
           },
         ]
       }
+      property_characteristic_assignments: {
+        Row: {
+          characteristic_id: string
+          created_at: string | null
+          id: string
+          property_id: string
+        }
+        Insert: {
+          characteristic_id: string
+          created_at?: string | null
+          id?: string
+          property_id: string
+        }
+        Update: {
+          characteristic_id?: string
+          created_at?: string | null
+          id?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_characteristic_assignments_characteristic_id_fkey"
+            columns: ["characteristic_id"]
+            isOneToOne: false
+            referencedRelation: "property_characteristics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_characteristic_assignments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_characteristics: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      property_seo_data: {
+        Row: {
+          activity_keywords: string | null
+          cancellation_policy: string | null
+          canonical_url: string | null
+          capacity: string | null
+          comfort_keywords: string | null
+          created_at: string | null
+          detailed_description: string | null
+          gallery_alt_texts: string[] | null
+          geographic_keywords: string | null
+          id: string
+          image_descriptions: string[] | null
+          image_titles: string[] | null
+          included_services: string | null
+          last_update_date: string | null
+          local_keywords: string | null
+          long_tail_keywords: string | null
+          main_equipments: string | null
+          main_image_alt: string | null
+          meta_description: string | null
+          meta_keywords: string | null
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          og_type: string | null
+          primary_keywords: string | null
+          priority_indexing: string | null
+          property_id: string
+          property_type: string | null
+          redirects: string | null
+          seasonal_keywords: string | null
+          secondary_keywords: string | null
+          spoken_languages: string | null
+          title_tag: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          activity_keywords?: string | null
+          cancellation_policy?: string | null
+          canonical_url?: string | null
+          capacity?: string | null
+          comfort_keywords?: string | null
+          created_at?: string | null
+          detailed_description?: string | null
+          gallery_alt_texts?: string[] | null
+          geographic_keywords?: string | null
+          id?: string
+          image_descriptions?: string[] | null
+          image_titles?: string[] | null
+          included_services?: string | null
+          last_update_date?: string | null
+          local_keywords?: string | null
+          long_tail_keywords?: string | null
+          main_equipments?: string | null
+          main_image_alt?: string | null
+          meta_description?: string | null
+          meta_keywords?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          og_type?: string | null
+          primary_keywords?: string | null
+          priority_indexing?: string | null
+          property_id: string
+          property_type?: string | null
+          redirects?: string | null
+          seasonal_keywords?: string | null
+          secondary_keywords?: string | null
+          spoken_languages?: string | null
+          title_tag?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          activity_keywords?: string | null
+          cancellation_policy?: string | null
+          canonical_url?: string | null
+          capacity?: string | null
+          comfort_keywords?: string | null
+          created_at?: string | null
+          detailed_description?: string | null
+          gallery_alt_texts?: string[] | null
+          geographic_keywords?: string | null
+          id?: string
+          image_descriptions?: string[] | null
+          image_titles?: string[] | null
+          included_services?: string | null
+          last_update_date?: string | null
+          local_keywords?: string | null
+          long_tail_keywords?: string | null
+          main_equipments?: string | null
+          main_image_alt?: string | null
+          meta_description?: string | null
+          meta_keywords?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          og_type?: string | null
+          primary_keywords?: string | null
+          priority_indexing?: string | null
+          property_id?: string
+          property_type?: string | null
+          redirects?: string | null
+          seasonal_keywords?: string | null
+          secondary_keywords?: string | null
+          spoken_languages?: string | null
+          title_tag?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_seo_data_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_types: {
         Row: {
           created_at: string | null
@@ -433,6 +711,47 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      property_views: {
+        Row: {
+          created_at: string | null
+          duration_seconds: number
+          id: string
+          property_id: string
+          referrer: string | null
+          user_agent: string | null
+          view_date: string | null
+          visitor_ip: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_seconds: number
+          id?: string
+          property_id: string
+          referrer?: string | null
+          user_agent?: string | null
+          view_date?: string | null
+          visitor_ip?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_seconds?: number
+          id?: string
+          property_id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          view_date?: string | null
+          visitor_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_views_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       regions: {
         Row: {
@@ -561,34 +880,70 @@ export type Database = {
         Returns: boolean
       }
       create_property: {
-        Args: {
-          p_address: string
-          p_bathrooms: number
-          p_bedrooms: number
-          p_check_in_time: string
-          p_check_out_time: string
-          p_children_allowed?: boolean
-          p_city_id: string
-          p_description: string
-          p_equipment_ids: string[]
-          p_images: string[]
-          p_latitude: string
-          p_longitude: string
-          p_max_guests: number
-          p_min_nights: number
-          p_parties_allowed?: boolean
-          p_pets_allowed?: boolean
-          p_price_per_night: number
-          p_property_type_id: string
-          p_region_id: string
-          p_smoking_allowed?: boolean
-          p_title: string
-        }
+        Args:
+          | {
+              p_address: string
+              p_bathrooms: number
+              p_bedrooms: number
+              p_characteristic_ids: string[]
+              p_check_in_time: string
+              p_check_out_time: string
+              p_children_allowed: boolean
+              p_city_id: string
+              p_description: string
+              p_equipment_ids: string[]
+              p_images: string[]
+              p_latitude: string
+              p_longitude: string
+              p_max_guests: number
+              p_min_nights: number
+              p_owner_id?: string
+              p_parties_allowed: boolean
+              p_pets_allowed: boolean
+              p_price_per_night: number
+              p_property_type_id: string
+              p_region_id: string
+              p_smoking_allowed: boolean
+              p_title: string
+            }
+          | {
+              p_address: string
+              p_bathrooms: number
+              p_bedrooms: number
+              p_check_in_time: string
+              p_check_out_time: string
+              p_children_allowed: boolean
+              p_city_id: string
+              p_description: string
+              p_equipment_ids: string[]
+              p_images: string[]
+              p_latitude: string
+              p_longitude: string
+              p_max_guests: number
+              p_min_nights: number
+              p_owner_id?: string
+              p_parties_allowed: boolean
+              p_pets_allowed: boolean
+              p_price_per_night: number
+              p_property_type_id: string
+              p_region_id: string
+              p_smoking_allowed: boolean
+              p_title: string
+            }
         Returns: string
       }
       deactivate_city: {
         Args: { city_uuid: string }
         Returns: undefined
+      }
+      get_cities_and_regions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          city_name: string
+          city_slug: string
+          region_name: string
+          region_slug: string
+        }[]
       }
       get_cities_with_regions: {
         Args: Record<PropertyKey, never>
@@ -656,9 +1011,10 @@ export type Database = {
           p_address: string
           p_bathrooms: number
           p_bedrooms: number
+          p_characteristic_ids: string[]
           p_check_in_time: string
           p_check_out_time: string
-          p_children_allowed?: boolean
+          p_children_allowed: boolean
           p_city_id: string
           p_description: string
           p_equipment_ids: string[]
@@ -666,12 +1022,40 @@ export type Database = {
           p_longitude: string
           p_max_guests: number
           p_min_nights: number
-          p_parties_allowed?: boolean
-          p_pets_allowed?: boolean
+          p_owner_id?: string
+          p_parties_allowed: boolean
+          p_pets_allowed: boolean
           p_price_per_night: number
           p_property_type_id: string
           p_region_id: string
-          p_smoking_allowed?: boolean
+          p_smoking_allowed: boolean
+          p_title: string
+          property_uuid: string
+        }
+        Returns: string
+      }
+      update_property_admin: {
+        Args: {
+          p_address: string
+          p_bathrooms: number
+          p_bedrooms: number
+          p_check_in_time: string
+          p_check_out_time: string
+          p_children_allowed: boolean
+          p_city_id: string
+          p_description: string
+          p_equipment_ids: string[]
+          p_latitude: string
+          p_longitude: string
+          p_max_guests: number
+          p_min_nights: number
+          p_owner_id?: string
+          p_parties_allowed: boolean
+          p_pets_allowed: boolean
+          p_price_per_night: number
+          p_property_type_id: string
+          p_region_id: string
+          p_smoking_allowed: boolean
           p_title: string
           property_uuid: string
         }
@@ -679,6 +1063,16 @@ export type Database = {
       }
       update_property_status: {
         Args: { admin_id?: string; new_status: string; property_uuid: string }
+        Returns: undefined
+      }
+      update_property_view_duration: {
+        Args: {
+          p_created_at: string
+          p_duration_to_add: number
+          p_property_id: string
+          p_view_date: string
+          p_visitor_ip: string
+        }
         Returns: undefined
       }
       validate_property_data: {
