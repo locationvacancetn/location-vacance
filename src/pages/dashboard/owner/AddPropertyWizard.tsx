@@ -377,7 +377,7 @@ const AddPropertyWizard = () => {
         description: "Impossible de charger les données de la propriété",
         variant: "destructive",
       });
-      navigate('/dashboard/properties');
+      navigate('/dashboard/owner/properties');
     } finally {
       setIsLoading(false);
     }
@@ -503,7 +503,7 @@ const AddPropertyWizard = () => {
         });
         
         // Redirection vers la gestion des propriétés
-        navigate('/dashboard/properties');
+        navigate('/dashboard/owner/properties');
       }
     } catch (error) {
       console.error("Erreur lors de la soumission:", error);

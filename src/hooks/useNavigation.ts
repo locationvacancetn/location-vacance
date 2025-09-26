@@ -52,7 +52,7 @@ const getMobileMenuItems = (role: string) => {
     case 'owner':
       return [
         ...commonItems,
-        { label: 'Mes Propriétés', path: '/dashboard/properties', icon: Building },
+        { label: 'Mes Propriétés', path: '/dashboard/owner/properties', icon: Building },
         { label: 'Réservations', path: '/dashboard/bookings', icon: Calendar },
         { label: 'Finances', path: '/dashboard/finances', icon: DollarSign },
         { label: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },

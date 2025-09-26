@@ -31,6 +31,7 @@ import {
   TreePine,
   ArrowUpDown
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Equipment = Tables<'equipments'>;
 
@@ -58,7 +59,7 @@ const EquipmentsManagement = () => {
   const [filteredEquipments, setFilteredEquipments] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showActiveOnly, setShowActiveOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [formData, setFormData] = useState({
@@ -105,12 +106,14 @@ const EquipmentsManagement = () => {
       );
     }
 
-    if (showActiveOnly) {
-      filtered = filtered.filter(equipment => equipment.is_active);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(equipment =>
+        statusFilter === "active" ? equipment.is_active : !equipment.is_active
+      );
     }
 
     setFilteredEquipments(filtered);
-  }, [equipments, searchTerm, showActiveOnly]);
+  }, [equipments, searchTerm, statusFilter]);
 
   useEffect(() => {
     fetchEquipments();
@@ -128,11 +131,58 @@ const EquipmentsManagement = () => {
       .trim();
   };
 
+  // Fonction pour traiter et normaliser les SVG
+  const processSvgIcon = (svgContent: string): string => {
+    if (!svgContent || !svgContent.includes('<svg')) {
+      return svgContent;
+    }
+
+    try {
+      // Nettoyer le SVG des échappements
+      let cleanSvg = svgContent
+        .replace(/\\"/g, '"')
+        .replace(/\\n/g, '')
+        .replace(/\\t/g, '')
+        .trim();
+
+      // Normaliser les dimensions à 24px
+      cleanSvg = cleanSvg
+        .replace(/width="[^"]*"/g, 'width="24"')
+        .replace(/height="[^"]*"/g, 'height="24"')
+        .replace(/width='[^']*'/g, "width='24'")
+        .replace(/height='[^']*'/g, "height='24'");
+
+      // Appliquer la couleur rgb(100,116,139)
+      cleanSvg = cleanSvg
+        .replace(/fill="#000000"/g, 'fill="rgb(100,116,139)"')
+        .replace(/fill="#000"/g, 'fill="rgb(100,116,139)"')
+        .replace(/stroke="#000000"/g, 'stroke="rgb(100,116,139)"')
+        .replace(/stroke="#000"/g, 'stroke="rgb(100,116,139)"')
+        .replace(/fill:#000000/g, 'fill:rgb(100,116,139)')
+        .replace(/fill:#000/g, 'fill:rgb(100,116,139)')
+        .replace(/stroke:#000000/g, 'stroke:rgb(100,116,139)')
+        .replace(/stroke:#000/g, 'stroke:rgb(100,116,139)')
+        .replace(/fill:none/g, 'fill:rgb(100,116,139)');
+
+      return cleanSvg;
+    } catch (error) {
+      console.error('Erreur lors du traitement du SVG:', error);
+      return svgContent;
+    }
+  };
+
   // Gérer les changements de formulaire
   const handleInputChange = (field: string, value: string | boolean) => {
+    let processedValue = value;
+
+    // Traiter le SVG si c'est le champ icon
+    if (field === 'icon' && typeof value === 'string') {
+      processedValue = processSvgIcon(value);
+    }
+
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: processedValue
     }));
 
     // Auto-générer le slug quand le nom change
@@ -149,11 +199,15 @@ const EquipmentsManagement = () => {
   const openDialog = (equipment?: Equipment) => {
     if (equipment) {
       setEditingEquipment(equipment);
+      
+      // Traiter le SVG existant s'il y en a un
+      const processedIcon = equipment.icon ? processSvgIcon(equipment.icon) : "";
+      
       setFormData({
         name: equipment.name,
         slug: equipment.slug,
         description: equipment.description || "",
-        icon: equipment.icon || "",
+        icon: processedIcon,
         is_active: equipment.is_active
       });
     } else {
@@ -297,17 +351,13 @@ const EquipmentsManagement = () => {
     
     // Si c'est un SVG (commence par <svg ou contient <svg)
     if (iconName.includes('<svg')) {
-      // Nettoyer le SVG des échappements
-      const cleanSvg = iconName
-        .replace(/\\"/g, '"')
-        .replace(/\\n/g, '')
-        .replace(/\\t/g, '')
-        .trim();
+      // Traiter le SVG avec la même logique que dans le formulaire
+      const processedSvg = processSvgIcon(iconName);
       
       return (
         <div 
-          className="h-4 w-4 flex items-center justify-center [&>svg]:h-4 [&>svg]:w-4 [&>svg]:fill-current"
-          dangerouslySetInnerHTML={{ __html: cleanSvg }}
+          className="h-4 w-4 flex items-center justify-center [&>svg]:h-4 [&>svg]:w-4"
+          dangerouslySetInnerHTML={{ __html: processedSvg }}
         />
       );
     }
@@ -337,9 +387,10 @@ const EquipmentsManagement = () => {
       <div className="flex items-center justify-end">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => openDialog()}>
+            <Button onClick={() => openDialog()} className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
-              Ajouter un équipement
+              <span className="hidden sm:inline">Ajouter un équipement</span>
+              <span className="sm:hidden">Ajouter</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
@@ -388,15 +439,28 @@ const EquipmentsManagement = () => {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="icon">Icône</Label>
-                <Input
-                  id="icon"
-                  value={formData.icon}
-                  onChange={(e) => handleInputChange('icon', e.target.value)}
-                  placeholder="Ex: wifi, car, swimming-pool..."
-                />
-                <p className="text-xs text-muted-foreground">
-                  Icône : nom Lucide (wifi, car), SVG complet, ou URL d'image
-                </p>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="icon"
+                    value={formData.icon}
+                    onChange={(e) => handleInputChange('icon', e.target.value)}
+                    placeholder="Ex: wifi, car, swimming-pool, SVG complet..."
+                    className="flex-1"
+                  />
+                  {formData.icon && (
+                    <div className="flex items-center justify-center w-12 h-12 border rounded bg-muted p-2">
+                      {getIconComponent(formData.icon)}
+                    </div>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>• Nom Lucide : wifi, car, swimming-pool, etc.</p>
+                  <p>• SVG complet : sera automatiquement dimensionné à 24px et coloré</p>
+                  <p>• URL d'image : sera affichée telle quelle</p>
+                  {formData.icon && formData.icon.includes('<svg') && (
+                    <p className="text-green-600">✓ SVG détecté - traitement automatique appliqué</p>
+                  )}
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Switch
@@ -416,139 +480,295 @@ const EquipmentsManagement = () => {
         </Dialog>
       </div>
 
-      {/* Filtres */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Filter className="h-5 w-5" />
-            Filtres
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Rechercher un équipement..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="show-active-only"
-                checked={showActiveOnly}
-                onCheckedChange={setShowActiveOnly}
-              />
-              <Label htmlFor="show-active-only">Afficher uniquement les actifs</Label>
-            </div>
+      {/* Barre de recherche */}
+      <div className="space-y-4">
+        {/* Version desktop - Recherche et filtre sur la même ligne */}
+        <div className="hidden lg:flex lg:items-center lg:gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom d'équipement"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10 placeholder:text-sm placeholder:text-muted-foreground"
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Filtre par statut */}
+          <div className="flex-1">
+            <Select value={statusFilter} onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}>
+              <SelectTrigger className="w-full">
+                <div className="flex items-center space-x-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="Filtrer par statut" className="text-sm text-muted-foreground" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les équipements</SelectItem>
+                <SelectItem value="active">Équipements actifs</SelectItem>
+                <SelectItem value="inactive">Équipements inactifs</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Version mobile - Recherche et filtre empilés */}
+        <div className="lg:hidden space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom d'équipement"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10 placeholder:text-sm placeholder:text-muted-foreground"
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+
+          {/* Filtre par statut - Pleine largeur */}
+          <Select value={statusFilter} onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}>
+            <SelectTrigger className="w-full">
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Filtrer par statut" className="text-sm text-muted-foreground" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les équipements</SelectItem>
+              <SelectItem value="active">Équipements actifs</SelectItem>
+              <SelectItem value="inactive">Équipements inactifs</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Statistiques des résultats */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {filteredEquipments.length} équipement{filteredEquipments.length !== 1 ? 's' : ''} 
+            {searchTerm && ` trouvé${filteredEquipments.length !== 1 ? 's' : ''}`}
+            {statusFilter !== "all" && ` (${statusFilter === "active" ? "actifs" : "inactifs"})`}
+          </span>
+          {(searchTerm || statusFilter !== "all") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("all");
+              }}
+              className="h-6 text-xs"
+            >
+              Effacer les filtres
+            </Button>
+          )}
+        </div>
+      </div>
 
       {/* Liste des équipements */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Équipements ({filteredEquipments.length})</CardTitle>
-          <CardDescription>
-            Liste de tous les équipements disponibles
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {filteredEquipments.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                {searchTerm || showActiveOnly 
-                  ? 'Aucun équipement ne correspond aux critères de recherche.' 
-                  : 'Aucun équipement trouvé.'
-                }
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Icône</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEquipments.map((equipment) => (
-                  <TableRow key={equipment.id}>
-                    <TableCell className="font-medium">
-                      {equipment.name}
-                    </TableCell>
-                    <TableCell>
-                      <code className="text-xs bg-muted px-2 py-1 rounded">
-                        {equipment.slug}
-                      </code>
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {equipment.description || '-'}
-                    </TableCell>
-                    <TableCell>
-                      {getIconComponent(equipment.icon)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={equipment.is_active ? "default" : "secondary"}>
-                        {equipment.is_active ? 'Actif' : 'Inactif'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Switch
-                          checked={equipment.is_active}
-                          onCheckedChange={(checked) => toggleActive(equipment, checked)}
-                          className="scale-90"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openDialog(equipment)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Supprimer l'équipement</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Êtes-vous sûr de vouloir supprimer l'équipement "{equipment.name}" ? 
-                                Cette action est irréversible.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(equipment.id)}
-                                className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+      {filteredEquipments.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">
+            {searchTerm || statusFilter !== "all" 
+              ? 'Aucun équipement ne correspond aux critères de recherche.' 
+              : 'Aucun équipement trouvé.'
+            }
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Version desktop - Table complète avec Card */}
+          <div className="hidden lg:block">
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Slug</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Icône</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredEquipments.map((equipment) => (
+                        <TableRow key={equipment.id}>
+                          <TableCell className="font-medium">
+                            {equipment.name}
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {equipment.slug}
+                            </code>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate" title={equipment.description || ''}>
+                              {equipment.description || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getIconComponent(equipment.icon)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={equipment.is_active ? "default" : "secondary"}>
+                              {equipment.is_active ? 'Actif' : 'Inactif'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Switch
+                                checked={equipment.is_active}
+                                onCheckedChange={(checked) => toggleActive(equipment, checked)}
+                                className="scale-90"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openDialog(equipment)}
                               >
-                                Supprimer
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Supprimer l'équipement</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Êtes-vous sûr de vouloir supprimer l'équipement "{equipment.name}" ? 
+                                      Cette action est irréversible.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(equipment.id)}
+                                      className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                                    >
+                                      Supprimer
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Version mobile - Cards */}
+          <div className="lg:hidden space-y-4">
+            {filteredEquipments.map((equipment) => (
+              <div key={equipment.id} className="p-4 border rounded-lg bg-card">
+                <div className="space-y-3">
+                  {/* En-tête avec nom et statut */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 border rounded bg-muted">
+                        {getIconComponent(equipment.icon)}
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                      <div>
+                        <h3 className="font-medium text-sm">{equipment.name}</h3>
+                        <code className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                          {equipment.slug}
+                        </code>
+                      </div>
+                    </div>
+                    <Badge variant={equipment.is_active ? "default" : "secondary"}>
+                      {equipment.is_active ? 'Actif' : 'Inactif'}
+                    </Badge>
+                  </div>
+
+                  {/* Description */}
+                  {equipment.description && (
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium">Description :</span> {equipment.description}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={equipment.is_active}
+                        onCheckedChange={(checked) => toggleActive(equipment, checked)}
+                        className="scale-90"
+                      />
+                      <Label className="text-xs text-muted-foreground">
+                        {equipment.is_active ? 'Actif' : 'Inactif'}
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openDialog(equipment)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer l'équipement</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Êtes-vous sûr de vouloir supprimer l'équipement "{equipment.name}" ? 
+                              Cette action est irréversible.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(equipment.id)}
+                              className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                            >
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 };

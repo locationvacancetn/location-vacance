@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { 
   Building, 
   Edit, 
@@ -39,6 +40,7 @@ type Property = Tables<'properties'> & {
 
 const AdminPropertiesManagement = () => {
   const { toast } = useToast();
+  const { title, description } = usePageTitle();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -192,7 +194,6 @@ const AdminPropertiesManagement = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Gestion des Propriétés</h1>
         </div>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
@@ -209,10 +210,6 @@ const AdminPropertiesManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Gestion des Propriétés</h1>
-          <p className="text-muted-foreground">
-            Gérez toutes les propriétés de la plateforme
-          </p>
         </div>
         <Link to="/dashboard/admin/add-property">
           <Button>

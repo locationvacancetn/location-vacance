@@ -23,22 +23,26 @@ import {
   X,
   Settings
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Characteristic = Tables<'property_characteristics'>;
 
 const CharacteristicsManagement = () => {
   const { toast } = useToast();
   const [characteristics, setCharacteristics] = useState<Characteristic[]>([]);
+  const [filteredCharacteristics, setFilteredCharacteristics] = useState<Characteristic[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterActive, setFilterActive] = useState<boolean | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   
   // États pour la modal d'ajout/modification
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCharacteristic, setEditingCharacteristic] = useState<Characteristic | null>(null);
   const [formData, setFormData] = useState({
     name: "",
+    slug: "",
     description: "",
+    icon: "",
     is_active: true
   });
 
@@ -68,70 +72,172 @@ const CharacteristicsManagement = () => {
     loadCharacteristics();
   }, []);
 
+  // Générer un slug à partir du nom
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
+  // Fonction pour traiter et normaliser les SVG
+  const processSvgIcon = (svgContent: string): string => {
+    if (!svgContent || !svgContent.includes('<svg')) {
+      return svgContent;
+    }
+
+    try {
+      // Nettoyer le SVG des échappements
+      let cleanSvg = svgContent
+        .replace(/\\"/g, '"')
+        .replace(/\\n/g, '')
+        .replace(/\\t/g, '')
+        .trim();
+
+      // Normaliser les dimensions à 24px
+      cleanSvg = cleanSvg
+        .replace(/width="[^"]*"/g, 'width="24"')
+        .replace(/height="[^"]*"/g, 'height="24"')
+        .replace(/width='[^']*'/g, "width='24'")
+        .replace(/height='[^']*'/g, "height='24'");
+
+      // Appliquer la couleur rgb(100,116,139)
+      cleanSvg = cleanSvg
+        .replace(/fill="#000000"/g, 'fill="rgb(100,116,139)"')
+        .replace(/fill="#000"/g, 'fill="rgb(100,116,139)"')
+        .replace(/stroke="#000000"/g, 'stroke="rgb(100,116,139)"')
+        .replace(/stroke="#000"/g, 'stroke="rgb(100,116,139)"')
+        .replace(/fill:#000000/g, 'fill:rgb(100,116,139)')
+        .replace(/fill:#000/g, 'fill:rgb(100,116,139)')
+        .replace(/stroke:#000000/g, 'stroke:rgb(100,116,139)')
+        .replace(/stroke:#000/g, 'stroke:rgb(100,116,139)')
+        .replace(/fill:none/g, 'fill:rgb(100,116,139)');
+
+      return cleanSvg;
+    } catch (error) {
+      console.error('Erreur lors du traitement du SVG:', error);
+      return svgContent;
+    }
+  };
+
+  // Gérer les changements de formulaire
+  const handleInputChange = (field: string, value: string | boolean) => {
+    let processedValue = value;
+
+    // Traiter le SVG si c'est le champ icon
+    if (field === 'icon' && typeof value === 'string') {
+      processedValue = processSvgIcon(value);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [field]: processedValue
+    }));
+
+    // Auto-générer le slug quand le nom change
+    if (field === 'name' && typeof value === 'string') {
+      setFormData(prev => ({
+        ...prev,
+        name: value,
+        slug: generateSlug(value)
+      }));
+    }
+  };
+
   // Filtrer les caractéristiques
-  const filteredCharacteristics = characteristics.filter(characteristic => {
-    const matchesSearch = characteristic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         characteristic.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterActive === null || characteristic.is_active === filterActive;
-    return matchesSearch && matchesFilter;
-  });
+  useEffect(() => {
+    let filtered = characteristics;
+
+    if (searchTerm) {
+      filtered = filtered.filter(characteristic =>
+        characteristic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (characteristic.description && characteristic.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(characteristic =>
+        statusFilter === "active" ? characteristic.is_active : !characteristic.is_active
+      );
+    }
+
+    setFilteredCharacteristics(filtered);
+  }, [characteristics, searchTerm, statusFilter]);
+
+  // Fonction pour obtenir l'icône d'une caractéristique
+  const getIconComponent = (iconName: string | null) => {
+    if (!iconName) return null;
+    
+    // Si c'est un SVG (commence par <svg ou contient <svg)
+    if (iconName.includes('<svg')) {
+      // Traiter le SVG avec la même logique que dans le formulaire
+      const processedSvg = processSvgIcon(iconName);
+      
+      return (
+        <div 
+          className="h-4 w-4 flex items-center justify-center [&>svg]:h-4 [&>svg]:w-4"
+          dangerouslySetInnerHTML={{ __html: processedSvg }}
+        />
+      );
+    }
+    
+    // Si c'est une URL d'image
+    if (iconName.startsWith('http') || iconName.startsWith('/')) {
+      return <img src={iconName} alt="icon" className="h-4 w-4" />;
+    }
+    
+    return null;
+  };
 
   // Gérer l'ajout/modification
   const handleSubmit = async () => {
     try {
-      if (!formData.name.trim()) {
+      if (!formData.name.trim() || !formData.slug.trim()) {
         toast({
           title: "Erreur",
-          description: "Le nom est requis",
+          description: "Le nom et le slug sont obligatoires",
           variant: "destructive"
         });
         return;
       }
 
-      // Créer le slug à partir du nom
-      const slug = formData.name.trim()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Supprimer les accents
-        .replace(/[^a-z0-9\s-]/g, '') // Garder seulement lettres, chiffres, espaces et tirets
-        .trim()
-        .replace(/\s+/g, '-'); // Remplacer espaces par tirets
+      const characteristicData = {
+        name: formData.name.trim(),
+        slug: formData.slug.trim(),
+        description: formData.description.trim() || null,
+        icon: formData.icon.trim() || null,
+        is_active: formData.is_active,
+        updated_at: new Date().toISOString()
+      };
 
       if (editingCharacteristic) {
         // Modification
         const { error } = await supabase
           .from('property_characteristics')
-          .update({
-            name: formData.name.trim(),
-            slug: slug,
-            description: formData.description.trim() || null,
-            is_active: formData.is_active,
-            updated_at: new Date().toISOString()
-          })
+          .update(characteristicData)
           .eq('id', editingCharacteristic.id);
 
         if (error) throw error;
 
         toast({
           title: "Succès",
-          description: "Caractéristique modifiée avec succès"
+          description: "Point fort modifié avec succès"
         });
       } else {
         // Ajout
         const { error } = await supabase
           .from('property_characteristics')
-          .insert({
-            name: formData.name.trim(),
-            slug: slug,
-            description: formData.description.trim() || null,
-            is_active: formData.is_active
-          });
+          .insert(characteristicData);
 
         if (error) throw error;
 
         toast({
           title: "Succès",
-          description: "Caractéristique ajoutée avec succès"
+          description: "Point fort ajouté avec succès"
         });
       }
 
@@ -182,7 +288,9 @@ const CharacteristicsManagement = () => {
   const resetForm = () => {
     setFormData({
       name: "",
+      slug: "",
       description: "",
+      icon: "",
       is_active: true
     });
     setEditingCharacteristic(null);
@@ -191,9 +299,15 @@ const CharacteristicsManagement = () => {
   // Ouvrir la modal pour modification
   const openEditDialog = (characteristic: Characteristic) => {
     setEditingCharacteristic(characteristic);
+    
+    // Traiter le SVG existant s'il y en a un
+    const processedIcon = characteristic.icon ? processSvgIcon(characteristic.icon) : "";
+    
     setFormData({
       name: characteristic.name,
+      slug: characteristic.slug,
       description: characteristic.description || "",
+      icon: processedIcon,
       is_active: characteristic.is_active
     });
     setIsDialogOpen(true);
@@ -205,11 +319,41 @@ const CharacteristicsManagement = () => {
     setIsDialogOpen(true);
   };
 
+  // Basculer l'état actif/inactif
+  const toggleActive = async (characteristic: Characteristic, checked?: boolean) => {
+    try {
+      const newStatus = checked !== undefined ? checked : !characteristic.is_active;
+      
+      const { error } = await supabase
+        .from('property_characteristics')
+        .update({ 
+          is_active: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', characteristic.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: `Point fort ${newStatus ? 'activé' : 'désactivé'} avec succès`,
+      });
+
+      loadCharacteristics();
+    } catch (error: any) {
+      console.error('Erreur lors du changement d\'état:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de modifier l'état du point fort",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Gestion des Caractéristiques</h1>
         </div>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
@@ -223,239 +367,391 @@ const CharacteristicsManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Gestion des Caractéristiques</h1>
-          <p className="text-muted-foreground">
-            Gérez les caractéristiques disponibles pour les propriétés
-          </p>
-        </div>
-        <Button onClick={openAddDialog}>
-          <Plus className="w-4 h-4 mr-2" />
-          Ajouter une caractéristique
-        </Button>
-      </div>
-
-      {/* Filtres */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
-            Filtres
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Rechercher</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      {/* En-tête */}
+      <div className="flex items-center justify-end">
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openAddDialog} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Ajouter un point fort</span>
+              <span className="sm:hidden">Ajouter</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>
+                {editingCharacteristic ? 'Modifier le point fort' : 'Ajouter un point fort'}
+              </DialogTitle>
+              <DialogDescription>
+                {editingCharacteristic 
+                  ? 'Modifiez les informations du point fort.' 
+                  : 'Ajoutez un nouveau point fort à la liste.'
+                }
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Nom *</Label>
                 <Input
-                  id="search"
-                  placeholder="Nom ou description..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Ex: Vue sur mer, Piscine privée..."
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Statut</Label>
-              <div className="flex gap-2">
-                <Button
-                  variant={filterActive === null ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilterActive(null)}
-                >
-                  Tous
-                </Button>
-                <Button
-                  variant={filterActive === true ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilterActive(true)}
-                >
-                  Actifs
-                </Button>
-                <Button
-                  variant={filterActive === false ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilterActive(false)}
-                >
-                  Inactifs
-                </Button>
+              <div className="grid gap-2">
+                <Label htmlFor="slug">Slug *</Label>
+                <Input
+                  id="slug"
+                  value={formData.slug}
+                  onChange={(e) => handleInputChange('slug', e.target.value)}
+                  placeholder="Ex: vue-mer, piscine-privee..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Le slug sera utilisé dans l'URL (ex: /characteristics/vue-mer)
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Description du point fort..."
+                  rows={3}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="icon">Icône</Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="icon"
+                    value={formData.icon}
+                    onChange={(e) => handleInputChange('icon', e.target.value)}
+                    placeholder="Ex: SVG complet, URL d'image..."
+                    className="flex-1"
+                  />
+                  {formData.icon && (
+                    <div className="flex items-center justify-center w-12 h-12 border rounded bg-muted p-2">
+                      {getIconComponent(formData.icon)}
+                    </div>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p>• SVG complet : sera automatiquement dimensionné à 24px et coloré</p>
+                  <p>• URL d'image : sera affichée telle quelle</p>
+                  {formData.icon && formData.icon.includes('<svg') && (
+                    <p className="text-green-600">✓ SVG détecté - traitement automatique appliqué</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is_active"
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) => handleInputChange('is_active', checked)}
+                />
+                <Label htmlFor="is_active">Actif</Label>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <DialogFooter>
+              <Button onClick={handleSubmit}>
+                {editingCharacteristic ? 'Modifier' : 'Ajouter'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-      {/* Liste des caractéristiques */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Caractéristiques ({filteredCharacteristics.length})
-          </CardTitle>
-          <CardDescription>
-            Liste des caractéristiques disponibles pour les propriétés
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {filteredCharacteristics.length === 0 ? (
-            <div className="text-center py-8">
-              <Settings className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Aucune caractéristique trouvée</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm || filterActive !== null 
-                  ? "Aucune caractéristique ne correspond à vos critères de recherche."
-                  : "Commencez par ajouter votre première caractéristique."
-                }
-              </p>
-              {!searchTerm && filterActive === null && (
-                <Button onClick={openAddDialog}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Ajouter une caractéristique
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Date de création</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCharacteristics.map((characteristic) => (
-                    <TableRow key={characteristic.id}>
-                      <TableCell className="font-medium">
-                        {characteristic.name}
-                      </TableCell>
-                      <TableCell className="max-w-md">
-                        <p className="text-sm text-muted-foreground truncate">
-                          {characteristic.description || "Aucune description"}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={characteristic.is_active ? "default" : "secondary"}>
-                          {characteristic.is_active ? (
-                            <><Check className="w-3 h-3 mr-1" /> Actif</>
-                          ) : (
-                            <><X className="w-3 h-3 mr-1" /> Inactif</>
-                          )}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(characteristic.created_at).toLocaleDateString('fr-FR')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openEditDialog(characteristic)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Êtes-vous sûr de vouloir supprimer la caractéristique "{characteristic.name}" ? 
-                                  Cette action est irréversible.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(characteristic.id)}
-                                  className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
-                                >
-                                  Supprimer
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+      {/* Barre de recherche */}
+      <div className="space-y-4">
+        {/* Version desktop - Recherche et filtre sur la même ligne */}
+        <div className="hidden lg:flex lg:items-center lg:gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom de point fort"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10 placeholder:text-sm placeholder:text-muted-foreground"
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+
+          {/* Filtre par statut */}
+          <div className="flex-1">
+            <Select value={statusFilter} onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}>
+              <SelectTrigger className="w-full">
+                <div className="flex items-center space-x-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="Filtrer par statut" className="text-sm text-muted-foreground" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les points forts</SelectItem>
+                <SelectItem value="active">Points forts actifs</SelectItem>
+                <SelectItem value="inactive">Points forts inactifs</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Version mobile - Recherche et filtre empilés */}
+        <div className="lg:hidden space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom de point fort"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10 placeholder:text-sm placeholder:text-muted-foreground"
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+
+          {/* Filtre par statut - Pleine largeur */}
+          <Select value={statusFilter} onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}>
+            <SelectTrigger className="w-full">
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Filtrer par statut" className="text-sm text-muted-foreground" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les points forts</SelectItem>
+              <SelectItem value="active">Points forts actifs</SelectItem>
+              <SelectItem value="inactive">Points forts inactifs</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Statistiques des résultats */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {filteredCharacteristics.length} point fort{filteredCharacteristics.length !== 1 ? 's' : ''} 
+            {searchTerm && ` trouvé${filteredCharacteristics.length !== 1 ? 's' : ''}`}
+            {statusFilter !== "all" && ` (${statusFilter === "active" ? "actifs" : "inactifs"})`}
+          </span>
+          {(searchTerm || statusFilter !== "all") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("all");
+              }}
+              className="h-6 text-xs"
+            >
+              Effacer les filtres
+            </Button>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Dialog d'ajout/modification */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
-              {editingCharacteristic ? "Modifier la caractéristique" : "Ajouter une caractéristique"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingCharacteristic 
-                ? "Modifiez les informations de cette caractéristique."
-                : "Ajoutez une nouvelle caractéristique pour les propriétés."
-              }
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom *</Label>
-              <Input
-                id="name"
-                placeholder="ex: WiFi, Piscine, Parking..."
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Description détaillée de la caractéristique..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={3}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-              />
-              <Label htmlFor="is_active">Caractéristique active</Label>
-            </div>
+      {/* Liste des points forts */}
+      {filteredCharacteristics.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">
+            {searchTerm || statusFilter !== "all" 
+              ? 'Aucun point fort ne correspond aux critères de recherche.' 
+              : 'Aucun point fort trouvé.'
+            }
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Version desktop - Table complète avec Card */}
+          <div className="hidden lg:block">
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Slug</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Icône</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCharacteristics.map((characteristic) => (
+                        <TableRow key={characteristic.id}>
+                          <TableCell className="font-medium">
+                            {characteristic.name}
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {characteristic.slug}
+                            </code>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate" title={characteristic.description || ''}>
+                              {characteristic.description || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getIconComponent(characteristic.icon)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={characteristic.is_active ? "default" : "secondary"}>
+                              {characteristic.is_active ? 'Actif' : 'Inactif'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Switch
+                                checked={characteristic.is_active}
+                                onCheckedChange={(checked) => toggleActive(characteristic, checked)}
+                                className="scale-90"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditDialog(characteristic)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Supprimer le point fort</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Êtes-vous sûr de vouloir supprimer le point fort "{characteristic.name}" ? 
+                                      Cette action est irréversible.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(characteristic.id)}
+                                      className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                                    >
+                                      Supprimer
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleSubmit}>
-              {editingCharacteristic ? "Modifier" : "Ajouter"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          {/* Version mobile - Cards */}
+          <div className="lg:hidden space-y-4">
+            {filteredCharacteristics.map((characteristic) => (
+              <div key={characteristic.id} className="p-4 border rounded-lg bg-card">
+                <div className="space-y-3">
+                  {/* En-tête avec nom et statut */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 border rounded bg-muted">
+                        {getIconComponent(characteristic.icon)}
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-sm">{characteristic.name}</h3>
+                        <code className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                          {characteristic.slug}
+                        </code>
+                      </div>
+                    </div>
+                    <Badge variant={characteristic.is_active ? "default" : "secondary"}>
+                      {characteristic.is_active ? 'Actif' : 'Inactif'}
+                    </Badge>
+                  </div>
+
+                  {/* Description */}
+                  {characteristic.description && (
+                    <div className="text-sm text-muted-foreground">
+                      <span className="font-medium">Description :</span> {characteristic.description}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={characteristic.is_active}
+                        onCheckedChange={(checked) => toggleActive(characteristic, checked)}
+                        className="scale-90"
+                      />
+                      <Label className="text-xs text-muted-foreground">
+                        {characteristic.is_active ? 'Actif' : 'Inactif'}
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(characteristic)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer le point fort</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Êtes-vous sûr de vouloir supprimer le point fort "{characteristic.name}" ? 
+                              Cette action est irréversible.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">Annuler</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(characteristic.id)}
+                              className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                            >
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 };

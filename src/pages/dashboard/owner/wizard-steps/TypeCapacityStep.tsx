@@ -48,6 +48,10 @@ const iconMap: { [key: string]: any } = {
   'dog': Dog,
   'no-smoking': Cigarette,
   'star': Star,
+  // Nouvelles icônes basées sur les données de la base
+  'droplets': Waves,
+  'heart-handshake': ShieldCheck,
+  'map-pin': Car,
 };
 
 const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) => {
@@ -125,6 +129,17 @@ const TypeCapacityStep = ({ formData, updateFormData }: TypeCapacityStepProps) =
   };
 
   const getIcon = (iconName: string) => {
+    // Si l'icône est un SVG complet, l'afficher directement
+    if (iconName && iconName.includes('<svg')) {
+      return (
+        <div 
+          className="h-4 w-4 flex items-center justify-center"
+          dangerouslySetInnerHTML={{ __html: iconName }}
+        />
+      );
+    }
+    
+    // Sinon, utiliser le mapping des icônes Lucide
     const IconComponent = iconMap[iconName] || Star;
     return <IconComponent className="h-4 w-4" />;
   };

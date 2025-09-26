@@ -48,11 +48,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { USER_ROLES } from '@/lib/constants';
 import { useNavigate } from 'react-router-dom';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const UsersManagement = () => {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
+  const { title, description } = usePageTitle();
   const {
     users,
     loading,

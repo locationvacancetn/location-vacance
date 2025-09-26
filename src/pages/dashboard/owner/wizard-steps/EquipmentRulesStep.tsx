@@ -96,6 +96,17 @@ const EquipmentRulesStep = ({ formData, updateFormData }: EquipmentRulesStepProp
   };
 
   const getIcon = (iconName: string) => {
+    // Si l'icône est un SVG complet, l'afficher directement
+    if (iconName && iconName.includes('<svg')) {
+      return (
+        <div 
+          className="h-5 w-5 flex items-center justify-center"
+          dangerouslySetInnerHTML={{ __html: iconName }}
+        />
+      );
+    }
+    
+    // Sinon, utiliser le mapping des icônes Lucide
     const IconComponent = iconMap[iconName] || Wifi;
     return <IconComponent className="h-5 w-5" />;
   };
