@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserPlus, Mail, User, Phone, Building, Megaphone, Home, Shield } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { USER_ROLES } from '@/lib/constants';
+import { supabase } from '@/integrations/supabase/client';
+import { config } from '@/lib/config';
 
 const AddUser = () => {
   const navigate = useNavigate();
@@ -16,24 +18,23 @@ const AddUser = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
-    password: '123456789',
+    password: '',
     full_name: '',
-    whatsapp_number: '',
     role: USER_ROLES.OWNER,
+    phone: '',
     bio: '',
-    address: '',
-    city: '',
-    postal_code: '',
-    company_name: '',
-    business_email: '',
-    business_phone: '',
+    whatsapp_number: '',
     website_url: '',
     facebook_url: '',
     instagram_url: '',
-    linkedin_url: '',
-    twitter_url: '',
     tiktok_url: '',
-    messenger_url: ''
+    messenger_url: '',
+    company_name: '',
+    company_website: '',
+    business_phone: '',
+    business_email: '',
+    linkedin_url: '',
+    twitter_url: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -72,9 +73,10 @@ const AddUser = () => {
         break;
       
       case 'whatsapp_number':
-        if (!value) {
-          newErrors.whatsapp_number = 'Le numéro WhatsApp est obligatoire';
-        } else if (!/^[\+]?[0-9\s\-\(\)]{10,}$/.test(value)) {
+        // WhatsApp obligatoire seulement pour les propriétaires
+        if (formData.role === USER_ROLES.OWNER && !value) {
+          newErrors.whatsapp_number = 'Le numéro WhatsApp est obligatoire pour les propriétaires';
+        } else if (value && !/^[\+]?[0-9\s\-\(\)]{10,}$/.test(value)) {
           newErrors.whatsapp_number = 'Format de numéro invalide';
         } else {
           delete newErrors.whatsapp_number;
@@ -113,8 +115,23 @@ const AddUser = () => {
   };
 
   const handleInputChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const newFormData = { ...formData, [name]: value };
+    setFormData(newFormData);
     validateField(name, value);
+    
+    // Si on change de rôle, revalider le WhatsApp avec le nouveau rôle
+    if (name === 'role') {
+      // Créer une nouvelle fonction de validation temporaire avec le nouveau rôle
+      const newErrors = { ...errors };
+      if (value === USER_ROLES.OWNER && !formData.whatsapp_number) {
+        newErrors.whatsapp_number = 'Le numéro WhatsApp est obligatoire pour les propriétaires';
+      } else if (formData.whatsapp_number && !/^[\+]?[0-9\s\-\(\)]{10,}$/.test(formData.whatsapp_number)) {
+        newErrors.whatsapp_number = 'Format de numéro invalide';
+      } else {
+        delete newErrors.whatsapp_number;
+      }
+      setErrors(newErrors);
+    }
   };
 
   const getRoleIcon = (role: string) => {
@@ -138,12 +155,18 @@ const AddUser = () => {
   };
 
   const isFormValid = () => {
-    return formData.email && 
-           formData.password && 
-           formData.full_name && 
-           formData.whatsapp_number && 
-           formData.role &&
-           Object.keys(errors).length === 0;
+    const baseValidation = formData.email && 
+                          formData.password && 
+                          formData.full_name && 
+                          formData.role &&
+                          Object.keys(errors).length === 0;
+    
+    // WhatsApp obligatoire seulement pour les propriétaires
+    if (formData.role === USER_ROLES.OWNER) {
+      return baseValidation && formData.whatsapp_number;
+    }
+    
+    return baseValidation;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,45 +184,106 @@ const AddUser = () => {
     setLoading(true);
     
     try {
-      // TODO: Implémenter la logique de création d'utilisateur
-      console.log('Données du formulaire:', formData);
+      // Vérifier l'authentification avant l'appel
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      // Simulation d'un délai
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (sessionError || !session) {
+        throw new Error('Vous devez être connecté pour créer un utilisateur');
+      }
+
+      console.log('🔑 Token d\'authentification:', session.access_token ? 'Présent' : 'Manquant');
+      console.log('🌐 URL de la fonction:', `${config.supabase.url}/functions/v1/create-user`);
+
+      // Données à envoyer
+      const requestData = {
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.full_name,
+        role: formData.role,
+        phone: formData.phone || undefined,
+        bio: formData.bio || undefined,
+        whatsapp_number: formData.whatsapp_number || undefined,
+        website_url: formData.website_url || undefined,
+        facebook_url: formData.facebook_url || undefined,
+        instagram_url: formData.instagram_url || undefined,
+        tiktok_url: formData.tiktok_url || undefined,
+        messenger_url: formData.messenger_url || undefined,
+        company_name: formData.company_name || undefined,
+        company_website: formData.company_website || undefined,
+        business_phone: formData.business_phone || undefined,
+        business_email: formData.business_email || undefined,
+        linkedin_url: formData.linkedin_url || undefined,
+        twitter_url: formData.twitter_url || undefined,
+      };
+
+      console.log('📤 Données à envoyer:', requestData);
+
+      // Appel à la Edge Function sécurisée pour créer l'utilisateur
+      console.log('🚀 Envoi de la requête...');
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondes timeout
+      
+      const response = await fetch(`${config.supabase.url}/functions/v1/create-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(requestData),
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      console.log('📥 Réponse reçue:', response.status, response.statusText);
+
+      // Vérifier si la réponse est valide
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erreur HTTP:', response.status, errorText);
+        throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
+      }
+
+      // Vérifier si la réponse contient du JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const responseText = await response.text();
+        console.error('Réponse non-JSON:', responseText);
+        throw new Error(`Réponse invalide du serveur: ${responseText}`);
+      }
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Erreur lors de la création de l\'utilisateur');
+      }
+
       toast({
         title: "Utilisateur créé avec succès",
         description: `L'utilisateur ${formData.full_name} a été créé avec succès.`,
       });
       
-      // Réinitialiser le formulaire
-      setFormData({
-        email: '',
-        password: '123456789',
-        full_name: '',
-        whatsapp_number: '',
-        role: USER_ROLES.OWNER,
-        bio: '',
-        address: '',
-        city: '',
-        postal_code: '',
-        company_name: '',
-        business_email: '',
-        business_phone: '',
-        website_url: '',
-        facebook_url: '',
-        instagram_url: '',
-        linkedin_url: '',
-        twitter_url: '',
-        tiktok_url: '',
-        messenger_url: ''
-      });
+      // Rediriger vers la page de gestion des utilisateurs
+      navigate('/dashboard/admin/users');
       
     } catch (error) {
       console.error('Erreur lors de la création:', error);
+      
+      let errorMessage = "Impossible de créer l'utilisateur. Veuillez réessayer.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = "Erreur de connexion. Vérifiez votre connexion internet et que la fonction est déployée.";
+        } else if (error.message.includes('authentification')) {
+          errorMessage = "Problème d'authentification. Veuillez vous reconnecter.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Erreur",
-        description: "Impossible de créer l'utilisateur. Veuillez réessayer.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -280,7 +364,7 @@ const AddUser = () => {
                 <div className="space-y-2">
                   <Label htmlFor="whatsapp_number" className="flex items-center gap-2 text-sm font-medium">
                     <Phone className="h-4 w-4" />
-                    Numéro WhatsApp <span className="text-red-500">*</span>
+                    Numéro WhatsApp {formData.role === USER_ROLES.OWNER && <span className="text-red-500">*</span>}
                   </Label>
                   <Input
                     id="whatsapp_number"

@@ -17,6 +17,7 @@ import { showSuccess } from "@/lib/appToast";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
 import { PropertyService, Property } from "@/lib/propertyService";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // Import des étapes du wizard
 import BasicInfoStep from "./wizard-steps/BasicInfoStep.tsx";
@@ -29,8 +30,10 @@ import EquipmentRulesStep from "./wizard-steps/EquipmentRulesStep.tsx";
 // Types pour les données du formulaire
 export interface PropertyFormData {
   // Étape 1: Informations de base
+  id?: string; // ID de la propriété (pour l'édition)
   name: string;
   description: string;
+  ownerId?: string; // ID du propriétaire (pour les admins)
   
   // Étape 2: Localisation
   regionId: string;
@@ -80,8 +83,10 @@ const EDIT_STEPS = [
 
 // Données initiales du formulaire
 const initialFormData: PropertyFormData = {
+  id: undefined,
   name: "",
   description: "",
+  ownerId: undefined,
   regionId: "",
   cityId: "",
   address: "",
@@ -109,6 +114,7 @@ const STORAGE_KEY = 'property-wizard-data';
 const AddPropertyWizard = () => {
   const navigate = useNavigate();
   const { id: propertyId } = useParams<{ id: string }>();
+  const { userRole } = useUserRole();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -120,6 +126,7 @@ const AddPropertyWizard = () => {
   const [isExistingImage, setIsExistingImage] = useState<boolean[]>([]);
   const [finalImageUrls, setFinalImageUrls] = useState<string[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isTitleValid, setIsTitleValid] = useState(true);
   const { toast } = useToast();
 
   // Déterminer les étapes selon le mode
@@ -331,8 +338,10 @@ const AddPropertyWizard = () => {
       
       // Convertir les données de la propriété en format PropertyFormData
       const propertyFormData: PropertyFormData = {
+        id: property.id, // ID de la propriété pour l'édition
         name: property.title || "",
         description: property.description || "",
+        ownerId: property.owner_id || undefined, // Charger l'owner_id pour les admins
         regionId: property.region_id || "",
         cityId: property.city_id || "",
         address: property.location || "",
@@ -357,10 +366,6 @@ const AddPropertyWizard = () => {
       
       setFormData(propertyFormData);
       
-      console.log('Données de la propriété chargées:', {
-        characteristicIds: property.characteristic_ids,
-        equipmentIds: property.amenities
-      });
       
       // Stocker les URLs des images existantes pour PhotosStep
       if (property.images && property.images.length > 0) {
@@ -377,7 +382,8 @@ const AddPropertyWizard = () => {
         description: "Impossible de charger les données de la propriété",
         variant: "destructive",
       });
-      navigate('/dashboard/owner/properties');
+      const redirectPath = userRole === 'admin' ? '/dashboard/admin/properties' : '/dashboard/owner/properties';
+      navigate(redirectPath);
     } finally {
       setIsLoading(false);
     }
@@ -428,7 +434,10 @@ const AddPropertyWizard = () => {
   const validateCurrentStep = (): boolean => {
     switch (currentStep) {
       case 1:
-        return formData.name.trim().length >= 5 && formData.description.trim().length >= 20;
+        // Validation de base + validation du titre
+        const basicValidation = formData.name.trim().length >= 5 && formData.description.trim().length >= 20;
+        const titleValidation = isTitleValid;
+        return basicValidation && titleValidation;
       case 2:
         // Validation des champs obligatoires de localisation
         const hasCityAndRegion = formData.cityId !== "" && formData.regionId !== "";
@@ -484,15 +493,12 @@ const AddPropertyWizard = () => {
           description: `Propriété "${updatedProperty.title}" modifiée avec succès !`,
         });
         
-        // Redirection vers la gestion des propriétés
-        navigate('/dashboard/owner/properties');
+        // Redirection vers la gestion des propriétés selon le rôle
+        const redirectPath = userRole === 'admin' ? '/dashboard/admin/properties' : '/dashboard/owner/properties';
+        navigate(redirectPath);
       } else {
         // Mode création
-        console.log("Création de la propriété avec les données:", formData);
-        
         const createdProperty = await PropertyService.createProperty(formData);
-        
-        console.log("Propriété créée avec succès:", createdProperty);
         
         // ✅ Nettoyer le localStorage après succès
         clearLocalStorage();
@@ -502,8 +508,9 @@ const AddPropertyWizard = () => {
           description: `Propriété "${createdProperty.title}" créée avec succès !`,
         });
         
-        // Redirection vers la gestion des propriétés
-        navigate('/dashboard/owner/properties');
+        // Redirection vers la gestion des propriétés selon le rôle
+        const redirectPath = userRole === 'admin' ? '/dashboard/admin/properties' : '/dashboard/owner/properties';
+        navigate(redirectPath);
       }
     } catch (error) {
       console.error("Erreur lors de la soumission:", error);
@@ -555,7 +562,12 @@ const AddPropertyWizard = () => {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <BasicInfoStep formData={formData} updateFormData={updateFormData} />;
+        return <BasicInfoStep 
+          formData={formData} 
+          updateFormData={updateFormData} 
+          isEditMode={isEditMode}
+          onTitleValidationChange={setIsTitleValid}
+        />;
       case 2:
         return <LocationStep formData={formData} updateFormData={updateFormData} isEditMode={isEditMode} />;
       case 3:
@@ -719,8 +731,8 @@ const AddPropertyWizard = () => {
 
        {/* Navigation - Desktop - Position fixe en bas */}
        <div 
-         className="hidden md:flex fixed bottom-0 z-50 bg-white px-6 py-4 justify-between items-center transition-all duration-300 left-0 right-0"
-         style={{ marginLeft: sidebarCollapsed ? '64px' : '224px' }}
+         className="hidden md:flex fixed bottom-0 bg-white px-6 py-4 justify-between items-center transition-all duration-300 left-0 right-0"
+         style={{ marginLeft: sidebarCollapsed ? '64px' : '224px', zIndex: 40 }}
        >
          <Button
            type="button"

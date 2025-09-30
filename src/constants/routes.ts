@@ -8,7 +8,7 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   SIGNUP: '/signup',
-  PROPERTY_DETAIL: '/property/:id',
+  PROPERTY_DETAIL: '/property/:slug',
   TEST_AUTH: '/test-auth',
   NOT_FOUND: '*',
 

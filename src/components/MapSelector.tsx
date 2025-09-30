@@ -82,11 +82,11 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   }, []);
 
   return (
-    <div className={`w-full ${className}`} style={{ height }}>
+    <div className={`w-full ${className}`} style={{ height, zIndex: 1 }}>
       <MapContainer
         center={mapCenter || defaultCenter}
         zoom={13}
-        style={{ height: '100%', width: '100%' }}
+        style={{ height: '100%', width: '100%', zIndex: 1 }}
         className="rounded-lg border border-gray-200"
         attributionControl={false}
       >

@@ -132,16 +132,11 @@ const SignupForm = ({ onSuccess, showTitle = true }: SignupFormProps) => {
         return;
       }
       if (data.user && !data.session) {
+        // Email à vérifier - le profil sera créé automatiquement par le trigger
         showSuccess(AUTH_MESSAGES.SIGNUP_EMAIL_VERIFICATION);
         if (onSuccess) onSuccess();
       } else if (data.session) {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ role: values.role, full_name: values.fullName })
-          .eq("user_id", data.user?.id);
-        if (profileError) {
-          console.error("Profile update error:", profileError);
-        }
+        // Utilisateur connecté directement - le profil a été créé par le trigger
         showSuccess(AUTH_MESSAGES.SIGNUP_SUCCESS);
         if (onSuccess) onSuccess();
       }

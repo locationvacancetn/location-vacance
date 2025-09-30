@@ -1,10 +1,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { PropertyFormData } from '@/pages/dashboard/owner/AddPropertyWizard';
+import { SlugService } from './slugService';
 
 export interface Property {
   id: string;
   title: string;
   description: string;
+  slug: string; // Ajout du champ slug
   city_id: string;
   region_id: string;
   property_type_id: string;
@@ -154,6 +156,12 @@ export class PropertyService {
     let propertyId: string | null = null;
     
     try {
+      // Vérifier l'unicité du titre AVANT création
+      const isTitleAvailable = await this.checkTitleAvailability(formData.name);
+      if (!isTitleAvailable) {
+        throw new Error('Ce nom de propriété existe déjà. Veuillez choisir un autre nom.');
+      }
+
       // Valider les contraintes de base de données
       if (formData.name.trim().length < 5) {
         throw new Error('Le nom doit contenir au moins 5 caractères');
@@ -230,6 +238,12 @@ export class PropertyService {
         }
       }
 
+      // Récupérer l'ID de l'utilisateur connecté
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+
       // 1. D'abord créer la propriété sans images
       const propertyData = {
         p_title: formData.name,
@@ -253,7 +267,8 @@ export class PropertyService {
         p_smoking_allowed: formData.smokingAllowed,
         p_pets_allowed: formData.petsAllowed,
         p_parties_allowed: formData.partiesAllowed,
-        p_children_allowed: formData.childrenAllowed
+        p_children_allowed: formData.childrenAllowed,
+        p_owner_id: user.id
       };
 
       // Appeler la fonction create_property
@@ -470,6 +485,26 @@ export class PropertyService {
    */
   static async updateProperty(propertyId: string, formData: PropertyFormData, finalImageUrls?: string[]): Promise<Property> {
     try {
+      // Vérifier si l'utilisateur actuel est admin
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Utilisateur non authentifié');
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      const isAdmin = profile?.role === 'admin';
+
+      // Vérifier l'unicité du titre AVANT modification (en excluant la propriété actuelle)
+      const isTitleAvailable = await this.checkTitleAvailability(formData.name, propertyId);
+      if (!isTitleAvailable) {
+        throw new Error('Ce nom de propriété existe déjà. Veuillez choisir un autre nom.');
+      }
+
       // Valider les contraintes de base de données
       if (formData.name.trim().length < 5) {
         throw new Error('Le nom doit contenir au moins 5 caractères');
@@ -568,11 +603,14 @@ export class PropertyService {
         p_smoking_allowed: formData.smokingAllowed,
         p_pets_allowed: formData.petsAllowed,
         p_parties_allowed: formData.partiesAllowed,
-        p_children_allowed: formData.childrenAllowed
+        p_children_allowed: formData.childrenAllowed,
+        // Ajouter l'owner_id pour les admins
+        ...(isAdmin && formData.ownerId && { p_owner_id: formData.ownerId })
       };
 
-      // Appeler la fonction update_property
-      const { data, error } = await supabase.rpc('update_property', {
+      // Appeler la fonction appropriée selon le rôle
+      const rpcFunction = isAdmin ? 'update_property_admin' : 'update_property';
+      const { data, error } = await supabase.rpc(rpcFunction, {
         property_uuid: propertyId,
         ...propertyData
       });
@@ -754,7 +792,6 @@ export class PropertyService {
       const ownerUserId = data.owner_id;
       let ownerAvatarUrl = '';
       let ownerLanguages: string[] = [];
-      console.log('ID utilisateur du propriétaire à rechercher:', ownerUserId);
       
       if (ownerUserId) {
         try {
@@ -764,21 +801,17 @@ export class PropertyService {
             .eq('user_id', ownerUserId)
             .single();
             
-          console.log('Résultat de la requête profiles:', { ownerData, ownerError });
           
           if (ownerError) {
             console.log('Erreur lors de la récupération du profil:', ownerError);
           } else if (ownerData?.full_name) {
             ownerName = ownerData.full_name;
-            console.log('Nom du propriétaire trouvé:', ownerName);
           }
           if (ownerData?.avatar_url) {
             ownerAvatarUrl = ownerData.avatar_url;
-            console.log('Avatar du propriétaire trouvé:', ownerAvatarUrl);
           }
           if (ownerData?.spoken_languages) {
             ownerLanguages = ownerData.spoken_languages;
-            console.log('Langues du propriétaire trouvées:', ownerLanguages);
           }
         } catch (e) {
           console.log('Impossible de récupérer les informations du propriétaire:', e);
@@ -806,18 +839,354 @@ export class PropertyService {
         characteristic_ids: characteristicIds
       };
 
-      console.log('Propriété récupérée:', {
-        title: property.title,
-        property_type: property.property_type,
-        location: property.location,
-        owner_name: property.owner_name,
-        owner_avatar_url: property.owner_avatar_url,
-        owner_languages: property.owner_languages
-      });
 
       return property;
     } catch (error) {
       console.error('Erreur dans PropertyService.getPropertyById:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Vérifier si un titre de propriété existe déjà
+   */
+  static async checkTitleAvailability(title: string, excludeId?: string): Promise<boolean> {
+    try {
+      if (!title || title.trim().length < 3) {
+        return true; // Considérer comme disponible si trop court
+      }
+
+      const trimmedTitle = title.trim();
+
+      if (excludeId) {
+        // Pour l'édition : vérifier s'il existe d'autres propriétés avec ce titre
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('title', trimmedTitle)
+          .neq('id', excludeId)
+          .limit(1);
+
+        if (error) {
+          console.error('Erreur lors de la vérification du titre:', error);
+          throw error;
+        }
+
+        // Si aucun résultat, le titre est disponible
+        return data?.length === 0;
+      } else {
+        // Pour la création : vérifier si le titre existe déjà
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('title', trimmedTitle)
+          .limit(1);
+
+        if (error) {
+          console.error('Erreur lors de la vérification du titre:', error);
+          throw error;
+        }
+
+        // Si aucun résultat, le titre est disponible
+        return data?.length === 0;
+      }
+    } catch (error) {
+      console.error('Erreur dans PropertyService.checkTitleAvailability:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Vérifier si un slug existe déjà
+   */
+  static async checkSlugAvailability(slug: string, excludeId?: string): Promise<boolean> {
+    try {
+      if (!slug || slug.trim().length < 3) {
+        return true; // Considérer comme disponible si trop court
+      }
+
+      const trimmedSlug = slug.trim();
+
+      if (excludeId) {
+        // Pour l'édition : vérifier s'il existe d'autres propriétés avec ce slug
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('slug', trimmedSlug)
+          .neq('id', excludeId)
+          .limit(1);
+
+        if (error) {
+          console.error('Erreur lors de la vérification du slug:', error);
+          throw error;
+        }
+
+        // Si aucun résultat, le slug est disponible
+        return data?.length === 0;
+      } else {
+        // Pour la création : vérifier si le slug existe déjà
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('slug', trimmedSlug)
+          .limit(1);
+
+        if (error) {
+          console.error('Erreur lors de la vérification du slug:', error);
+          throw error;
+        }
+
+        // Si aucun résultat, le slug est disponible
+        return data?.length === 0;
+      }
+    } catch (error) {
+      console.error('Erreur dans PropertyService.checkSlugAvailability:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Générer un slug unique pour une propriété
+   */
+  static async generateUniquePropertySlug(
+    propertyType: string,
+    city: string,
+    title: string,
+    region?: string | null,
+    excludeId?: string
+  ): Promise<string> {
+    try {
+      // Générer le slug de base avec la région
+      const baseSlug = SlugService.generatePropertySlug(propertyType, city, title, region);
+      
+      // Vérifier l'unicité et générer un slug unique si nécessaire
+      const uniqueSlug = await SlugService.generateUniqueSlug(
+        baseSlug,
+        (slug) => this.checkSlugAvailability(slug, excludeId)
+      );
+
+      return uniqueSlug;
+    } catch (error) {
+      console.error('Erreur lors de la génération du slug unique:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Récupérer une propriété par son slug
+   */
+  static async getPropertyBySlug(slug: string): Promise<Property | null> {
+    try {
+      if (!slug || slug.trim().length < 3) {
+        throw new Error('Slug invalide');
+      }
+
+      // Récupérer les données de base de la propriété
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('slug', slug.trim())
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Aucun résultat trouvé
+          return null;
+        }
+        console.error('Erreur lors de la récupération de la propriété par slug:', error);
+        throw error;
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      // Récupérer les informations des relations séparément (même logique que getPropertyById)
+      let propertyType = 'Type non spécifié';
+      let cityName = 'Ville non spécifiée';
+      let regionName = 'Région non spécifiée';
+      let ownerName = 'Propriétaire';
+
+      // Récupérer le type de propriété
+      if (data.property_type_id) {
+        try {
+          const { data: typeData } = await supabase
+            .from('property_types')
+            .select('name')
+            .eq('id', data.property_type_id)
+            .single();
+          if (typeData?.name) {
+            propertyType = typeData.name;
+          }
+        } catch (e) {
+          console.log('Impossible de récupérer le type de propriété:', e);
+        }
+      }
+
+      // Récupérer la ville
+      if (data.city_id) {
+        try {
+          const { data: cityData } = await supabase
+            .from('cities')
+            .select('name')
+            .eq('id', data.city_id)
+            .single();
+          if (cityData?.name) {
+            cityName = cityData.name;
+          }
+        } catch (e) {
+          console.log('Impossible de récupérer la ville:', e);
+        }
+      }
+
+      // Récupérer la région
+      if (data.region_id) {
+        try {
+          const { data: regionData } = await supabase
+            .from('regions')
+            .select('name')
+            .eq('id', data.region_id)
+            .single();
+          if (regionData?.name) {
+            regionName = regionData.name;
+          }
+        } catch (e) {
+          console.log('Impossible de récupérer la région:', e);
+        }
+      }
+
+      // Récupérer les caractéristiques de la propriété
+      let characteristicIds: string[] = [];
+      try {
+        const { data: characteristicsData } = await supabase
+          .from('property_characteristic_assignments')
+          .select('characteristic_id')
+          .eq('property_id', data.id);
+        
+        if (characteristicsData) {
+          characteristicIds = characteristicsData.map(item => item.characteristic_id);
+        }
+      } catch (e) {
+        console.log('Impossible de récupérer les caractéristiques:', e);
+      }
+
+      // Récupérer les informations du propriétaire
+      const ownerUserId = data.owner_id;
+      let ownerAvatarUrl = '';
+      let ownerLanguages: string[] = [];
+      
+      if (ownerUserId) {
+        try {
+          const { data: ownerData, error: ownerError } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url, spoken_languages')
+            .eq('user_id', ownerUserId)
+            .single();
+            
+          if (ownerError) {
+            console.log('Erreur lors de la récupération du profil:', ownerError);
+          } else if (ownerData?.full_name) {
+            ownerName = ownerData.full_name;
+          }
+          if (ownerData?.avatar_url) {
+            ownerAvatarUrl = ownerData.avatar_url;
+          }
+          if (ownerData?.spoken_languages) {
+            ownerLanguages = ownerData.spoken_languages;
+          }
+        } catch (e) {
+          console.log('Impossible de récupérer les informations du propriétaire:', e);
+        }
+      }
+
+      // Construire la localisation
+      let location = 'Localisation non spécifiée';
+      if (cityName !== 'Ville non spécifiée' && regionName !== 'Région non spécifiée') {
+        location = `${cityName}, ${regionName}`;
+      } else if (data.location) {
+        location = data.location;
+      }
+
+      // Transformer les données pour inclure les noms des relations
+      const property: Property = {
+        ...data,
+        property_type: propertyType,
+        city_name: cityName,
+        region_name: regionName,
+        location: location,
+        owner_name: ownerName,
+        owner_avatar_url: ownerAvatarUrl,
+        owner_languages: ownerLanguages,
+        characteristic_ids: characteristicIds
+      };
+
+      return property;
+    } catch (error) {
+      console.error('Erreur dans PropertyService.getPropertyBySlug:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mettre à jour le slug d'une propriété
+   */
+  static async updatePropertySlug(propertyId: string, newSlug: string): Promise<void> {
+    try {
+      // Valider le slug
+      const validation = SlugService.validateSlug(newSlug);
+      if (!validation.isValid) {
+        throw new Error(`Slug invalide: ${validation.errors.join(', ')}`);
+      }
+
+      // Vérifier l'unicité
+      const isAvailable = await this.checkSlugAvailability(newSlug, propertyId);
+      if (!isAvailable) {
+        throw new Error('Ce slug existe déjà. Veuillez choisir un autre slug.');
+      }
+
+      // Mettre à jour le slug
+      const { error } = await supabase
+        .from('properties')
+        .update({ slug: newSlug })
+        .eq('id', propertyId);
+
+      if (error) {
+        console.error('Erreur lors de la mise à jour du slug:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Erreur dans PropertyService.updatePropertySlug:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Générer des suggestions de slugs pour une propriété
+   */
+  static async generateSlugSuggestions(
+    propertyType: string,
+    city: string,
+    title: string,
+    region?: string | null,
+    count: number = 3
+  ): Promise<string[]> {
+    try {
+      const suggestions = SlugService.generateSlugSuggestions(propertyType, city, title, region, count);
+      
+      // Vérifier la disponibilité de chaque suggestion
+      const availableSuggestions: string[] = [];
+      
+      for (const suggestion of suggestions) {
+        const isAvailable = await this.checkSlugAvailability(suggestion);
+        if (isAvailable) {
+          availableSuggestions.push(suggestion);
+        }
+      }
+
+      return availableSuggestions;
+    } catch (error) {
+      console.error('Erreur lors de la génération des suggestions de slug:', error);
       throw error;
     }
   }

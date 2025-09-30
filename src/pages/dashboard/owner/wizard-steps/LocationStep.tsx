@@ -27,7 +27,6 @@ interface City {
   name: string;
   slug: string;
   is_active: boolean;
-  region_id: string;
 }
 
 const LocationStep = ({ formData, updateFormData, isEditMode = false }: LocationStepProps) => {
@@ -39,6 +38,8 @@ const LocationStep = ({ formData, updateFormData, isEditMode = false }: Location
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodingResult, setGeocodingResult] = useState<GeocodingResult | null>(null);
   const [hasExistingCoordinates, setHasExistingCoordinates] = useState(false);
+  const [citiesError, setCitiesError] = useState<string | null>(null);
+  const [regionsError, setRegionsError] = useState<string | null>(null);
 
   // Détecter les coordonnées existantes en mode édition
   useEffect(() => {
@@ -60,27 +61,15 @@ const LocationStep = ({ formData, updateFormData, isEditMode = false }: Location
 
         if (error) {
           console.error('Erreur lors du chargement des villes:', error);
-          // Si la table n'existe pas, utiliser des données de test
-          setCities([
-            { id: '1', name: 'Tunis', slug: 'tunis', is_active: true },
-            { id: '2', name: 'Sfax', slug: 'sfax', is_active: true },
-            { id: '3', name: 'Sousse', slug: 'sousse', is_active: true },
-            { id: '4', name: 'Monastir', slug: 'monastir', is_active: true },
-            { id: '5', name: 'Hammamet', slug: 'hammamet', is_active: true },
-          ]);
+          setCitiesError('Impossible de charger la liste des villes. Veuillez réessayer plus tard.');
+          setCities([]);
           return;
         }
         setCities(data || []);
       } catch (error) {
         console.error('Erreur lors du chargement des villes:', error);
-        // Données de fallback
-        setCities([
-          { id: '1', name: 'Tunis', slug: 'tunis', is_active: true },
-          { id: '2', name: 'Sfax', slug: 'sfax', is_active: true },
-          { id: '3', name: 'Sousse', slug: 'sousse', is_active: true },
-          { id: '4', name: 'Monastir', slug: 'monastir', is_active: true },
-          { id: '5', name: 'Hammamet', slug: 'hammamet', is_active: true },
-        ]);
+        setCitiesError('Impossible de charger la liste des villes. Veuillez réessayer plus tard.');
+        setCities([]);
       } finally {
         setLoadingCities(false);
       }
@@ -104,41 +93,15 @@ const LocationStep = ({ formData, updateFormData, isEditMode = false }: Location
 
           if (error) {
             console.error('Erreur lors du chargement des régions:', error);
-            // Données de fallback basées sur la ville sélectionnée
-            const fallbackRegions = {
-              '1': [ // Tunis
-                { id: '1', name: 'Centre-ville', slug: 'centre-ville', is_active: true, city_id: '1' },
-                { id: '2', name: 'Lac', slug: 'lac', is_active: true, city_id: '1' },
-                { id: '3', name: 'Carthage', slug: 'carthage', is_active: true, city_id: '1' },
-              ],
-              '2': [ // Sfax
-                { id: '4', name: 'Centre', slug: 'centre', is_active: true, city_id: '2' },
-                { id: '5', name: 'Sakiet Ezzit', slug: 'sakiet-ezzit', is_active: true, city_id: '2' },
-              ],
-              '3': [ // Sousse
-                { id: '6', name: 'Médina', slug: 'medina', is_active: true, city_id: '3' },
-                { id: '7', name: 'Port El Kantaoui', slug: 'port-el-kantaoui', is_active: true, city_id: '3' },
-              ],
-              '4': [ // Monastir
-                { id: '8', name: 'Centre', slug: 'centre', is_active: true, city_id: '4' },
-                { id: '9', name: 'Skanes', slug: 'skanes', is_active: true, city_id: '4' },
-              ],
-              '5': [ // Hammamet
-                { id: '10', name: 'Centre', slug: 'centre', is_active: true, city_id: '5' },
-                { id: '11', name: 'Yasmine Hammamet', slug: 'yasmine-hammamet', is_active: true, city_id: '5' },
-              ],
-            };
-            setRegions(fallbackRegions[formData.cityId as keyof typeof fallbackRegions] || []);
+            setRegionsError('Impossible de charger la liste des régions. Veuillez réessayer plus tard.');
+            setRegions([]);
             return;
           }
           setRegions(data || []);
         } catch (error) {
           console.error('Erreur lors du chargement des régions:', error);
-          // Données de fallback
-          setRegions([
-            { id: '1', name: 'Centre-ville', slug: 'centre-ville', is_active: true, city_id: formData.cityId },
-            { id: '2', name: 'Région principale', slug: 'region-principale', is_active: true, city_id: formData.cityId },
-          ]);
+          setRegionsError('Impossible de charger la liste des régions. Veuillez réessayer plus tard.');
+          setRegions([]);
         } finally {
           setLoadingRegions(false);
         }
@@ -155,6 +118,8 @@ const LocationStep = ({ formData, updateFormData, isEditMode = false }: Location
       cityId,
       regionId: "" // Reset region when city changes
     });
+    // Réinitialiser l'erreur des régions quand on change de ville
+    setRegionsError(null);
   };
 
   const handleRegionChange = (regionId: string) => {
@@ -247,7 +212,7 @@ const LocationStep = ({ formData, updateFormData, isEditMode = false }: Location
 
       <div className="space-y-4">
         {/* Sélection de la ville et région sur la même ligne */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative" style={{ zIndex: 20 }}>
           {/* Sélection de la ville */}
           <div>
             <Label htmlFor="city" className="text-sm font-medium">
@@ -256,10 +221,16 @@ const LocationStep = ({ formData, updateFormData, isEditMode = false }: Location
             <Select
               value={formData.cityId}
               onValueChange={handleCityChange}
-              disabled={loadingCities}
+              disabled={loadingCities || !!citiesError}
             >
               <SelectTrigger className="mt-1 text-sm">
-                <SelectValue placeholder={loadingCities ? "Chargement..." : "Sélectionnez une ville"} />
+                <SelectValue placeholder={
+                  citiesError 
+                    ? "Erreur de chargement" 
+                    : loadingCities 
+                    ? "Chargement..." 
+                    : "Sélectionnez une ville"
+                } />
               </SelectTrigger>
               <SelectContent>
                 {cities.map((city) => (
@@ -269,6 +240,9 @@ const LocationStep = ({ formData, updateFormData, isEditMode = false }: Location
                 ))}
               </SelectContent>
             </Select>
+            {citiesError && (
+              <p className="text-xs text-red-600 mt-1">{citiesError}</p>
+            )}
           </div>
 
           {/* Sélection de la région */}
@@ -279,12 +253,14 @@ const LocationStep = ({ formData, updateFormData, isEditMode = false }: Location
             <Select
               value={formData.regionId}
               onValueChange={handleRegionChange}
-              disabled={!formData.cityId || loadingRegions}
+              disabled={!formData.cityId || loadingRegions || !!regionsError}
             >
               <SelectTrigger className="mt-1 text-sm">
                 <SelectValue 
                   placeholder={
-                    !formData.cityId 
+                    regionsError
+                      ? "Erreur de chargement"
+                      : !formData.cityId 
                       ? "Sélectionnez d'abord une ville" 
                       : loadingRegions 
                       ? "Chargement..." 
@@ -300,6 +276,9 @@ const LocationStep = ({ formData, updateFormData, isEditMode = false }: Location
                 ))}
               </SelectContent>
             </Select>
+            {regionsError && (
+              <p className="text-xs text-red-600 mt-1">{regionsError}</p>
+            )}
           </div>
         </div>
 

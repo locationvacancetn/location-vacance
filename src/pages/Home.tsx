@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
-import { LocationAutocomplete } from "@/components/LocationAutocomplete";
+import { LocationSelect } from "@/components/LocationSelect";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -59,6 +59,7 @@ const HomePage = () => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileCalendarOpen, setIsMobileCalendarOpen] = useState(false);
   const [propertyAvailability, setPropertyAvailability] = useState<any[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
 
   // Fonction pour fermer tous les panels
   const closeAllPanels = useCallback(() => {
@@ -66,6 +67,7 @@ const HomePage = () => {
     setIsFilterOpen(false);
     setIsGuestsOpen(false);
     setIsMobileCalendarOpen(false);
+    // Note: isSearchModalOpen n'est pas fermé ici car c'est géré séparément
   }, []);
 
   // Fonction pour ouvrir uniquement le calendrier
@@ -196,7 +198,7 @@ const HomePage = () => {
   // Fonction pour réinitialiser les invités
   const handleClearGuests = useCallback(() => {
     setGuests({
-      adults: 2,
+      adults: 0,
       children: 0,
       pets: 0
     });
@@ -235,13 +237,14 @@ const HomePage = () => {
             <div className="mt-4 hidden md:block relative">
               <div className="flex items-center gap-2">
                 {/* Destination */}
-                <div className="flex-1">
-                  <LocationAutocomplete
+                <div className="flex-[2]">
+                  <LocationSelect
                     placeholder="Où allez-vous ?"
-                    className="h-9 rounded-lg"
+                    className="rounded-lg w-full"
+                    value={selectedLocation}
                     onLocationSelect={(location) => {
                       console.log('Localisation sélectionnée:', location);
-                      // Ici vous pouvez gérer la sélection de localisation
+                      setSelectedLocation(location);
                     }}
                   />
                 </div>
@@ -250,7 +253,7 @@ const HomePage = () => {
                 <TooltipProvider>
                   <Popover open={isCalendarOpen && !isSearchModalOpen} onOpenChange={(open) => open ? openCalendar() : setIsCalendarOpen(false)}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="h-9 px-4 justify-start text-left font-normal w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80 border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                      <Button variant="outline" className="h-10 px-4 justify-start text-left font-normal flex-[1.5] border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 text-muted-foreground">
                         <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
                         {checkIn && checkOut 
                           ? `${format(checkIn, "dd-MM-yyyy", { locale: fr })} au ${format(checkOut, "dd-MM-yyyy", { locale: fr })}`
@@ -325,19 +328,16 @@ const HomePage = () => {
                 {/* Invités */}
                 <Popover open={isGuestsOpen && !isSearchModalOpen} onOpenChange={(open) => open ? openGuests() : setIsGuestsOpen(false)}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="h-9 px-4 justify-start text-left font-normal w-36 sm:w-40 md:w-44 lg:w-48 xl:w-52 border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                    <Button variant="outline" className="h-10 px-4 justify-start text-left font-normal flex-[1.5] border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 text-muted-foreground">
                       <Users className="mr-2 h-5 w-5 text-muted-foreground" />
-                      {guests.adults !== 2 || guests.children > 0 || guests.pets > 0 ? (
-                        <span className="truncate">
-                          {guests.adults > 0 && `${guests.adults} adulte${guests.adults > 1 ? 's' : ''}`}
-                          {guests.adults > 0 && (guests.children > 0 || guests.pets > 0) && ', '}
-                          {guests.children > 0 && `${guests.children} enfant${guests.children > 1 ? 's' : ''}`}
-                          {guests.children > 0 && guests.pets > 0 && ', '}
-                          {guests.pets > 0 && `${guests.pets} animal${guests.pets > 1 ? 'aux' : ''}`}
-                        </span>
-                      ) : (
-                        'Invités ?'
-                      )}
+                      {guests.adults + guests.children + guests.pets > 0
+                        ? [
+                            guests.adults > 0 ? `${guests.adults} adulte${guests.adults !== 1 ? 's' : ''}` : '',
+                            guests.children > 0 ? `${guests.children} enfant${guests.children !== 1 ? 's' : ''}` : '',
+                            guests.pets > 0 ? `${guests.pets} ${guests.pets !== 1 ? 'animaux' : 'animal'}` : ''
+                          ].filter(Boolean).join(', ')
+                        : 'Combien d\'invités ?'
+                      }
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80 p-4" align="start" sideOffset={8}>
@@ -451,14 +451,14 @@ const HomePage = () => {
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-9 w-9 rounded-lg border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  className="h-10 w-10 rounded-lg border-input bg-background hover:bg-background hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   onClick={() => isFilterOpen ? closeAllPanels() : openFilters()}
                 >
                   <SlidersHorizontal className="h-5 w-5" />
                 </Button>
                 
                 {/* Bouton de recherche */}
-                <Button className="h-9 px-4 bg-primary text-primary-foreground rounded-lg">
+                <Button className="h-10 px-4 bg-primary text-primary-foreground rounded-lg">
                   <Search className="mr-2 h-4 w-4" />
                   Rechercher
                 </Button>
@@ -1069,7 +1069,10 @@ const HomePage = () => {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setIsSearchModalOpen(false)}
+              onClick={() => {
+                setIsSearchModalOpen(false);
+                closeAllPanels(); // Fermer tous les panels quand on ferme le modal mobile
+              }}
               className="h-9 w-9 rounded-md text-gray-500 border-gray-300 hover:border-gray-400"
             >
               <X className="h-4 w-4" />
@@ -1080,16 +1083,13 @@ const HomePage = () => {
           <div className="flex-1 p-4 max-w-md mx-auto">
             {/* Barre de recherche principale */}
             <div className="relative mb-4">
-              <LocationAutocomplete
+              <LocationSelect
                 placeholder="Où voulez-vous aller ?"
                 className="h-12 rounded-xl"
-                useRelativePositioning={true}
+                value={selectedLocation}
                 onLocationSelect={(location) => {
                   console.log('Localisation sélectionnée:', location);
-                  // Ici vous pouvez gérer la sélection de localisation
-                }}
-                onClick={() => {
-                  closeAllPanels();
+                  setSelectedLocation(location);
                 }}
               />
             </div>
@@ -1298,6 +1298,7 @@ const HomePage = () => {
                 onClick={() => {
                   // Logique de recherche à implémenter
                   setIsSearchModalOpen(false);
+                  closeAllPanels(); // Fermer tous les panels après recherche
                 }}
               >
                 <Search className="mr-2 h-4 w-4" />

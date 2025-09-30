@@ -1,15 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import Navbar from "@/components/Navbar";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { format, isAfter, isBefore, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -29,37 +23,165 @@ L.Icon.Default.mergeOptions({
 });
 
 import {
-  MapPin,
-  Star,
   Heart,
   Share2,
-  Printer,
-  Calendar as CalendarIcon,
-  Users,
-  Bed,
-  ShowerHead,
-  House,
   ChevronLeft,
   ChevronRight,
-  Plus,
-  Minus,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Mail,
-  Eye,
   Wifi,
-  Car,
-  Coffee,
-  Waves,
-  Mountain,
-  TreePine,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
 
+// Composant pour l'image de fallback
+const ImageFallback = ({ alt, className }: { alt: string; className?: string }) => (
+  <div className={`bg-gray-100 flex flex-col items-center justify-center ${className}`}>
+    <img
+      src="/logo---.svg"
+      alt="Logo"
+      className="w-16 h-16 mb-2"
+      style={{ filter: 'brightness(0) saturate(100%) invert(20%) sepia(8%) saturate(1234%) hue-rotate(200deg) brightness(95%) contrast(89%)' }}
+    />
+    <span className="text-gray-400 text-sm font-medium">Image non disponible</span>
+  </div>
+);
+
+// Composant skeleton avec effet de vague
+const SkeletonBox = ({ className }: { className: string }) => (
+  <div className={`bg-gray-200 relative overflow-hidden ${className}`}>
+    <div className="absolute inset-0 -translate-x-full shimmer-animation bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+  </div>
+);
+
+// Skeleton pour la galerie d'images
+const ImageGallerySkeleton = () => (
+  <div className="w-full mb-2">
+    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Layout desktop: 1 grande photo à gauche, 4 petites à droite */}
+      <div className="hidden md:grid md:grid-cols-2 gap-2 h-[500px]">
+        {/* Image principale skeleton */}
+        <SkeletonBox className="w-full h-full rounded-lg" />
+        
+        {/* Grille d'images secondaires skeleton */}
+        <div className="grid grid-cols-2 gap-2 h-full">
+          <SkeletonBox className="w-full h-[248px] rounded-lg" />
+          <SkeletonBox className="w-full h-[248px] rounded-lg" />
+          <SkeletonBox className="w-full h-[248px] rounded-lg" />
+          <SkeletonBox className="w-full h-[248px] rounded-lg" />
+        </div>
+      </div>
+
+      {/* Layout mobile skeleton */}
+      <div className="md:hidden space-y-2">
+        {/* Image principale mobile skeleton */}
+        <SkeletonBox className="w-full h-64 rounded-lg" />
+        
+        {/* Grille mobile 2x2 skeleton */}
+        <div className="grid grid-cols-2 gap-2">
+          <SkeletonBox className="w-full h-32 rounded-lg" />
+          <SkeletonBox className="w-full h-32 rounded-lg" />
+          <SkeletonBox className="w-full h-32 rounded-lg" />
+          <SkeletonBox className="w-full h-32 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Skeleton pour les informations de base
+const PropertyInfoSkeleton = () => (
+  <div className="mb-6">
+    <SkeletonBox className="h-8 w-3/4 mb-3 rounded" />
+    <div className="flex items-center justify-between mb-3">
+      <SkeletonBox className="h-4 w-1/3 rounded" />
+      <SkeletonBox className="h-4 w-20 rounded" />
+    </div>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <SkeletonBox className="h-4 w-1/4 rounded" />
+        <SkeletonBox className="h-4 w-1/4 rounded" />
+      </div>
+      <div className="flex items-center justify-between">
+        <SkeletonBox className="h-4 w-1/4 rounded" />
+        <SkeletonBox className="h-4 w-1/3 rounded" />
+      </div>
+    </div>
+  </div>
+);
+
+// Skeleton pour les sections avec grilles
+const GridSectionSkeleton = ({ title = true }: { title?: boolean }) => (
+  <div className="mb-8">
+    {title && <SkeletonBox className="h-6 w-1/3 mb-3 rounded" />}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="flex items-center space-x-3 p-3 rounded border border-border/50">
+          <SkeletonBox className="h-4 w-4 rounded" />
+          <SkeletonBox className="h-4 w-24 rounded" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// Skeleton pour la carte
+const MapSkeleton = () => (
+  <div className="mb-8">
+    <SkeletonBox className="h-6 w-1/4 mb-3 rounded" />
+    <SkeletonBox className="h-64 w-full rounded-lg" />
+  </div>
+);
+
+// Skeleton pour le profil de l'hôte
+const HostSkeleton = () => (
+  <div className="mb-8">
+    <SkeletonBox className="h-6 w-1/3 mb-4 rounded" />
+    <div className="flex items-center gap-4 mb-4">
+      <SkeletonBox className="w-12 h-12 rounded-full" />
+      <div className="flex-1">
+        <SkeletonBox className="h-4 w-1/3 mb-2 rounded" />
+        <SkeletonBox className="h-3 w-20 rounded" />
+      </div>
+    </div>
+    <div className="space-y-2">
+      <SkeletonBox className="h-3 w-32 rounded" />
+      <div className="flex flex-wrap gap-2">
+        <SkeletonBox className="h-6 w-16 rounded-full" />
+        <SkeletonBox className="h-6 w-20 rounded-full" />
+      </div>
+    </div>
+  </div>
+);
+
+// Skeleton pour le widget de réservation
+const BookingWidgetSkeleton = () => (
+  <Card className="border border-gray-200 bg-white">
+    <CardContent className="p-5">
+      <div className="space-y-5">
+        <div className="pb-3 border-b">
+          <SkeletonBox className="h-8 w-32 rounded" />
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <SkeletonBox className="h-4 w-20 rounded" />
+            <SkeletonBox className="h-4 w-20 rounded" />
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: 35 }).map((_, index) => (
+              <SkeletonBox key={index} className="aspect-square rounded" />
+            ))}
+          </div>
+          <div className="space-y-2">
+            <SkeletonBox className="h-10 w-full rounded" />
+            <SkeletonBox className="h-10 w-full rounded" />
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 const PropertyDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
   
   // États pour les données de la propriété
@@ -85,17 +207,6 @@ const PropertyDetail = () => {
   const [isSelectingCheckOut, setIsSelectingCheckOut] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [guests, setGuests] = useState({
-    adults: 2,
-    children: 0,
-    pets: 0
-  });
-
-  // États pour les services supplémentaires
-  const [additionalServices, setAdditionalServices] = useState({
-    gardening: false,
-    housekeeping: false
-  });
 
   // Images de la propriété selon l'ordre des images fournies
   const propertyImages = [
@@ -119,6 +230,7 @@ const PropertyDetail = () => {
   // État pour le modal de réservation mobile
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
+
   // État pour l'affichage des points forts
   const [showAllCharacteristics, setShowAllCharacteristics] = useState(false);
 
@@ -128,10 +240,10 @@ const PropertyDetail = () => {
   // Charger les données de la propriété et les réservations
   useEffect(() => {
     const loadProperty = async () => {
-      if (!id) {
+      if (!slug) {
         toast({
           title: "Erreur",
-          description: "ID de propriété manquant",
+          description: "Slug de propriété manquant",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -140,11 +252,19 @@ const PropertyDetail = () => {
 
       try {
         setIsLoading(true);
-        const propertyData = await PropertyService.getPropertyById(id);
+        const propertyData = await PropertyService.getPropertyBySlug(slug);
+        if (!propertyData) {
+          toast({
+            title: "Propriété non trouvée",
+            description: "La propriété que vous recherchez n'existe pas ou n'est plus disponible.",
+            variant: "destructive",
+          });
+          return;
+        }
         setProperty(propertyData);
         
         // Charger la disponibilité pour cette propriété
-        await loadPropertyAvailability(id);
+        await loadPropertyAvailability(propertyData.id);
         
         // Charger les caractéristiques de la propriété
         await loadPropertyCharacteristics(propertyData);
@@ -164,7 +284,7 @@ const PropertyDetail = () => {
     };
 
     loadProperty();
-  }, [id, toast]);
+  }, [slug, toast]);
 
   // Fonction pour charger la disponibilité depuis la base de données
   const loadPropertyAvailability = async (propertyId: string) => {
@@ -280,8 +400,8 @@ const PropertyDetail = () => {
     setIsSelectingCheckOut(false);
   }, []);
 
-  // Navigation du calendrier
-  const goToPreviousMonth = () => {
+  // Navigation du calendrier (mémorisé)
+  const goToPreviousMonth = useCallback(() => {
     const today = new Date();
     const currentMonthStart = startOfMonth(currentMonth);
     const todayMonthStart = startOfMonth(today);
@@ -290,14 +410,14 @@ const PropertyDetail = () => {
     if (currentMonthStart > todayMonthStart) {
       setCurrentMonth(subMonths(currentMonth, 1));
     }
-  };
+  }, [currentMonth]);
 
-  const goToNextMonth = () => {
+  const goToNextMonth = useCallback(() => {
     setCurrentMonth(addMonths(currentMonth, 1));
-  };
+  }, [currentMonth]);
 
-  // Générer les jours du calendrier
-  const generateCalendarDays = () => {
+  // Générer les jours du calendrier (mémorisé)
+  const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
     const startDate = startOfDay(monthStart);
@@ -323,10 +443,10 @@ const PropertyDetail = () => {
     }
     
     return days;
-  };
+  }, [currentMonth]);
 
-  // Vérifier l'état d'une date basé sur la disponibilité réelle
-  const getDateStatus = (date: Date) => {
+  // Vérifier l'état d'une date basé sur la disponibilité réelle (mémorisé)
+  const getDateStatus = useCallback((date: Date) => {
     const today = startOfDay(new Date());
     const checkDate = startOfDay(date);
     
@@ -347,10 +467,10 @@ const PropertyDetail = () => {
     
     // Par défaut, la date est disponible
     return 'available';
-  };
+  }, [propertyAvailability]);
 
-  // Gérer le clic sur une date
-  const handleDateClick = (date: Date) => {
+  // Gérer le clic sur une date (mémorisé)
+  const handleDateClick = useCallback((date: Date) => {
     if (isBefore(date, startOfDay(new Date()))) return;
     
     const status = getDateStatus(date);
@@ -370,17 +490,85 @@ const PropertyDetail = () => {
         setIsSelectingCheckOut(true);
       }
     }
-  };
+  }, [checkIn, checkOut, getDateStatus]);
 
-  // Afficher le chargement
+  // Afficher le skeleton de chargement
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Chargement de la propriété...</p>
+        
+        <main className="pt-1 pb-20 md:pb-8">
+          {/* Skeleton de la galerie d'images */}
+          <ImageGallerySkeleton />
+
+          <div className="max-w-7xl mx-auto lg:px-8 px-0 py-2">
+            <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 gap-0">
+              {/* Contenu principal - Colonne de gauche (2/3) */}
+              <div className="lg:col-span-2 lg:border lg:border-gray-200 lg:rounded-lg lg:p-6 px-4 py-0">
+                {/* Skeleton des informations de base */}
+                <PropertyInfoSkeleton />
+
+                {/* Skeleton de la description */}
+                <div className="mb-8">
+                  <SkeletonBox className="h-6 w-1/2 mb-3 rounded" />
+                  <div className="space-y-2">
+                    <SkeletonBox className="h-4 w-full rounded" />
+                    <SkeletonBox className="h-4 w-full rounded" />
+                    <SkeletonBox className="h-4 w-3/4 rounded" />
+                  </div>
+                </div>
+
+                {/* Skeleton des points forts */}
+                <GridSectionSkeleton />
+
+                {/* Skeleton des règles */}
+                <GridSectionSkeleton />
+
+                {/* Skeleton de la localisation */}
+                <MapSkeleton />
+
+                {/* Skeleton de la section À Proximité */}
+                <div className="mb-8">
+                  <SkeletonBox className="h-6 w-1/4 mb-3 rounded" />
+                  <SkeletonBox className="h-4 w-full mb-6 rounded" />
+                  <div className="space-y-4">
+                    {Array.from({ length: 2 }).map((_, index) => (
+                      <div key={index} className="flex gap-3 items-center">
+                        <SkeletonBox className="w-16 h-16 rounded-lg" />
+                        <div className="flex-1">
+                          <SkeletonBox className="h-4 w-1/2 mb-2 rounded" />
+                          <SkeletonBox className="h-3 w-full rounded" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Skeleton des équipements */}
+                <GridSectionSkeleton />
+
+                {/* Skeleton du profil de l'hôte */}
+                <HostSkeleton />
+              </div>
+
+              {/* Widget de réservation - Colonne de droite (1/3) - Desktop uniquement */}
+              <div className="hidden lg:block lg:col-span-1">
+                <div className="sticky top-8">
+                  <BookingWidgetSkeleton />
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* Bannière mobile sticky skeleton */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-[0]">
+          <div className="flex items-center justify-between px-4" style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }}>
+            <div className="flex flex-col">
+              <SkeletonBox className="h-8 w-24 rounded" />
+            </div>
+            <SkeletonBox className="h-12 w-20 rounded-lg" />
           </div>
         </div>
       </div>
@@ -405,11 +593,24 @@ const PropertyDetail = () => {
     );
   }
 
-  // Utiliser les images de la propriété ou les images par défaut
-  const displayImages = property.images && property.images.length > 0 ? property.images : propertyImages;
+  // Utiliser les images de la propriété ou un tableau vide pour forcer le fallback
+  const displayImages = property.images && property.images.length > 0 ? property.images : [];
 
   return (
     <div className="min-h-screen bg-background">
+      <style>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .shimmer-animation {
+          animation: shimmer 2s infinite;
+        }
+      `}</style>
       <Navbar />
       
       <main className="pt-1 pb-20 md:pb-8">
@@ -420,48 +621,69 @@ const PropertyDetail = () => {
             <div className="hidden md:grid md:grid-cols-2 gap-2 h-[500px]">
               {/* Image principale statique (plus grande, à gauche) */}
               <div className="relative group overflow-hidden rounded-lg">
-                <img
-                  src={displayImages[0]}
-                  alt={`${property.title} - Image principale`}
-                  className="w-full h-full object-cover cursor-pointer"
-                  onClick={() => {
-                    setCurrentImageIndex(0);
-                    setIsGalleryOpen(true);
-                  }}
-                />
+                {displayImages.length > 0 ? (
+                  <img
+                    src={displayImages[0]}
+                    alt={`${property.title} - Image principale`}
+                    className="w-full h-full object-cover cursor-pointer"
+                    loading="lazy"
+                    onClick={() => {
+                      setCurrentImageIndex(0);
+                      setIsGalleryOpen(true);
+                    }}
+                  />
+                ) : (
+                  <ImageFallback 
+                    alt={`${property.title} - Image principale`}
+                    className="w-full h-full"
+                  />
+                )}
               </div>
               
               {/* Grille d'images secondaires (2x2, à droite) */}
               <div className="grid grid-cols-2 gap-2 h-full">
-                {displayImages.slice(1, 5).map((image, index) => (
-                  <div key={index} className="relative group cursor-pointer overflow-hidden rounded-lg h-[248px]">
-                    <img
-                      src={image}
-                      alt={`${property.title} ${index + 2}`}
-                      className="w-full h-full object-cover hover:opacity-90 transition-opacity"
-                      onClick={() => {
-                        setCurrentImageIndex(index + 1);
-                        setIsGalleryOpen(true);
-                      }}
-                    />
-                    {index === 3 && displayImages.length > 5 && (
-                      <div 
-                        className="absolute bottom-2 right-2"
-                      >
-                        <Button 
-                          size="sm"
-                          className="bg-white/90 hover:bg-white text-black text-xs font-medium px-3 py-1 h-7 rounded-md shadow-sm backdrop-blur-sm border border-white/20"
-                          onClick={() => {
-                            setCurrentImageIndex(0);
-                            setIsGalleryOpen(true);
-                          }}
+                {displayImages.length > 0 ? (
+                  displayImages.slice(1, 5).map((image, index) => (
+                    <div key={index} className="relative group cursor-pointer overflow-hidden rounded-lg h-[248px]">
+                      <img
+                        src={image}
+                        alt={`${property.title} ${index + 2}`}
+                        className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                        loading="lazy"
+                        onClick={() => {
+                          setCurrentImageIndex(index + 1);
+                          setIsGalleryOpen(true);
+                        }}
+                      />
+                      {index === 3 && displayImages.length > 5 && (
+                        <div 
+                          className="absolute bottom-2 right-2"
                         >
-                          Plus de Photos
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                          <Button 
+                            size="sm"
+                            className="bg-white/90 hover:bg-white text-black text-xs font-medium px-3 py-1 h-7 rounded-md shadow-sm backdrop-blur-sm border border-white/20"
+                            onClick={() => {
+                              setCurrentImageIndex(0);
+                              setIsGalleryOpen(true);
+                            }}
+                          >
+                            Plus de Photos
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  // Afficher 4 placeholders de fallback
+                  Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="relative group cursor-pointer overflow-hidden rounded-lg h-[248px]">
+                      <ImageFallback 
+                        alt={`${property.title} ${index + 2}`}
+                        className="w-full h-full"
+                      />
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -469,48 +691,69 @@ const PropertyDetail = () => {
             <div className="md:hidden space-y-2">
               {/* Image principale mobile statique */}
               <div className="relative group overflow-hidden rounded-lg">
-                <img
-                  src={displayImages[0]}
-                  alt={property.title}
-                  className="w-full h-64 object-cover cursor-pointer"
-                  onClick={() => {
-                    setCurrentImageIndex(0);
-                    setIsGalleryOpen(true);
-                  }}
-                />
+                {displayImages.length > 0 ? (
+                  <img
+                    src={displayImages[0]}
+                    alt={property.title}
+                    className="w-full h-64 object-cover cursor-pointer"
+                    loading="lazy"
+                    onClick={() => {
+                      setCurrentImageIndex(0);
+                      setIsGalleryOpen(true);
+                    }}
+                  />
+                ) : (
+                  <ImageFallback 
+                    alt={property.title}
+                    className="w-full h-64"
+                  />
+                )}
               </div>
               
               {/* Grille mobile 2x2 */}
               <div className="grid grid-cols-2 gap-2">
-                {displayImages.slice(1, 5).map((image, index) => (
-                  <div key={index} className="relative group cursor-pointer overflow-hidden rounded-lg h-32">
-                    <img
-                      src={image}
-                      alt={`${property.title} ${index + 2}`}
-                      className="w-full h-full object-cover hover:opacity-90 transition-opacity"
-                      onClick={() => {
-                        setCurrentImageIndex(index + 1);
-                        setIsGalleryOpen(true);
-                      }}
-                    />
-                    {index === 3 && displayImages.length > 5 && (
-                      <div 
-                        className="absolute bottom-1 right-1"
-                      >
-                        <Button 
-                          size="sm"
-                          className="bg-white/90 hover:bg-white text-black text-xs font-medium px-2 py-1 h-6 rounded-md shadow-sm backdrop-blur-sm border border-white/20"
-                          onClick={() => {
-                            setCurrentImageIndex(0);
-                            setIsGalleryOpen(true);
-                          }}
+                {displayImages.length > 0 ? (
+                  displayImages.slice(1, 5).map((image, index) => (
+                    <div key={index} className="relative group cursor-pointer overflow-hidden rounded-lg h-32">
+                      <img
+                        src={image}
+                        alt={`${property.title} ${index + 2}`}
+                        className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                        loading="lazy"
+                        onClick={() => {
+                          setCurrentImageIndex(index + 1);
+                          setIsGalleryOpen(true);
+                        }}
+                      />
+                      {index === 3 && displayImages.length > 5 && (
+                        <div 
+                          className="absolute bottom-1 right-1"
                         >
-                          Plus de Photos
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                          <Button 
+                            size="sm"
+                            className="bg-white/90 hover:bg-white text-black text-xs font-medium px-2 py-1 h-6 rounded-md shadow-sm backdrop-blur-sm border border-white/20"
+                            onClick={() => {
+                              setCurrentImageIndex(0);
+                              setIsGalleryOpen(true);
+                            }}
+                          >
+                            Plus de Photos
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  // Afficher 4 placeholders de fallback
+                  Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="relative group cursor-pointer overflow-hidden rounded-lg h-32">
+                      <ImageFallback 
+                        alt={`${property.title} ${index + 2}`}
+                        className="w-full h-full"
+                      />
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -933,6 +1176,7 @@ const PropertyDetail = () => {
                         src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=200&h=200&fit=crop"
                         alt="Plongée Sous Marine"
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -953,6 +1197,7 @@ const PropertyDetail = () => {
                         src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=200&h=200&fit=crop"
                         alt="Restaurant Local"
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1027,6 +1272,7 @@ const PropertyDetail = () => {
                       src={property.owner_avatar_url}
                       alt={`Photo de ${property.owner_name || "Propriétaire"}`}
                       className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                      loading="lazy"
                       onError={(e) => {
                         // Fallback vers l'initiale si l'image ne charge pas
                         const target = e.target as HTMLImageElement;
@@ -1130,7 +1376,7 @@ const PropertyDetail = () => {
 
                           {/* Grille du calendrier */}
                           <div className="grid grid-cols-7 gap-1">
-                            {generateCalendarDays().map((date, index) => {
+                            {calendarDays.map((date, index) => {
                               const isCurrentMonth = isSameMonth(date, currentMonth);
                               const isToday = isSameDay(date, new Date());
                               const isSelected = (checkIn && isSameDay(date, checkIn)) || (checkOut && isSameDay(date, checkOut));
@@ -1263,6 +1509,7 @@ const PropertyDetail = () => {
                 alt={`${property.title} - Photo ${currentImageIndex + 1}`}
                 className="max-w-full max-h-full object-contain"
                 style={{ maxHeight: 'calc(100vh - 200px)' }}
+                loading="lazy"
               />
               
               {/* Bouton précédent */}
@@ -1305,6 +1552,7 @@ const PropertyDetail = () => {
                       src={image}
                       alt={`Miniature ${index + 1}`}
                       className="w-16 h-16 object-cover"
+                      loading="lazy"
                     />
                   </div>
                 ))}
@@ -1339,15 +1587,13 @@ const PropertyDetail = () => {
                style={{
                  border: 'none',
                  boxShadow: 'none',
-                 zIndex: 95
+                 zIndex: 60
                }}
              >
-               <VisuallyHidden>
-                 <DialogTitle>Réservation - {property.title}</DialogTitle>
-                 <DialogDescription>
-                   Calendrier de disponibilité et options de contact pour réserver cette propriété
-                 </DialogDescription>
-               </VisuallyHidden>
+               <DialogTitle className="sr-only">Réservation - {property.title}</DialogTitle>
+               <DialogDescription className="sr-only">
+                 Calendrier de disponibilité et options de contact pour réserver cette propriété
+               </DialogDescription>
                <div className="flex flex-col h-full">
                 {/* Contenu scrollable */}
                 <div className="flex-1 overflow-y-auto p-4">
@@ -1415,7 +1661,7 @@ const PropertyDetail = () => {
 
                         {/* Grille du calendrier */}
                         <div className="grid grid-cols-7 gap-1">
-                          {generateCalendarDays().map((date, index) => {
+                          {calendarDays.map((date, index) => {
                             const isCurrentMonth = isSameMonth(date, currentMonth);
                             const isToday = isSameDay(date, new Date());
                             const isSelected = (checkIn && isSameDay(date, checkIn)) || (checkOut && isSameDay(date, checkOut));

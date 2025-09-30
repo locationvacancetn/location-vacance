@@ -55,6 +55,7 @@ export const useUsersManagement = (): UseUsersManagementReturn => {
         throw error;
       }
 
+
       // Récupérer le nombre de propriétés pour chaque propriétaire
       const usersWithCounts = await Promise.all(
         (profiles || []).map(async (profile) => {

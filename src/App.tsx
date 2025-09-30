@@ -9,6 +9,7 @@ import SignupPage from "./pages/Signup";
 import LoginPage from "./pages/Login";
 import PropertyDetail from "./pages/PropertyDetail";
 import TestAuth from "./pages/TestAuth";
+import TestSlugSystem from "./pages/TestSlugSystem";
 import NotFound from "./pages/NotFound";
 import { DashboardRouter } from "./pages/dashboard/DashboardRouter";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -34,6 +35,7 @@ const AppContent = () => {
                 <Route path={ROUTES.LOGIN} element={<LoginPage />} />
                 <Route path={ROUTES.PROPERTY_DETAIL} element={<PropertyDetail />} />
                 <Route path={ROUTES.TEST_AUTH} element={<TestAuth />} />
+                <Route path="/test-slug-system" element={<TestSlugSystem />} />
                 
                 {/* Route dashboard protégée */}
                 <Route 

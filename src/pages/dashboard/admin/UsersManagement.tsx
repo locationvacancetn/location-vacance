@@ -110,6 +110,7 @@ const UsersManagement = () => {
     }
   };
 
+
   // État de chargement
   if (loading) {
     return (
@@ -289,7 +290,7 @@ const UsersManagement = () => {
                     </TableHeader>
                     <TableBody>
                       {users.map((user) => (
-                        <TableRow key={user.id}>
+                        <TableRow key={user.user_id}>
                           <TableCell>
                             <div className="flex items-center space-x-3">
                               <Avatar className="h-10 w-10">

@@ -2,20 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { MapPin, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LocationService, LocationResult as DBLocationResult } from '@/lib/locationService';
 
 export interface LocationResult {
+  id: string;
+  name: string;
+  type: 'city' | 'region';
+  city_name?: string;
   display_name: string;
-  lat: string;
-  lon: string;
-  place_id: string;
-  type: string;
-  address?: {
-    city?: string;
-    town?: string;
-    village?: string;
-    state?: string;
-    country?: string;
-  };
+  slug: string;
 }
 
 interface LocationAutocompleteProps {
@@ -61,29 +56,10 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     setIsLoading(true);
     
     try {
-      const params = new URLSearchParams({
-        q: searchQuery,
-        format: 'json',
-        addressdetails: '1',
-        limit: '8',
-        'accept-language': 'fr,en',
-        countrycodes: 'tn', // Limiter à la Tunisie
-        bounded: '1',
-        viewbox: '7.5,30.2,11.6,37.5' // Bounding box de la Tunisie
-      });
-
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-        headers: {
-          'User-Agent': 'LocationVacance/1.0'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setResults(data || []);
+      // Utiliser le service de base de données pour récupérer les villes et régions
+      const dbResults = await LocationService.searchLocations(searchQuery, 8);
+      
+      setResults(dbResults);
       setShowResults(true);
       setSelectedIndex(-1);
     } catch (error) {
@@ -175,22 +151,9 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
 
   // Formater le nom d'affichage
   const formatDisplayName = (location: LocationResult) => {
-    const parts = [];
-    
-    if (location.address?.city || location.address?.town || location.address?.village) {
-      parts.push(location.address.city || location.address.town || location.address.village);
-    }
-    
-    if (location.address?.state) {
-      parts.push(location.address.state);
-    }
-    
-    if (location.address?.country) {
-      parts.push(location.address.country);
-    }
-
-    return parts.length > 0 ? parts.join(', ') : location.display_name;
+    return location.display_name;
   };
+
 
   return (
     <div className="relative w-full">
@@ -217,13 +180,20 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
         <div
           ref={resultsRef}
           className={cn(
-            "absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto",
+            "w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto",
             useRelativePositioning ? "relative" : "absolute"
           )}
+          style={{
+            zIndex: 9999,
+            position: useRelativePositioning ? 'relative' : 'absolute',
+            top: useRelativePositioning ? 'auto' : '100%',
+            left: useRelativePositioning ? 'auto' : 0,
+            right: useRelativePositioning ? 'auto' : 0
+          }}
         >
           {results.map((location, index) => (
             <div
-              key={location.place_id}
+              key={location.id}
               className={cn(
                 "px-4 py-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0",
                 index === selectedIndex && "bg-gray-100"
@@ -237,7 +207,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
                     {formatDisplayName(location)}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    {location.type}
+                    {location.type === 'city' ? 'Ville' : 'Région'}
                   </div>
                 </div>
               </div>
@@ -251,9 +221,16 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
         <div
           ref={resultsRef}
           className={cn(
-            "absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4",
+            "w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4",
             useRelativePositioning ? "relative" : "absolute"
           )}
+          style={{
+            zIndex: 9999,
+            position: useRelativePositioning ? 'relative' : 'absolute',
+            top: useRelativePositioning ? 'auto' : '100%',
+            left: useRelativePositioning ? 'auto' : 0,
+            right: useRelativePositioning ? 'auto' : 0
+          }}
         >
           <div className="text-sm text-gray-500 text-center">
             Aucun résultat trouvé pour "{inputValue}"

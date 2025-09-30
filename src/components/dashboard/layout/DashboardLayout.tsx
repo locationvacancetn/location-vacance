@@ -46,7 +46,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         {/* Sidebar - Fixe sur desktop */}
         <div className={cn(
-          "fixed md:fixed z-50 md:z-30 transition-transform duration-300 ease-in-out",
+          "fixed md:fixed z-50 md:z-20 transition-transform duration-300 ease-in-out",
           "md:top-0 md:left-0 md:h-screen",
           isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}>

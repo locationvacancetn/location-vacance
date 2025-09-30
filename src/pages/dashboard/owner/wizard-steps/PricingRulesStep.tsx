@@ -52,16 +52,25 @@ const PricingRulesStep = ({ formData, updateFormData }: PricingRulesStepProps) =
             <Label htmlFor="base-price" className="text-sm font-medium text-foreground">
               Prix par nuitée *
             </Label>
-            <Input
-              id="base-price"
-              type="number"
-              min="10"
-              step="1"
-              value={formData.basePrice > 0 ? formData.basePrice : ""}
-              onChange={(e) => handleNumberChange('basePrice', e.target.value)}
-              className="mt-1 text-sm placeholder:text-muted-foreground/70"
-              required
-            />
+            <div className="flex">
+              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md whitespace-nowrap min-w-[80px]">
+                À partir
+              </span>
+              <Input
+                id="base-price"
+                type="number"
+                min="10"
+                step="1"
+                value={formData.basePrice > 0 ? formData.basePrice : ""}
+                onChange={(e) => handleNumberChange('basePrice', e.target.value)}
+                placeholder="Prix"
+                className="rounded-l-none"
+                required
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Ce prix est à titre indicatif. Le prix final sera communiqué par vous après contact du voyageur.
+            </p>
             {formData.basePrice > 0 && formData.basePrice <= 10 && (
               <div className="flex justify-end mt-1">
                 <p className="text-xs font-medium text-error">

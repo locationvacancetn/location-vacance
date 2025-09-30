@@ -543,7 +543,6 @@ const PropertiesManagement = () => {
                           size="sm"
                           className="h-8 w-8 p-0 border border-[#385aa2] hover:border-[#385aa2] bg-transparent hover:bg-[#385aa2] text-[#385aa2] hover:text-white transition-colors"
                           onClick={() => {
-                            console.log('Navigation vers modification:', `/dashboard/owner/edit-property/${property.id}`);
                             navigate(`/dashboard/owner/edit-property/${property.id}`);
                           }}
                           title="Modifier"
@@ -566,7 +565,7 @@ const PropertiesManagement = () => {
                           variant="outline"
                           size="sm"
                           className="h-8 w-8 p-0 border border-[#387e64] hover:border-[#387e64] bg-transparent hover:bg-[#387e64] text-[#387e64] hover:text-white transition-colors"
-                          onClick={() => navigate(`/property/${property.id}`)}
+                          onClick={() => window.open(`/property/${property.slug}`, '_blank')}
                           title="Voir"
                         >
                           <Eye className="h-4 w-4" />
@@ -657,7 +656,6 @@ const PropertiesManagement = () => {
                          title="Modifier"
                          onClick={(e) => {
                            e.stopPropagation();
-                           console.log('Navigation vers modification (mobile):', `/dashboard/owner/edit-property/${property.id}`);
                            navigate(`/dashboard/owner/edit-property/${property.id}`);
                          }}
                        >
@@ -672,6 +670,16 @@ const PropertiesManagement = () => {
                          }}
                        >
                          <Trash2 className="h-4 w-4" />
+                       </button>
+                       <button
+                         className="h-8 w-8 p-0 border-transparent bg-[#387e64] text-white rounded-md flex items-center justify-center"
+                         title="Voir"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           window.open(`/property/${property.slug}`, '_blank');
+                         }}
+                       >
+                         <Eye className="h-4 w-4" />
                        </button>
                        <button
                          className="h-8 w-8 p-0 border-transparent bg-[#e2c044] text-white rounded-md flex items-center justify-center"
