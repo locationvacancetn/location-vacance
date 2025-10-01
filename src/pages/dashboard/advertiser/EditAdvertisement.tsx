@@ -9,26 +9,29 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
-import { Tables } from "@/integrations/supabase/types";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import AdvertisementImageUpload from "@/components/AdvertisementImageUpload";
+import { AdvertisementService } from "@/lib/advertisementService";
+import { useAdvertisementImage } from "@/hooks/useAdvertisementImage";
 import { 
   Megaphone, 
   Save,
-  ArrowLeft,
-  Calendar,
-  DollarSign,
   Target,
   Eye,
   Image as ImageIcon,
-  Loader
+  Check,
+  AlertTriangle,
+  X,
+  Lightbulb,
+  ExternalLink
 } from "lucide-react";
-
-type Advertisement = Tables<'advertisements'>;
 
 const EditAdvertisement = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { setPageTitle, setPageDescription } = usePageTitle();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   
@@ -36,68 +39,130 @@ const EditAdvertisement = () => {
     title: "",
     description: "",
     ad_type: "",
-    budget: "",
-    start_date: "",
-    end_date: "",
-    target_audience: "",
     image_url: "",
     link_url: ""
   });
 
-  // Charger la publicité existante
-  const loadAdvertisement = async () => {
-    try {
-      setInitialLoading(true);
-      
+  // Hook pour la gestion d'image
+  const { imageState, setImage, replaceImage, removeImage, isSupabaseImage } = useAdvertisementImage();
+  
+  // États pour la prévisualisation
+  const [showImagePreview, setShowImagePreview] = useState(false);
+
+  // Définir le titre de la page
+  useEffect(() => {
+    setPageTitle("Modifier la Publicité");
+    setPageDescription("Modifiez les informations de votre campagne publicitaire");
+  }, [setPageTitle, setPageDescription]);
+
+  // Charger les données de la publicité
+  useEffect(() => {
+    const loadAdvertisement = async () => {
       if (!id || !user?.id) return;
 
-      const { data, error } = await supabase
-        .from('advertisements')
-        .select('*')
-        .eq('id', id)
-        .eq('advertiser_id', user.id) // S'assurer que l'utilisateur est le propriétaire
-        .single();
+      try {
+        setInitialLoading(true);
+        
+        const { data: advertisement, error } = await supabase
+          .from('advertisements')
+          .select('*')
+          .eq('id', id)
+          .eq('advertiser_id', user.id)
+          .single();
 
-      if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
-      if (!data) {
+        if (!advertisement) {
+          toast({
+            title: "Erreur",
+            description: "Publicité non trouvée",
+            variant: "destructive"
+          });
+          navigate('/dashboard/advertiser/ads');
+          return;
+        }
+
+        // Fonction pour détecter si l'URL est une image Supabase
+        const isSupabaseImage = (url: string | null): boolean => {
+          if (!url) return false;
+          return url.includes('supabase.co/storage/v1/object/public/advertisement-images/');
+        };
+
+        // Remplir le formulaire avec les données existantes
+        setFormData({
+          title: advertisement.title || "",
+          description: advertisement.description || "",
+          ad_type: advertisement.ad_type || "",
+          image_url: isSupabaseImage(advertisement.image_url) ? "" : (advertisement.image_url || ""),
+          link_url: advertisement.link_url || ""
+        });
+
+        // Si il y a une image existante, la définir comme URL
+        if (advertisement.image_url) {
+          setImage(null, advertisement.image_url);
+        }
+
+      } catch (error: any) {
+        console.error('Erreur lors du chargement de la publicité:', error);
         toast({
           title: "Erreur",
-          description: "Publicité non trouvée",
+          description: error.message || "Impossible de charger la publicité",
           variant: "destructive"
         });
         navigate('/dashboard/advertiser/ads');
-        return;
+      } finally {
+        setInitialLoading(false);
       }
+    };
 
-      // Remplir le formulaire avec les données existantes
-      setFormData({
-        title: data.title,
-        description: data.description || "",
-        ad_type: data.ad_type,
-        budget: data.budget.toString(),
-        start_date: data.start_date,
-        end_date: data.end_date,
-        target_audience: data.target_audience || "",
-        image_url: data.image_url || "",
-        link_url: data.link_url || ""
-      });
+    loadAdvertisement();
+  }, [id, user?.id, navigate, toast]);
 
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de charger la publicité",
-        variant: "destructive"
-      });
-      navigate('/dashboard/advertiser/ads');
-    } finally {
-      setInitialLoading(false);
+  // Gérer le changement d'image
+  const handleImageChange = (file: File | null, imageUrl: string | null) => {
+    setImage(file, imageUrl);
+    
+    // Si une image est uploadée, vider le champ URL externe
+    if (file && formData.image_url) {
+      setFormData({ ...formData, image_url: "" });
     }
   };
 
-  useEffect(() => {
-    loadAdvertisement();
-  }, [id, user?.id]);
+  // Fonctions pour la prévisualisation
+  const handlePreviewImage = () => {
+    if (formData.image_url.trim()) {
+      setShowImagePreview(true);
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Veuillez d'abord saisir une URL d'image",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePreviewWebsite = () => {
+    if (formData.link_url.trim()) {
+      try {
+        new URL(formData.link_url);
+        window.open(formData.link_url, '_blank', 'noopener,noreferrer');
+      } catch {
+        toast({
+          title: "Erreur",
+          description: "L'URL du site web n'est pas valide",
+          variant: "destructive"
+        });
+      }
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Veuillez d'abord saisir une URL de site web",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +170,7 @@ const EditAdvertisement = () => {
     if (!user?.id || !id) {
       toast({
         title: "Erreur",
-        description: "Informations manquantes",
+        description: "Vous devez être connecté",
         variant: "destructive"
       });
       return;
@@ -121,6 +186,33 @@ const EditAdvertisement = () => {
       return;
     }
 
+    if (formData.title.length > 30) {
+      toast({
+        title: "Erreur",
+        description: "Le titre ne doit pas dépasser 30 caractères",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      toast({
+        title: "Erreur",
+        description: "La description est requise",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.description.length > 160) {
+      toast({
+        title: "Erreur",
+        description: "La description ne doit pas dépasser 160 caractères",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!formData.ad_type) {
       toast({
         title: "Erreur",
@@ -130,54 +222,62 @@ const EditAdvertisement = () => {
       return;
     }
 
-    if (!formData.budget || parseFloat(formData.budget) <= 0) {
+    if (!formData.link_url.trim()) {
       toast({
         title: "Erreur",
-        description: "Le budget doit être supérieur à 0",
+        description: "L'URL de destination est requise",
         variant: "destructive"
       });
       return;
     }
 
-    if (!formData.start_date || !formData.end_date) {
+    // Validation de l'URL
+    try {
+      new URL(formData.link_url);
+    } catch {
       toast({
         title: "Erreur",
-        description: "Les dates de début et fin sont requises",
+        description: "L'URL de destination n'est pas valide",
         variant: "destructive"
       });
       return;
     }
 
-    if (new Date(formData.start_date) >= new Date(formData.end_date)) {
-      toast({
-        title: "Erreur",
-        description: "La date de fin doit être après la date de début",
-        variant: "destructive"
-      });
-      return;
+    // Validation de l'URL d'image si fournie
+    if (formData.image_url.trim()) {
+      try {
+        new URL(formData.image_url);
+      } catch {
+        toast({
+          title: "Erreur",
+          description: "L'URL de l'image n'est pas valide",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     try {
       setLoading(true);
-      
-      const { error } = await supabase
-        .from('advertisements')
-        .update({
-          title: formData.title.trim(),
-          description: formData.description.trim() || null,
-          ad_type: formData.ad_type,
-          budget: parseFloat(formData.budget),
-          start_date: formData.start_date,
-          end_date: formData.end_date,
-          target_audience: formData.target_audience.trim() || null,
-          image_url: formData.image_url.trim() || null,
-          link_url: formData.link_url.trim() || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .eq('advertiser_id', user.id);
+      let finalImageUrl = formData.image_url.trim() || null;
 
-      if (error) throw error;
+      // Remplacer l'image si un fichier a été sélectionné
+      if (imageState.file && user.id && id) {
+        try {
+          finalImageUrl = await replaceImage(id, user.id);
+        } catch (replaceError) {
+          return; // L'erreur est déjà gérée dans le hook
+        }
+      }
+
+      // Mettre à jour la publicité
+      await AdvertisementService.updateAdvertisement(id, {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        ad_type: formData.ad_type as 'B2C' | 'B2B',
+        image_url: finalImageUrl,
+        link_url: formData.link_url.trim()
+      });
 
       toast({
         title: "Succès",
@@ -198,25 +298,10 @@ const EditAdvertisement = () => {
 
   if (initialLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate('/dashboard/advertiser/ads')}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Modifier la Publicité</h1>
-            <p className="text-muted-foreground">Chargement...</p>
-          </div>
-        </div>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <Loader className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
-            <p className="text-muted-foreground">Chargement de la publicité...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement de la publicité...</p>
         </div>
       </div>
     );
@@ -224,198 +309,268 @@ const EditAdvertisement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => navigate('/dashboard/advertiser/ads')}
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Modifier la Publicité</h1>
-          <p className="text-muted-foreground">
-            Modifiez votre campagne publicitaire
-          </p>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Formulaire principal */}
-          <div className="lg:col-span-2 space-y-6">
+        {/* Layout en deux colonnes pour les sections principales */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Informations de base */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <Megaphone className="w-5 h-5" />
                   Informations de base
                 </CardTitle>
                 <CardDescription>
-                  Modifiez les informations principales de votre publicité
+                  Définissez les informations principales de votre publicité
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Titre *</Label>
+               <CardContent className="space-y-4">
+                 <div className="space-y-2">
+                   <Label htmlFor="ad_type">Type de publicité *</Label>
+                   <Select
+                     value={formData.ad_type}
+                     onValueChange={(value) => setFormData({ ...formData, ad_type: value })}
+                   >
+                     <SelectTrigger className="h-auto py-2 [&>span]:line-clamp-none">
+                       <SelectValue placeholder="Sélectionnez le type">
+                         {formData.ad_type && (
+                           <div className="flex flex-col items-start gap-1">
+                             <div className="flex items-center gap-2">
+                               <span>{formData.ad_type === 'B2C' ? 'B to C' : 'B to B'}</span>
+                             </div>
+                             <span className="text-xs text-muted-foreground">
+                               {formData.ad_type === 'B2C' 
+                                 ? 'Publicité destinée aux vacanciers consultant le site'
+                                 : 'Publicité destinée aux propriétaires de maisons de vacances'
+                               }
+                             </span>
+                           </div>
+                         )}
+                       </SelectValue>
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="B2C">
+                         <div className="flex flex-col items-start gap-1">
+                           <div className="flex items-center gap-2">
+                             <span>B to C</span>
+                           </div>
+                           <span className="text-xs text-muted-foreground">
+                             Publicité destinée aux vacanciers consultant le site
+                           </span>
+                         </div>
+                       </SelectItem>
+                       <SelectItem value="B2B">
+                         <div className="flex flex-col items-start gap-1">
+                           <div className="flex items-center gap-2">
+                             <span>B to B</span>
+                           </div>
+                           <span className="text-xs text-muted-foreground">
+                             Publicité destinée aux propriétaires de maisons de vacances
+                           </span>
+                         </div>
+                       </SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+
+                 <div className="space-y-2">
+                   <Label htmlFor="title">Titre *</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="Titre accrocheur de votre publicité"
+                    maxLength={30}
                     required
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">
+                      {formData.title.length}/30 caractères
+                    </span>
+                     <div className="flex items-center gap-1">
+                       <span className={`${formData.title.length === 0 ? 'text-red-500' : formData.title.length < 10 ? 'text-yellow-500' : 'text-green-500'}`} style={formData.title.length === 0 ? {color: '#bc2d2b'} : formData.title.length > 0 && formData.title.length < 10 ? {color: 'rgb(234 179 8)'} : {}}>
+                         {formData.title.length === 0 ? <X className="w-4 h-4" /> : 
+                          formData.title.length < 10 ? <AlertTriangle className="w-4 h-4" /> : 
+                          <Check className="w-4 h-4" />}
+                       </span>
+                       <span className={`text-xs font-bold ${formData.title.length === 0 ? 'text-red-500' : formData.title.length < 10 ? 'text-yellow-500' : 'text-green-500'}`} style={formData.title.length === 0 ? {color: '#bc2d2b'} : formData.title.length > 0 && formData.title.length < 10 ? {color: 'rgb(234 179 8)'} : {}}>
+                         {formData.title.length === 0 ? 'Vide' : 
+                          formData.title.length < 10 ? 'Trop court' : 
+                          'Bon'}
+                       </span>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Hint pour le titre */}
+                 <div className="bg-muted/50 p-3 rounded-lg">
+                   <h4 className="font-medium text-sm mb-2 flex items-center gap-2 text-muted-foreground">
+                     <Lightbulb className="w-4 h-4" style={{color: 'rgb(234 179 8)'}} />
+                     Conseils pour un titre efficace :
+                   </h4>
+                   <div className="text-xs space-y-1">
+                     <div className="flex items-start gap-2">
+                       <Check className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                       <div>
+                         <span className="font-bold text-muted-foreground">Nom de l'enseigne :</span>
+                         <span className="text-muted-foreground"> Incluez le nom de votre entreprise pour la reconnaissance</span>
+                       </div>
+                     </div>
+                     <div className="flex items-start gap-2">
+                       <Check className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                       <div>
+                         <span className="font-bold text-muted-foreground">Mémorable :</span>
+                         <span className="text-muted-foreground"> Facile à retenir et à retrouver par les clients</span>
+                       </div>
+                     </div>
+                     <div className="flex items-start gap-2">
+                       <Check className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                       <div>
+                         <span className="font-bold text-muted-foreground">Représentatif :</span>
+                         <span className="text-muted-foreground"> Reflète votre marque et votre activité</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 <div className="space-y-2">
+                   <Label htmlFor="description">Description *</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Description détaillée de votre publicité"
+                    maxLength={160}
                     rows={4}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="ad_type">Type de publicité *</Label>
-                  <Select
-                    value={formData.ad_type}
-                    onValueChange={(value) => setFormData({ ...formData, ad_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez le type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="banner">
-                        <div className="flex items-center gap-2">
-                          <Eye className="w-4 h-4" />
-                          Bannière - Affichage sur le site
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="sponsored">
-                        <div className="flex items-center gap-2">
-                          <Target className="w-4 h-4" />
-                          Sponsorisé - Mise en avant dans les résultats
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="featured">
-                        <div className="flex items-center gap-2">
-                          <Megaphone className="w-4 h-4" />
-                          Vedette - Position premium
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Budget et calendrier */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5" />
-                  Budget et Calendrier
-                </CardTitle>
-                <CardDescription>
-                  Modifiez votre budget et la période de diffusion
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="budget">Budget total (DT) *</Label>
-                  <Input
-                    id="budget"
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    value={formData.budget}
-                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                    placeholder="100.00"
                     required
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Budget total pour toute la durée de la campagne
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="start_date">Date de début *</Label>
-                    <Input
-                      id="start_date"
-                      type="date"
-                      value={formData.start_date}
-                      onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="end_date">Date de fin *</Label>
-                    <Input
-                      id="end_date"
-                      type="date"
-                      value={formData.end_date}
-                      onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                      min={formData.start_date}
-                      required
-                    />
-                  </div>
-                </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">
+                      {formData.description.length}/160 caractères
+                    </span>
+                     <div className="flex items-center gap-1">
+                       <span className={`${formData.description.length === 0 ? 'text-red-500' : formData.description.length < 50 ? 'text-yellow-500' : 'text-green-500'}`} style={formData.description.length === 0 ? {color: '#bc2d2b'} : formData.description.length > 0 && formData.description.length < 50 ? {color: 'rgb(234 179 8)'} : {}}>
+                         {formData.description.length === 0 ? <X className="w-4 h-4" /> : 
+                          formData.description.length < 50 ? <AlertTriangle className="w-4 h-4" /> : 
+                          <Check className="w-4 h-4" />}
+                       </span>
+                       <span className={`text-xs font-bold ${formData.description.length === 0 ? 'text-red-500' : formData.description.length < 50 ? 'text-yellow-500' : 'text-green-500'}`} style={formData.description.length === 0 ? {color: '#bc2d2b'} : formData.description.length > 0 && formData.description.length < 50 ? {color: 'rgb(234 179 8)'} : {}}>
+                         {formData.description.length === 0 ? 'Vide' : 
+                          formData.description.length < 50 ? 'Trop court' : 
+                          'Bon'}
+                       </span>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Hint pour la description */}
+                 <div className="bg-muted/50 p-3 rounded-lg">
+                   <h4 className="font-medium text-sm mb-2 flex items-center gap-2 text-muted-foreground">
+                     <Lightbulb className="w-4 h-4" style={{color: 'rgb(234 179 8)'}} />
+                     Conseils pour une description efficace :
+                   </h4>
+                   <div className="text-xs space-y-1">
+                     <div className="flex items-start gap-2">
+                       <Check className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                       <div>
+                         <span className="font-bold text-muted-foreground">Claire et concise :</span>
+                         <span className="text-muted-foreground"> Décrivez votre service de manière simple et directe</span>
+                       </div>
+                     </div>
+                     <div className="flex items-start gap-2">
+                       <Check className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                       <div>
+                         <span className="font-bold text-muted-foreground">Appel à l'action :</span>
+                         <span className="text-muted-foreground"> Incitez les clients à vous contacter ou visiter</span>
+                       </div>
+                     </div>
+                     <div className="flex items-start gap-2">
+                       <Check className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                       <div>
+                         <span className="font-bold text-muted-foreground">Bénéfices clés :</span>
+                         <span className="text-muted-foreground"> Mettez en avant les avantages de votre service</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
               </CardContent>
             </Card>
 
-            {/* Ciblage et médias */}
+            {/* Médias et liens */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="w-5 h-5" />
-                  Ciblage et Médias
+              <CardTitle className="flex items-center gap-2 text-lg">
+                  <ImageIcon className="w-5 h-5" />
+                  Médias et Liens
                 </CardTitle>
                 <CardDescription>
-                  Modifiez votre audience et vos médias
+                  Ajoutez une image et définissez le lien de destination
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="target_audience">Audience cible</Label>
-                  <Textarea
-                    id="target_audience"
-                    value={formData.target_audience}
-                    onChange={(e) => setFormData({ ...formData, target_audience: e.target.value })}
-                    placeholder="Décrivez votre audience cible (âge, localisation, centres d'intérêt...)"
-                    rows={3}
-                  />
-                </div>
+              <CardContent className="space-y-6">
+                {/* Upload d'image */}
+                <AdvertisementImageUpload
+                  onImageChange={handleImageChange}
+                  disabled={loading || imageState.isUploading}
+                  initialImageUrl={imageState.url}
+                />
                 
+                {/* Alternative : URL d'image */}
                 <div className="space-y-2">
-                  <Label htmlFor="image_url">URL de l'image</Label>
+                  <Label htmlFor="image_url">Ou URL de l'image (alternative)</Label>
+                <div className="flex gap-2">
                   <Input
                     id="image_url"
                     type="url"
                     value={formData.image_url}
                     onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                     placeholder="https://exemple.com/image.jpg"
+                    disabled={!!imageState.file || loading}
+                    className="flex-1"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    URL de l'image à afficher avec votre publicité
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePreviewImage}
+                    disabled={!!imageState.file || loading || !formData.image_url.trim()}
+                    title="Voir l'image"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                    {imageState.file 
+                      ? "Une image a été uploadée. L'URL sera ignorée."
+                      : "URL de l'image à afficher avec votre publicité (optionnel)"
+                    }
                   </p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="link_url">URL de destination</Label>
+                  <Label htmlFor="link_url">URL de destination *</Label>
+                <div className="flex gap-2">
                   <Input
                     id="link_url"
                     type="url"
                     value={formData.link_url}
                     onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
                     placeholder="https://votre-site.com"
+                    required
+                    disabled={loading}
+                    className="flex-1"
                   />
-                  <p className="text-sm text-muted-foreground">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePreviewWebsite}
+                    disabled={loading || !formData.link_url.trim()}
+                    title="Voir le site web"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
                     URL vers laquelle les utilisateurs seront redirigés
                   </p>
                 </div>
@@ -423,67 +578,69 @@ const EditAdvertisement = () => {
             </Card>
           </div>
 
-          {/* Sidebar avec aperçu */}
-          <div className="space-y-6">
-            {/* Aperçu */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Eye className="w-5 h-5" />
-                  Aperçu
-                </CardTitle>
-                <CardDescription>
-                  Aperçu de votre publicité modifiée
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-lg p-4 space-y-3">
-                  {formData.image_url && (
-                    <div className="w-full h-32 bg-muted rounded-lg flex items-center justify-center">
-                      <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                  )}
-                  
-                  <div>
-                    <h4 className="font-semibold">
-                      {formData.title || "Titre de votre publicité"}
-                    </h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {formData.description || "Description de votre publicité"}
-                    </p>
-                  </div>
-                  
-                  {formData.ad_type && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                        {formData.ad_type === 'banner' ? 'Bannière' :
-                         formData.ad_type === 'sponsored' ? 'Sponsorisé' : 'Vedette'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <div className="space-y-3">
-              <Button type="submit" className="w-full" disabled={loading}>
-                <Save className="w-4 h-4 mr-2" />
-                {loading ? "Sauvegarde..." : "Sauvegarder les modifications"}
-              </Button>
-              
+        {/* Actions en bas */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={() => navigate('/dashboard/advertiser/ads')}
+            disabled={loading || imageState.isUploading}
+          >
+            Annuler
+          </Button>
+          
               <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full"
-                onClick={() => navigate('/dashboard/advertiser/ads')}
+                type="submit" 
+                disabled={loading || imageState.isUploading}
               >
-                Annuler
+                <Save className="w-4 h-4 mr-2" />
+                {imageState.isUploading 
+                  ? "Upload de l'image..." 
+                  : loading 
+                    ? "Modification..." 
+                    : "Modifier la publicité"
+                }
               </Button>
+        </div>
+      </form>
+
+      {/* Modal de prévisualisation de l'image */}
+      {showImagePreview && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Aperçu de l'image</h3>
+              <Button 
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowImagePreview(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-4">
+              <div className="flex items-center justify-center bg-muted rounded-lg min-h-[300px]">
+                <img
+                  src={formData.image_url}
+                  alt="Aperçu de l'image"
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                  onError={() => {
+                    toast({
+                      title: "Erreur",
+                      description: "Impossible de charger l'image. Vérifiez l'URL.",
+                      variant: "destructive"
+                    });
+                    setShowImagePreview(false);
+                  }}
+                />
+              </div>
+              <div className="mt-4 text-xs text-muted-foreground">
+                <p><strong>URL :</strong> {formData.image_url}</p>
+              </div>
             </div>
           </div>
         </div>
-      </form>
+      )}
     </div>
   );
 };

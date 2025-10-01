@@ -24,6 +24,8 @@ import KonnectConfigPage from './admin/KonnectConfigPage';
 import EmailSettings from './admin/EmailSettings';
 import AdminPropertiesManagement from './admin/AdminPropertiesManagement';
 import SEOManagement from './admin/SEOManagement';
+import AdminSubscriptions from './admin/AdminSubscriptions';
+import AddSubscriptionPlan from './admin/AddSubscriptionPlan';
 
 
 // Import des pages Profil par rôle
@@ -160,6 +162,8 @@ export const DashboardRouter = () => {
               <Route path="/email" element={<EmailSettings />} />
               <Route path="/properties" element={<AdminPropertiesManagement />} />
               <Route path="/seo" element={<SEOManagement />} />
+              <Route path="/subscriptions" element={<AdminSubscriptions />} />
+              <Route path="/subscriptions/add" element={<AddSubscriptionPlan />} />
               <Route path="/users" element={<UsersManagement />} />
               <Route path="/add-user" element={<AddUser />} />
               <Route path="/add-property" element={<AddPropertyWizard />} />

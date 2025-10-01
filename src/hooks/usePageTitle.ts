@@ -23,6 +23,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/admin/konnect': 'Configuration Konnect',
   '/dashboard/admin/email': 'Configuration Email',
   '/dashboard/admin/seo': 'Gestion SEO',
+  '/dashboard/admin/subscriptions': 'Gestion des Abonnements',
+  '/dashboard/admin/subscriptions/add': 'Créer un Plan d\'Abonnement',
   '/dashboard/users': 'Gestion des Utilisateurs',
   
   // Pages Owner
@@ -33,6 +35,10 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/owner/properties': 'Mes Propriétés',
   '/dashboard/calendar': 'Calendrier de Blocage',
   '/dashboard/owner/calendar': 'Calendrier de Blocage',
+  
+  // Pages Advertiser
+  '/dashboard/advertiser/ads': 'Mes Publicités',
+  '/dashboard/advertiser/add-advertisement': 'Créer une Publicité',
   
   // Dashboards par rôle (fallback)
   '/dashboard/admin': 'Tableau de bord Admin',
@@ -58,6 +64,8 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/dashboard/admin/konnect': 'Configurez les paramètres de l\'intégration avec le service de paiement Konnect',
   '/dashboard/admin/email': 'Gérez l\'envoi d\'emails et les paramètres SMTP',
   '/dashboard/admin/seo': 'Optimisez le référencement de vos annonces pour améliorer leur visibilité',
+  '/dashboard/admin/subscriptions': 'Gérez les plans d\'abonnement pour les propriétaires et annonceurs',
+  '/dashboard/admin/subscriptions/add': 'Définissez les détails du nouveau plan d\'abonnement',
   '/dashboard/users': 'Administrez les comptes utilisateurs',
   '/dashboard/add-property': 'Créez votre annonce étape par étape',
   '/dashboard/owner/add-property': 'Créez votre annonce étape par étape',
@@ -66,6 +74,8 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/dashboard/owner/properties': 'Gérez vos propriétés et leurs statuts',
   '/dashboard/calendar': 'Gérez la disponibilité de vos propriétés en bloquant ou libérant des dates',
   '/dashboard/owner/calendar': 'Gérez la disponibilité de vos propriétés en bloquant ou libérant des dates',
+  '/dashboard/advertiser/ads': 'Gérez vos campagnes publicitaires et leurs performances',
+  '/dashboard/advertiser/add-advertisement': 'Créez une nouvelle campagne publicitaire pour promouvoir votre entreprise',
 };
 
 export const usePageTitle = () => {

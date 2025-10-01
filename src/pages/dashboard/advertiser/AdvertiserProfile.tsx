@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,13 +29,15 @@ const AdvertiserProfile = () => {
     fullName: '',
     phone: '',
     phoneCountryCode: '+216',
-    // Champs professionnels pour les annonceurs
-    companyName: '',
-    companyWebsite: '',
-    businessPhone: '',
-    businessEmail: '',
-    linkedinUrl: '',
-    twitterUrl: '',
+    // Champs de contact social
+    whatsappNumber: '',
+    websiteUrl: '',
+    facebookUrl: '',
+    instagramUrl: '',
+    tiktokUrl: '',
+    messengerUrl: '',
+    // Langues parlées
+    spokenLanguages: [] as string[],
   });
   const [avatarUrl, setAvatarUrl] = useState('');
 
@@ -46,17 +49,30 @@ const AdvertiserProfile = () => {
       const countryCode = phoneParts[0] || '+216';
       const phoneNumber = phoneParts.slice(1).join(' ') || '';
       
+      // Extraire la partie variable des URLs
+      const extractUrlPart = (url: string | null, prefix: string) => {
+        if (!url) return '';
+        if (url.startsWith(prefix)) {
+          return url.substring(prefix.length);
+        }
+        // Si l'URL ne commence pas par le préfixe, retourner l'URL complète
+        // (au cas où l'utilisateur aurait saisi l'URL complète)
+        return url;
+      };
+      
       setFormData({
         fullName: userProfile.full_name || '',
         phone: phoneNumber,
         phoneCountryCode: countryCode, // Seulement l'indicatif
-        // Champs professionnels pour les annonceurs
-        companyName: userProfile.company_name || '',
-        companyWebsite: userProfile.company_website || '',
-        businessPhone: userProfile.business_phone || '',
-        businessEmail: userProfile.business_email || '',
-        linkedinUrl: userProfile.linkedin_url || '',
-        twitterUrl: userProfile.twitter_url || '',
+        // Champs de contact social - extraire seulement la partie variable
+        whatsappNumber: userProfile.whatsapp_number || '',
+        websiteUrl: extractUrlPart(userProfile.website_url, 'https://'),
+        facebookUrl: extractUrlPart(userProfile.facebook_url, 'https://facebook.com/'),
+        instagramUrl: extractUrlPart(userProfile.instagram_url, 'https://instagram.com/'),
+        tiktokUrl: extractUrlPart(userProfile.tiktok_url, 'https://tiktok.com/@'),
+        messengerUrl: extractUrlPart(userProfile.messenger_url, 'https://m.me/'),
+        // Langues parlées
+        spokenLanguages: userProfile.spoken_languages || [],
       });
       setAvatarUrl(userProfile.avatar_url || '');
     }
@@ -66,6 +82,15 @@ const AdvertiserProfile = () => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handleLanguageChange = (language: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      spokenLanguages: checked
+        ? [...prev.spokenLanguages, language]
+        : prev.spokenLanguages.filter(lang => lang !== language)
     }));
   };
 
@@ -246,18 +271,27 @@ const AdvertiserProfile = () => {
     if (!user) return;
 
     // Validation côté client
-    if (!formData.whatsappNumber.trim()) {
+    if (!formData.phone.trim()) {
       toast({
         title: "Erreur de validation",
-        description: "Le numéro WhatsApp est obligatoire pour les propriétaires",
+        description: "Le numéro de téléphone est obligatoire",
         variant: "destructive",
       });
       return;
     }
 
+    // Le numéro WhatsApp n'est plus obligatoire pour les annonceurs
+
     setIsLoading(true);
     try {
       const phoneWithCountryCode = `${formData.phoneCountryCode} ${formData.phone}`.trim();
+      
+      // Reconstruire les URLs complètes
+      const facebookUrl = formData.facebookUrl.trim() ? `https://facebook.com/${formData.facebookUrl.trim()}` : null;
+      const messengerUrl = formData.messengerUrl.trim() ? `https://m.me/${formData.messengerUrl.trim()}` : null;
+      const instagramUrl = formData.instagramUrl.trim() ? `https://instagram.com/${formData.instagramUrl.trim()}` : null;
+      const tiktokUrl = formData.tiktokUrl.trim() ? `https://tiktok.com/@${formData.tiktokUrl.trim()}` : null;
+      const websiteUrl = formData.websiteUrl.trim() ? `https://${formData.websiteUrl.trim()}` : null;
       
       const { error } = await supabase
         .from('profiles')
@@ -266,17 +300,22 @@ const AdvertiserProfile = () => {
           phone: phoneWithCountryCode,
           avatar_url: avatarUrl,
           // Champs de contact social
-          phone_secondary: formData.phoneSecondary,
-          whatsapp_number: formData.whatsappNumber,
-          facebook_url: formData.facebookUrl,
-          instagram_url: formData.instagramUrl,
-          tiktok_url: formData.tiktokUrl,
-          messenger_url: formData.messengerUrl,
+          whatsapp_number: formData.whatsappNumber.trim() || null,
+          website_url: websiteUrl,
+          facebook_url: facebookUrl,
+          instagram_url: instagramUrl,
+          tiktok_url: tiktokUrl,
+          messenger_url: messengerUrl,
+          // Langues parlées
+          spoken_languages: formData.spokenLanguages,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       // Rafraîchir les données utilisateur
       refreshUserData();
@@ -287,9 +326,13 @@ const AdvertiserProfile = () => {
       });
     } catch (error) {
       console.error('Error updating profile:', error);
+      
+      // Message d'erreur plus détaillé
+      const errorMessage = error?.message || "Erreur lors de la mise à jour du profil";
+      
       toast({
         title: "Erreur",
-        description: "Erreur lors de la mise à jour du profil",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -302,8 +345,9 @@ const AdvertiserProfile = () => {
     <div className="space-y-6">
 
       {/* Section Photo de profil */}
-      <Card>
+      <Card className="md:block hidden">
         <CardHeader>
+          <CardTitle className="text-lg">Photo de profil</CardTitle>
           <CardDescription>
             Votre photo apparaîtra sur votre profil et dans vos interactions.
           </CardDescription>
@@ -365,14 +409,80 @@ const AdvertiserProfile = () => {
         </CardContent>
       </Card>
 
+      {/* Section Photo de profil - Version mobile */}
+      <div className="md:hidden space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold">Photo de profil</h3>
+          <p className="text-sm text-muted-foreground">
+            Votre photo apparaîtra sur votre profil et dans vos interactions.
+          </p>
+        </div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+              {avatarUrl ? (
+                <img 
+                  src={avatarUrl} 
+                  alt="Photo de profil" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-2xl font-semibold text-gray-600">
+                    {userProfile?.full_name?.charAt(0) || 'U'}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {/* Bouton de suppression superposé */}
+            {avatarUrl && (
+              <button
+                onClick={handleDeleteAvatar}
+                disabled={isLoading}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-md items-center justify-center disabled:opacity-50 flex"
+                title="Supprimer la photo"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+          
+          <div className="text-center">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              {isLoading ? "Téléchargement..." : "Télécharger une photo"}
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Taille maximale : 2MB.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Section Informations personnelles */}
-      <Card>
+      <Card className="md:block hidden">
         <CardHeader>
+          <CardTitle className="text-lg">Informations personnelles</CardTitle>
           <CardDescription>
             Vos informations de base.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Email et Nom complet côte à côte */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Email - non modifiable */}
           <div className="space-y-2">
             <Label htmlFor="email">
@@ -386,6 +496,7 @@ const AdvertiserProfile = () => {
             />
             </div>
 
+            {/* Nom complet */}
           <div className="space-y-2">
             <Label htmlFor="fullName">Nom complet</Label>
             <Input
@@ -395,9 +506,16 @@ const AdvertiserProfile = () => {
               placeholder="Votre nom complet"
             />
             </div>
+            </div>
           
+          <div className="space-y-4">
+            {/* Téléphone et WhatsApp côte à côte */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Téléphone */}
           <div className="space-y-2">
-            <Label htmlFor="phone">Téléphone</Label>
+                <Label htmlFor="phone">
+                  Téléphone <span className="text-red-500">*</span>
+                </Label>
             <div className="flex gap-2">
               <Select 
                 value={formData.phoneCountryCode} 
@@ -637,94 +755,641 @@ const AdvertiserProfile = () => {
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="25100200"
                 className="flex-1"
+                    required
               />
             </div>
+              </div>
+
+              {/* WhatsApp */}
+              <div className="space-y-2">
+                <Label htmlFor="whatsappNumber">
+                  WhatsApp
+                </Label>
+                <Input
+                  id="whatsappNumber"
+                  value={formData.whatsappNumber}
+                  onChange={(e) => handleInputChange('whatsappNumber', e.target.value)}
+                  placeholder="Numéro WhatsApp"
+                />
+              </div>
+            </div>
+            
           </div>
 
         </CardContent>
       </Card>
 
-      {/* Section Contacts sociaux */}
-      <Card>
-        <CardHeader>
-          <CardDescription>
-            Vos informations de contact pour les locataires et prospects.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* 2ème numéro de téléphone */}
+      {/* Section Informations personnelles - Version mobile */}
+      <div className="md:hidden space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold">Informations personnelles</h3>
+          <p className="text-sm text-muted-foreground">
+            Vos informations de base.
+          </p>
+        </div>
+        <div className="space-y-4">
+          {/* Email - non modifiable */}
           <div className="space-y-2">
-            <Label htmlFor="phoneSecondary">2ème numéro de téléphone</Label>
+            <Label htmlFor="email-mobile">
+              Email
+            </Label>
             <Input
-              id="phoneSecondary"
-              value={formData.phoneSecondary}
-              onChange={(e) => handleInputChange('phoneSecondary', e.target.value)}
-              placeholder="Numéro de téléphone secondaire"
+              id="email-mobile"
+              value={userProfile?.email || ''}
+              disabled
+              className="bg-gray-50"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="fullName-mobile">Nom complet</Label>
+            <Input
+              id="fullName-mobile"
+              value={formData.fullName}
+              onChange={(e) => handleInputChange('fullName', e.target.value)}
+              placeholder="Votre nom complet"
+            />
+          </div>
+          
+          <div className="space-y-4">
+            {/* Téléphone et WhatsApp côte à côte */}
+            <div className="space-y-4">
+              {/* Téléphone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone-mobile">
+                  Téléphone <span className="text-red-500">*</span>
+                </Label>
+                <div className="flex gap-2">
+                  <Select 
+                    value={formData.phoneCountryCode} 
+                    onValueChange={(value) => handleInputChange('phoneCountryCode', value)}
+                  >
+                    <SelectTrigger className="w-24">
+                      <span className="truncate">{formData.phoneCountryCode}</span>
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {/* Pays prioritaires - Maghreb et Europe */}
+                      <SelectItem value="+216">+216 Tunisie</SelectItem>
+                      <SelectItem value="+213">+213 Algérie</SelectItem>
+                      <SelectItem value="+212">+212 Maroc</SelectItem>
+                      <SelectItem value="+218">+218 Libye</SelectItem>
+                      <SelectItem value="+33">+33 France</SelectItem>
+                      <SelectItem value="+39">+39 Italie</SelectItem>
+                      <SelectItem value="+49">+49 Allemagne</SelectItem>
+                      
+                      {/* Reste par ordre alphabétique */}
+                      <SelectItem value="+355">+355 Albanie</SelectItem>
+                      <SelectItem value="+376">+376 Andorre</SelectItem>
+                      <SelectItem value="+244">+244 Angola</SelectItem>
+                      <SelectItem value="+1264">+1264 Anguilla</SelectItem>
+                      <SelectItem value="+1268">+1268 Antigua-et-Barbuda</SelectItem>
+                      <SelectItem value="+966">+966 Arabie saoudite</SelectItem>
+                      <SelectItem value="+54">+54 Argentine</SelectItem>
+                      <SelectItem value="+374">+374 Arménie</SelectItem>
+                      <SelectItem value="+61">+61 Australie</SelectItem>
+                      <SelectItem value="+43">+43 Autriche</SelectItem>
+                      <SelectItem value="+994">+994 Azerbaïdjan</SelectItem>
+                      <SelectItem value="+1242">+1242 Bahamas</SelectItem>
+                      <SelectItem value="+973">+973 Bahreïn</SelectItem>
+                      <SelectItem value="+880">+880 Bangladesh</SelectItem>
+                      <SelectItem value="+1246">+1246 Barbade</SelectItem>
+                      <SelectItem value="+375">+375 Biélorussie</SelectItem>
+                      <SelectItem value="+32">+32 Belgique</SelectItem>
+                      <SelectItem value="+501">+501 Belize</SelectItem>
+                      <SelectItem value="+229">+229 Bénin</SelectItem>
+                      <SelectItem value="+1441">+1441 Bermudes</SelectItem>
+                      <SelectItem value="+975">+975 Bhoutan</SelectItem>
+                      <SelectItem value="+591">+591 Bolivie</SelectItem>
+                      <SelectItem value="+387">+387 Bosnie-Herzégovine</SelectItem>
+                      <SelectItem value="+267">+267 Botswana</SelectItem>
+                      <SelectItem value="+55">+55 Brésil</SelectItem>
+                      <SelectItem value="+673">+673 Brunei</SelectItem>
+                      <SelectItem value="+359">+359 Bulgarie</SelectItem>
+                      <SelectItem value="+226">+226 Burkina Faso</SelectItem>
+                      <SelectItem value="+257">+257 Burundi</SelectItem>
+                      <SelectItem value="+855">+855 Cambodge</SelectItem>
+                      <SelectItem value="+237">+237 Cameroun</SelectItem>
+                      <SelectItem value="+1">+1 Canada</SelectItem>
+                      <SelectItem value="+238">+238 Cap-Vert</SelectItem>
+                      <SelectItem value="+1345">+1345 Îles Caïmans</SelectItem>
+                      <SelectItem value="+236">+236 République centrafricaine</SelectItem>
+                      <SelectItem value="+235">+235 Tchad</SelectItem>
+                      <SelectItem value="+56">+56 Chili</SelectItem>
+                      <SelectItem value="+86">+86 Chine</SelectItem>
+                      <SelectItem value="+57">+57 Colombie</SelectItem>
+                      <SelectItem value="+269">+269 Comores</SelectItem>
+                      <SelectItem value="+242">+242 République du Congo</SelectItem>
+                      <SelectItem value="+243">+243 République démocratique du Congo</SelectItem>
+                      <SelectItem value="+682">+682 Îles Cook</SelectItem>
+                      <SelectItem value="+506">+506 Costa Rica</SelectItem>
+                      <SelectItem value="+385">+385 Croatie</SelectItem>
+                      <SelectItem value="+53">+53 Cuba</SelectItem>
+                      <SelectItem value="+357">+357 Chypre</SelectItem>
+                      <SelectItem value="+420">+420 République tchèque</SelectItem>
+                      <SelectItem value="+45">+45 Danemark</SelectItem>
+                      <SelectItem value="+253">+253 Djibouti</SelectItem>
+                      <SelectItem value="+1767">+1767 Dominique</SelectItem>
+                      <SelectItem value="+1809">+1809 République dominicaine</SelectItem>
+                      <SelectItem value="+593">+593 Équateur</SelectItem>
+                      <SelectItem value="+20">+20 Égypte</SelectItem>
+                      <SelectItem value="+971">+971 Émirats arabes unis</SelectItem>
+                      <SelectItem value="+291">+291 Érythrée</SelectItem>
+                      <SelectItem value="+34">+34 Espagne</SelectItem>
+                      <SelectItem value="+372">+372 Estonie</SelectItem>
+                      <SelectItem value="+251">+251 Éthiopie</SelectItem>
+                      <SelectItem value="+679">+679 Fidji</SelectItem>
+                      <SelectItem value="+358">+358 Finlande</SelectItem>
+                      <SelectItem value="+33">+33 France</SelectItem>
+                      <SelectItem value="+241">+241 Gabon</SelectItem>
+                      <SelectItem value="+220">+220 Gambie</SelectItem>
+                      <SelectItem value="+995">+995 Géorgie</SelectItem>
+                      <SelectItem value="+233">+233 Ghana</SelectItem>
+                      <SelectItem value="+350">+350 Gibraltar</SelectItem>
+                      <SelectItem value="+30">+30 Grèce</SelectItem>
+                      <SelectItem value="+1473">+1473 Grenade</SelectItem>
+                      <SelectItem value="+299">+299 Groenland</SelectItem>
+                      <SelectItem value="+590">+590 Guadeloupe</SelectItem>
+                      <SelectItem value="+1671">+1671 Guam</SelectItem>
+                      <SelectItem value="+502">+502 Guatemala</SelectItem>
+                      <SelectItem value="+224">+224 Guinée</SelectItem>
+                      <SelectItem value="+240">+240 Guinée équatoriale</SelectItem>
+                      <SelectItem value="+245">+245 Guinée-Bissau</SelectItem>
+                      <SelectItem value="+592">+592 Guyana</SelectItem>
+                      <SelectItem value="+509">+509 Haïti</SelectItem>
+                      <SelectItem value="+504">+504 Honduras</SelectItem>
+                      <SelectItem value="+852">+852 Hong Kong</SelectItem>
+                      <SelectItem value="+36">+36 Hongrie</SelectItem>
+                      <SelectItem value="+91">+91 Inde</SelectItem>
+                      <SelectItem value="+62">+62 Indonésie</SelectItem>
+                      <SelectItem value="+98">+98 Iran</SelectItem>
+                      <SelectItem value="+964">+964 Irak</SelectItem>
+                      <SelectItem value="+353">+353 Irlande</SelectItem>
+                      <SelectItem value="+354">+354 Islande</SelectItem>
+                      <SelectItem value="+972">+972 Israël</SelectItem>
+                      <SelectItem value="+1876">+1876 Jamaïque</SelectItem>
+                      <SelectItem value="+81">+81 Japon</SelectItem>
+                      <SelectItem value="+962">+962 Jordanie</SelectItem>
+                      <SelectItem value="+7">+7 Kazakhstan</SelectItem>
+                      <SelectItem value="+254">+254 Kenya</SelectItem>
+                      <SelectItem value="+996">+996 Kirghizistan</SelectItem>
+                      <SelectItem value="+686">+686 Kiribati</SelectItem>
+                      <SelectItem value="+965">+965 Koweït</SelectItem>
+                      <SelectItem value="+383">+383 Kosovo</SelectItem>
+                      <SelectItem value="+856">+856 Laos</SelectItem>
+                      <SelectItem value="+266">+266 Lesotho</SelectItem>
+                      <SelectItem value="+371">+371 Lettonie</SelectItem>
+                      <SelectItem value="+961">+961 Liban</SelectItem>
+                      <SelectItem value="+231">+231 Liberia</SelectItem>
+                      <SelectItem value="+218">+218 Libye</SelectItem>
+                      <SelectItem value="+423">+423 Liechtenstein</SelectItem>
+                      <SelectItem value="+370">+370 Lituanie</SelectItem>
+                      <SelectItem value="+352">+352 Luxembourg</SelectItem>
+                      <SelectItem value="+853">+853 Macao</SelectItem>
+                      <SelectItem value="+389">+389 Macédoine du Nord</SelectItem>
+                      <SelectItem value="+261">+261 Madagascar</SelectItem>
+                      <SelectItem value="+60">+60 Malaisie</SelectItem>
+                      <SelectItem value="+265">+265 Malawi</SelectItem>
+                      <SelectItem value="+960">+960 Maldives</SelectItem>
+                      <SelectItem value="+223">+223 Mali</SelectItem>
+                      <SelectItem value="+356">+356 Malte</SelectItem>
+                      <SelectItem value="+692">+692 Îles Marshall</SelectItem>
+                      <SelectItem value="+596">+596 Martinique</SelectItem>
+                      <SelectItem value="+222">+222 Mauritanie</SelectItem>
+                      <SelectItem value="+230">+230 Maurice</SelectItem>
+                      <SelectItem value="+262">+262 Mayotte</SelectItem>
+                      <SelectItem value="+52">+52 Mexique</SelectItem>
+                      <SelectItem value="+691">+691 Micronésie</SelectItem>
+                      <SelectItem value="+373">+373 Moldavie</SelectItem>
+                      <SelectItem value="+377">+377 Monaco</SelectItem>
+                      <SelectItem value="+976">+976 Mongolie</SelectItem>
+                      <SelectItem value="+1664">+1664 Montserrat</SelectItem>
+                      <SelectItem value="+382">+382 Monténégro</SelectItem>
+                      <SelectItem value="+212">+212 Maroc</SelectItem>
+                      <SelectItem value="+258">+258 Mozambique</SelectItem>
+                      <SelectItem value="+95">+95 Myanmar</SelectItem>
+                      <SelectItem value="+264">+264 Namibie</SelectItem>
+                      <SelectItem value="+674">+674 Nauru</SelectItem>
+                      <SelectItem value="+977">+977 Népal</SelectItem>
+                      <SelectItem value="+31">+31 Pays-Bas</SelectItem>
+                      <SelectItem value="+687">+687 Nouvelle-Calédonie</SelectItem>
+                      <SelectItem value="+64">+64 Nouvelle-Zélande</SelectItem>
+                      <SelectItem value="+505">+505 Nicaragua</SelectItem>
+                      <SelectItem value="+227">+227 Niger</SelectItem>
+                      <SelectItem value="+234">+234 Nigeria</SelectItem>
+                      <SelectItem value="+683">+683 Niue</SelectItem>
+                      <SelectItem value="+850">+850 Corée du Nord</SelectItem>
+                      <SelectItem value="+1670">+1670 Îles Mariannes du Nord</SelectItem>
+                      <SelectItem value="+47">+47 Norvège</SelectItem>
+                      <SelectItem value="+968">+968 Oman</SelectItem>
+                      <SelectItem value="+92">+92 Pakistan</SelectItem>
+                      <SelectItem value="+680">+680 Palaos</SelectItem>
+                      <SelectItem value="+970">+970 Palestine</SelectItem>
+                      <SelectItem value="+507">+507 Panama</SelectItem>
+                      <SelectItem value="+675">+675 Papouasie-Nouvelle-Guinée</SelectItem>
+                      <SelectItem value="+595">+595 Paraguay</SelectItem>
+                      <SelectItem value="+51">+51 Pérou</SelectItem>
+                      <SelectItem value="+63">+63 Philippines</SelectItem>
+                      <SelectItem value="+48">+48 Pologne</SelectItem>
+                      <SelectItem value="+351">+351 Portugal</SelectItem>
+                      <SelectItem value="+1787">+1787 Porto Rico</SelectItem>
+                      <SelectItem value="+974">+974 Qatar</SelectItem>
+                      <SelectItem value="+40">+40 Roumanie</SelectItem>
+                      <SelectItem value="+7">+7 Russie</SelectItem>
+                      <SelectItem value="+250">+250 Rwanda</SelectItem>
+                      <SelectItem value="+290">+290 Sainte-Hélène</SelectItem>
+                      <SelectItem value="+1869">+1869 Saint-Kitts-et-Nevis</SelectItem>
+                      <SelectItem value="+1758">+1758 Sainte-Lucie</SelectItem>
+                      <SelectItem value="+1784">+1784 Saint-Vincent-et-les-Grenadines</SelectItem>
+                      <SelectItem value="+378">+378 Saint-Marin</SelectItem>
+                      <SelectItem value="+508">+508 Saint-Pierre-et-Miquelon</SelectItem>
+                      <SelectItem value="+685">+685 Samoa</SelectItem>
+                      <SelectItem value="+1684">+1684 Samoa américaines</SelectItem>
+                      <SelectItem value="+378">+378 Saint-Marin</SelectItem>
+                      <SelectItem value="+239">+239 Sao Tomé-et-Principe</SelectItem>
+                      <SelectItem value="+966">+966 Arabie saoudite</SelectItem>
+                      <SelectItem value="+221">+221 Sénégal</SelectItem>
+                      <SelectItem value="+381">+381 Serbie</SelectItem>
+                      <SelectItem value="+248">+248 Seychelles</SelectItem>
+                      <SelectItem value="+232">+232 Sierra Leone</SelectItem>
+                      <SelectItem value="+65">+65 Singapour</SelectItem>
+                      <SelectItem value="+421">+421 Slovaquie</SelectItem>
+                      <SelectItem value="+386">+386 Slovénie</SelectItem>
+                      <SelectItem value="+677">+677 Îles Salomon</SelectItem>
+                      <SelectItem value="+252">+252 Somalie</SelectItem>
+                      <SelectItem value="+27">+27 Afrique du Sud</SelectItem>
+                      <SelectItem value="+82">+82 Corée du Sud</SelectItem>
+                      <SelectItem value="+211">+211 Soudan du Sud</SelectItem>
+                      <SelectItem value="+34">+34 Espagne</SelectItem>
+                      <SelectItem value="+94">+94 Sri Lanka</SelectItem>
+                      <SelectItem value="+249">+249 Soudan</SelectItem>
+                      <SelectItem value="+597">+597 Suriname</SelectItem>
+                      <SelectItem value="+268">+268 Eswatini</SelectItem>
+                      <SelectItem value="+46">+46 Suède</SelectItem>
+                      <SelectItem value="+41">+41 Suisse</SelectItem>
+                      <SelectItem value="+963">+963 Syrie</SelectItem>
+                      <SelectItem value="+992">+992 Tadjikistan</SelectItem>
+                      <SelectItem value="+255">+255 Tanzanie</SelectItem>
+                      <SelectItem value="+66">+66 Thaïlande</SelectItem>
+                      <SelectItem value="+228">+228 Togo</SelectItem>
+                      <SelectItem value="+676">+676 Tonga</SelectItem>
+                      <SelectItem value="+1868">+1868 Trinité-et-Tobago</SelectItem>
+                      <SelectItem value="+216">+216 Tunisie</SelectItem>
+                      <SelectItem value="+993">+993 Turkménistan</SelectItem>
+                      <SelectItem value="+90">+90 Turquie</SelectItem>
+                      <SelectItem value="+1649">+1649 Îles Turques-et-Caïques</SelectItem>
+                      <SelectItem value="+688">+688 Tuvalu</SelectItem>
+                      <SelectItem value="+256">+256 Ouganda</SelectItem>
+                      <SelectItem value="+380">+380 Ukraine</SelectItem>
+                      <SelectItem value="+598">+598 Uruguay</SelectItem>
+                      <SelectItem value="+998">+998 Ouzbékistan</SelectItem>
+                      <SelectItem value="+678">+678 Vanuatu</SelectItem>
+                      <SelectItem value="+58">+58 Venezuela</SelectItem>
+                      <SelectItem value="+84">+84 Vietnam</SelectItem>
+                      <SelectItem value="+1340">+1340 Îles Vierges américaines</SelectItem>
+                      <SelectItem value="+1284">+1284 Îles Vierges britanniques</SelectItem>
+                      <SelectItem value="+967">+967 Yémen</SelectItem>
+                      <SelectItem value="+260">+260 Zambie</SelectItem>
+                      <SelectItem value="+263">+263 Zimbabwe</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    id="phone-mobile"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="25100200"
+                    className="flex-1"
+                    required
+                  />
+                </div>
           </div>
 
           {/* WhatsApp */}
           <div className="space-y-2">
-            <Label htmlFor="whatsappNumber">
-              Numéro WhatsApp <span className="text-red-500">*</span>
+                <Label htmlFor="whatsappNumber-mobile">
+                  WhatsApp
             </Label>
             <Input
-              id="whatsappNumber"
+                  id="whatsappNumber-mobile"
               value={formData.whatsappNumber}
               onChange={(e) => handleInputChange('whatsappNumber', e.target.value)}
-              placeholder="Numéro WhatsApp (obligatoire)"
-              required
+              placeholder="Numéro WhatsApp"
             />
-            <p className="text-sm text-muted-foreground">
-              Ce numéro sera visible par les locataires pour vous contacter.
-            </p>
+              </div>
+            </div>
+            
+          </div>
+        </div>
           </div>
 
+      {/* Section Langues parlées - COMMENTÉE : Pas nécessaire pour les annonceurs */}
+      {/* 
+      <Card className="md:block hidden">
+        <CardHeader>
+          <CardTitle className="text-lg">Langues parlées</CardTitle>
+          <CardDescription>
+            Indiquez les langues que vous parlez pour faciliter la communication avec les locataires.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { id: 'arabe', label: 'Arabe' },
+              { id: 'français', label: 'Français' },
+              { id: 'anglais', label: 'Anglais' },
+              { id: 'espagnol', label: 'Espagnol' },
+              { id: 'allemand', label: 'Allemand' },
+              { id: 'italien', label: 'Italien' }
+            ].map((language) => (
+              <div key={language.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={language.id}
+                  checked={formData.spokenLanguages.includes(language.id)}
+                  onCheckedChange={(checked) => 
+                    handleLanguageChange(language.id, checked as boolean)
+                  }
+                />
+                <Label 
+                  htmlFor={language.id}
+                  className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {language.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+          
+          {formData.spokenLanguages.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-muted-foreground mb-2">Langues sélectionnées :</p>
+              <div className="flex flex-wrap gap-2">
+                {formData.spokenLanguages.map((language) => (
+                  <span
+                    key={language}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >
+                    {language.charAt(0).toUpperCase() + language.slice(1)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      */}
+
+      {/* Section Langues parlées - Version mobile - COMMENTÉE : Pas nécessaire pour les annonceurs */}
+      {/* 
+      <div className="md:hidden space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold">Langues parlées</h3>
+          <p className="text-sm text-muted-foreground">
+            Indiquez les langues que vous parlez pour faciliter la communication avec les locataires.
+          </p>
+        </div>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { id: 'arabe', label: 'Arabe' },
+              { id: 'français', label: 'Français' },
+              { id: 'anglais', label: 'Anglais' },
+              { id: 'espagnol', label: 'Espagnol' },
+              { id: 'allemand', label: 'Allemand' },
+              { id: 'italien', label: 'Italien' }
+            ].map((langue) => (
+              <div key={langue.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${langue.id}-mobile`}
+                  checked={formData.spokenLanguages.includes(langue.id)}
+                  onCheckedChange={(checked) => handleLanguageChange(langue.id, checked as boolean)}
+                />
+                <Label htmlFor={`${langue.id}-mobile`} className="text-sm font-medium">
+                  {langue.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+          {formData.spokenLanguages.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-muted-foreground mb-2">Langues sélectionnées :</p>
+              <div className="flex flex-wrap gap-2">
+                {formData.spokenLanguages.map((langue) => (
+                  <span
+                    key={langue}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  >
+                    {langue}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      */}
+
+      {/* Section Contacts sociaux */}
+      <Card className="md:block hidden">
+        <CardHeader>
+          <CardTitle className="text-lg">Contacts sociaux</CardTitle>
+          <CardDescription>
+            Vos informations de contact sur les réseaux sociaux.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Facebook et Messenger */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Facebook */}
           <div className="space-y-2">
             <Label htmlFor="facebookUrl">Page Facebook</Label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                  https://facebook.com/
+                </span>
             <Input
               id="facebookUrl"
               value={formData.facebookUrl}
               onChange={(e) => handleInputChange('facebookUrl', e.target.value)}
-              placeholder="https://facebook.com/votre-page"
+                  placeholder="votre-page"
+                  className="rounded-l-none"
             />
+              </div>
           </div>
 
+            {/* Messenger */}
+            <div className="space-y-2">
+              <Label htmlFor="messengerUrl">Lien Messenger</Label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                  https://m.me/
+                </span>
+                <Input
+                  id="messengerUrl"
+                  value={formData.messengerUrl}
+                  onChange={(e) => handleInputChange('messengerUrl', e.target.value)}
+                  placeholder="votre-page"
+                  className="rounded-l-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Instagram et TikTok */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Instagram */}
           <div className="space-y-2">
             <Label htmlFor="instagramUrl">Page Instagram</Label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                  https://instagram.com/
+                </span>
             <Input
               id="instagramUrl"
               value={formData.instagramUrl}
               onChange={(e) => handleInputChange('instagramUrl', e.target.value)}
-              placeholder="https://instagram.com/votre-compte"
+                  placeholder="votre-compte"
+                  className="rounded-l-none"
             />
+              </div>
           </div>
 
           {/* TikTok */}
           <div className="space-y-2">
             <Label htmlFor="tiktokUrl">Page TikTok</Label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                  https://tiktok.com/@
+                </span>
             <Input
               id="tiktokUrl"
               value={formData.tiktokUrl}
               onChange={(e) => handleInputChange('tiktokUrl', e.target.value)}
-              placeholder="https://tiktok.com/@votre-compte"
+                  placeholder="votre-compte"
+                  className="rounded-l-none"
             />
+              </div>
+            </div>
+          </div>
+
+          {/* Site web */}
+          <div className="space-y-2">
+            <Label htmlFor="websiteUrl">Site web</Label>
+            <div className="flex max-w-md">
+              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                https://
+              </span>
+            <Input
+                id="websiteUrl"
+                value={formData.websiteUrl}
+                onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
+                placeholder="votre-site.com"
+                className="rounded-l-none"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Votre site web personnel ou professionnel.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section Contacts sociaux - Version mobile */}
+      <div className="md:hidden space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold">Contacts sociaux</h3>
+          <p className="text-sm text-muted-foreground">
+            Vos informations de contact sur les réseaux sociaux.
+          </p>
+        </div>
+        <div className="space-y-4">
+          {/* Facebook */}
+          <div className="space-y-2">
+            <Label htmlFor="facebookUrl-mobile">Page Facebook</Label>
+            <div className="flex">
+              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                https://facebook.com/
+              </span>
+              <Input
+                id="facebookUrl-mobile"
+                value={formData.facebookUrl}
+                onChange={(e) => handleInputChange('facebookUrl', e.target.value)}
+                placeholder="votre-page"
+                className="rounded-l-none"
+              />
+            </div>
           </div>
 
           {/* Messenger */}
           <div className="space-y-2">
-            <Label htmlFor="messengerUrl">Lien Messenger</Label>
-            <Input
-              id="messengerUrl"
-              value={formData.messengerUrl}
-              onChange={(e) => handleInputChange('messengerUrl', e.target.value)}
-              placeholder="https://m.me/votre-page"
-            />
+            <Label htmlFor="messengerUrl-mobile">Messenger</Label>
+            <div className="flex">
+              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                https://m.me/
+              </span>
+              <Input
+                id="messengerUrl-mobile"
+                value={formData.messengerUrl}
+                onChange={(e) => handleInputChange('messengerUrl', e.target.value)}
+                placeholder="votre-compte"
+                className="rounded-l-none"
+              />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Instagram */}
+          <div className="space-y-2">
+            <Label htmlFor="instagramUrl-mobile">Page Instagram</Label>
+            <div className="flex">
+              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                https://instagram.com/
+              </span>
+              <Input
+                id="instagramUrl-mobile"
+                value={formData.instagramUrl}
+                onChange={(e) => handleInputChange('instagramUrl', e.target.value)}
+                placeholder="votre-compte"
+                className="rounded-l-none"
+              />
+            </div>
+          </div>
+
+          {/* TikTok */}
+          <div className="space-y-2">
+            <Label htmlFor="tiktokUrl-mobile">Page TikTok</Label>
+            <div className="flex">
+              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                https://tiktok.com/@
+              </span>
+              <Input
+                id="tiktokUrl-mobile"
+                value={formData.tiktokUrl}
+                onChange={(e) => handleInputChange('tiktokUrl', e.target.value)}
+                placeholder="votre-compte"
+                className="rounded-l-none"
+              />
+            </div>
+          </div>
+
+          {/* Site web */}
+          <div className="space-y-2">
+            <Label htmlFor="websiteUrl-mobile">Site web</Label>
+            <div className="flex">
+              <span className="inline-flex items-center px-3 text-sm text-gray-500 bg-gray-50 border border-r-0 border-gray-300 rounded-l-md">
+                https://
+              </span>
+              <Input
+                id="websiteUrl-mobile"
+                value={formData.websiteUrl}
+                onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
+                placeholder="votre-site.com"
+                className="rounded-l-none"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Votre site web personnel ou professionnel.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Actions */}
       <div className="flex justify-end gap-4 sm:w-full">

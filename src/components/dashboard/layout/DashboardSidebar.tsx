@@ -38,7 +38,8 @@ import {
   X,
   HomeIcon,
   CreditCard,
-  Mail
+  Mail,
+  Package
 } from 'lucide-react';
 
 // Configuration des menus par rôle - STRUCTURE UNIFIÉE
@@ -57,6 +58,7 @@ const getMenuItems = (role: string) => {
         ...commonItems,
         { label: 'Utilisateurs', path: '/dashboard/admin/users', icon: Users },
         { label: 'Propriétés', path: '/dashboard/admin/properties', icon: Building },
+        { label: 'Abonnements', path: '/dashboard/admin/subscriptions', icon: Package },
         { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
         { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
         { label: 'Caractéristiques', path: '/dashboard/admin/characteristics', icon: Settings },
