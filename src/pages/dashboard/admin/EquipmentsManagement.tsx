@@ -642,16 +642,9 @@ const EquipmentsManagement = () => {
                                 onCheckedChange={(checked) => toggleActive(equipment, checked)}
                                 className="scale-90"
                               />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openDialog(equipment)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm">
+                                  <Button variant="outline" size="sm" className="h-8 w-8 p-0 hover:text-red-600 hover:border-red-300">
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </AlertDialogTrigger>
@@ -674,6 +667,14 @@ const EquipmentsManagement = () => {
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openDialog(equipment)}
+                                className="h-8 w-8 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -728,17 +729,9 @@ const EquipmentsManagement = () => {
                       </Label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openDialog(equipment)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0 hover:text-red-600 hover:border-red-300">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
@@ -761,6 +754,14 @@ const EquipmentsManagement = () => {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openDialog(equipment)}
+                        className="h-8 w-8 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>

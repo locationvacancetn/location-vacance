@@ -423,17 +423,9 @@ const CitiesManagement = () => {
                     onCheckedChange={(checked) => handleToggleCityStatus(city.id, checked)}
                     className="scale-90"
                   />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openCityDialog(city)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                      <Button variant="outline" size="sm" className="h-8 w-8 p-0 hover:text-red-600 hover:border-red-300">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
@@ -453,6 +445,14 @@ const CitiesManagement = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openCityDialog(city)}
+                    className="h-8 w-8 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </CardHeader>

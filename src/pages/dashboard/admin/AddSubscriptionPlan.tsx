@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Plus, X, GripVertical, Check } from "lucide-react";
+import { saveSubscriptionPlan } from "@/lib/subscriptionService";
 
 interface Feature {
   id: string;
@@ -181,11 +182,22 @@ const AddSubscriptionPlan = () => {
 
     setIsLoading(true);
     try {
-      // TODO: Implémenter la sauvegarde dans Supabase
-      console.log("Données à sauvegarder:", {
-        ...formData,
-        features,
-      });
+      console.log("📝 Sauvegarde du plan d'abonnement...");
+      console.log("Données du formulaire:", formData);
+      console.log("Fonctionnalités:", features);
+
+      // Séparer les features par type (on n'utilise que features, pas highlights)
+      const featuresList = features.filter(f => f.text.trim() !== "");
+      const highlightsList: typeof features = []; // Vide pour l'instant
+
+      // Appel du service de sauvegarde
+      const result = await saveSubscriptionPlan(formData, featuresList, highlightsList);
+
+      if (!result.success) {
+        throw new Error(result.error || "Erreur lors de la sauvegarde");
+      }
+
+      console.log("✅ Plan sauvegardé avec succès, ID:", result.planId);
 
       toast({
         title: "Succès",
@@ -194,7 +206,8 @@ const AddSubscriptionPlan = () => {
 
       // Redirection vers la liste
       navigate("/dashboard/admin/subscriptions");
-    } catch (error) {
+    } catch (error: any) {
+      console.error("❌ Erreur lors de la sauvegarde:", error);
       toast({
         title: "Erreur",
         description: error?.message || "Erreur lors de la création du plan",
