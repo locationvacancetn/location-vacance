@@ -158,9 +158,9 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
 
   return (
     <header className="bg-background px-6 py-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         {/* Logo à gauche sur mobile, titre sur desktop */}
-        <div className="flex items-center gap-4 flex-1">
+        <div className="flex items-start gap-4 flex-1">
           {/* Logo sur mobile */}
           <div className="md:hidden">
             <Link to="/">
@@ -181,7 +181,7 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-start gap-4">
           {/* Bouton kebab sur mobile */}
           <div className="md:hidden">
             <Button
@@ -200,14 +200,14 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
           <div className="hidden md:block">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-3 p-2 hover:bg-transparent">
-                  <div className="text-right">
+                <Button variant="ghost" className="flex items-start gap-3 p-2 hover:bg-transparent">
+                  <div className="text-right flex flex-col justify-start">
                     <p className="text-xs text-muted-foreground">Bonjour,</p>
                     <p className="text-base font-medium text-foreground">
                       {userProfile?.full_name || 'Utilisateur'}
                     </p>
                   </div>
-                  <div className="relative">
+                  <div className="relative flex-shrink-0">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={userProfile?.avatar_url} className="object-cover" />
                       <AvatarFallback className="bg-gray-200 text-gray-600">

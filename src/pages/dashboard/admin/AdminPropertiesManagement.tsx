@@ -28,7 +28,8 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Plus
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -101,7 +102,7 @@ const AdminPropertiesManagement = () => {
 
   // Filtrer les propriétés
   const filteredProperties = properties.filter(property => {
-    const matchesSearch = 
+    const matchesSearch = !searchTerm || 
       property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.owner?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.city?.name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -113,114 +114,64 @@ const AdminPropertiesManagement = () => {
     return matchesSearch && matchesStatus && matchesType && matchesCity;
   });
 
-  // Changer le statut d'une propriété
-  const handleStatusChange = async (propertyId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from('properties')
-        .update({ 
-          status: newStatus,
-          last_status_change: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', propertyId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "Statut de la propriété mis à jour"
-      });
-      loadProperties();
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de modifier le statut",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Supprimer une propriété
-  const handleDelete = async (propertyId: string) => {
-    try {
-      // Supprimer d'abord les disponibilités liées
-      await supabase
-        .from('property_availability')
-        .delete()
-        .eq('property_id', propertyId);
-
-      // Puis supprimer la propriété
-      const { error } = await supabase
-        .from('properties')
-        .delete()
-        .eq('id', propertyId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "Propriété supprimée avec succès"
-      });
-      loadProperties();
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de supprimer la propriété",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Obtenir le badge de statut
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'published':
-        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Publié</Badge>;
-      case 'draft':
-        return <Badge variant="secondary"><XCircle className="w-3 h-3 mr-1" />Brouillon</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500"><Clock className="w-3 h-3 mr-1" />En attente</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Rejeté</Badge>;
-      case 'inactive':
-        return <Badge variant="outline"><XCircle className="w-3 h-3 mr-1" />Inactif</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+    const statusConfig = {
+      published: { label: "Publié", variant: "default" as const, icon: CheckCircle, color: "text-green-600" },
+      draft: { label: "Brouillon", variant: "secondary" as const, icon: AlertTriangle, color: "text-yellow-600" },
+      pending: { label: "En attente", variant: "secondary" as const, icon: Clock, color: "text-yellow-600" },
+      inactive: { label: "Inactif", variant: "destructive" as const, icon: XCircle, color: "text-red-600" },
+      rejected: { label: "Rejeté", variant: "destructive" as const, icon: XCircle, color: "text-red-600" }
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+    const IconComponent = config.icon;
+
+    return (
+      <Badge variant={config.variant} className="flex items-center gap-1">
+        <IconComponent className={`w-3 h-3 ${config.color}`} />
+        {config.label}
+      </Badge>
+    );
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-        </div>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Chargement...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleDeleteProperty = async (propertyId: string) => {
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', propertyId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Propriété supprimée avec succès",
+      });
+
+      loadProperties();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la propriété",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-        </div>
-        <Link to="/dashboard/admin/add-property">
-          <Button>
-            <Building className="w-4 h-4 mr-2" />
+      {/* En-tête avec bouton d'ajout */}
+      <div className="flex items-center justify-end">
+        <Button asChild className="w-full sm:w-auto">
+          <Link to="/dashboard/admin/add-property">
+            <Plus className="w-4 h-4 mr-2" />
             Ajouter une propriété
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
-      {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Cartes de statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
@@ -273,246 +224,423 @@ const AdminPropertiesManagement = () => {
         </Card>
       </div>
 
-      {/* Filtres */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
-            Filtres
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Rechercher</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Titre, propriétaire, ville..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Statut</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tous les statuts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="published">Publié</SelectItem>
-                  <SelectItem value="draft">Brouillon</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="inactive">Inactif</SelectItem>
-                  <SelectItem value="rejected">Rejeté</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Type</Label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tous les types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  {propertyTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Ville</Label>
-              <Select value={cityFilter} onValueChange={setCityFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Toutes les villes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les villes</SelectItem>
-                  {cities.map((city) => (
-                    <SelectItem key={city.id} value={city.id}>
-                      {city.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Barre de recherche et filtres */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Recherche */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Titre, propriétaire, ville..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full"
+          />
+        </div>
+        
+        {/* Filtre par statut */}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Tous les statuts" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="published">Publié</SelectItem>
+            <SelectItem value="draft">Brouillon</SelectItem>
+            <SelectItem value="pending">En attente</SelectItem>
+            <SelectItem value="inactive">Inactif</SelectItem>
+            <SelectItem value="rejected">Rejeté</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        {/* Filtre par type */}
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-full">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Tous les types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les types</SelectItem>
+            {propertyTypes.map((type) => (
+              <SelectItem key={type.id} value={type.id}>
+                {type.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        {/* Filtre par ville */}
+        <Select value={cityFilter} onValueChange={setCityFilter}>
+          <SelectTrigger className="w-full">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Toutes les villes" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les villes</SelectItem>
+            {cities.map((city) => (
+              <SelectItem key={city.id} value={city.id}>
+                {city.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Compteur */}
+      <div className="mb-4">
+        <p className="text-sm text-muted-foreground">
+          {filteredProperties.length} propriété{filteredProperties.length > 1 ? "s" : ""}
+        </p>
+      </div>
+
+      {/* Version Desktop - Tableau */}
+      <div className="hidden lg:block">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Chargement des propriétés...</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Liste des propriétés */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building className="w-5 h-5" />
-            Propriétés ({filteredProperties.length})
-          </CardTitle>
-          <CardDescription>
-            Liste de toutes les propriétés de la plateforme
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {filteredProperties.length === 0 ? (
-            <div className="text-center py-8">
-              <Building className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Aucune propriété trouvée</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm || statusFilter !== "all" || typeFilter !== "all" || cityFilter !== "all"
-                  ? "Aucune propriété ne correspond à vos critères de recherche."
-                  : "Aucune propriété n'a été ajoutée pour le moment."
-                }
-              </p>
+        ) : filteredProperties.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Building className="w-8 h-8 text-gray-400" />
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Propriété</TableHead>
-                    <TableHead>Propriétaire</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Localisation</TableHead>
-                    <TableHead>Prix/nuit</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Date création</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProperties.map((property) => (
-                    <TableRow key={property.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                            <Home className="w-6 h-6 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{property.title}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {property.max_guests} personnes
-                            </p>
-                          </div>
+            <h3 className="text-lg font-semibold mb-2">
+              {searchTerm || statusFilter !== "all" || typeFilter !== "all" || cityFilter !== "all"
+                ? "Aucune propriété trouvée"
+                : "Aucune propriété"}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm || statusFilter !== "all" || typeFilter !== "all" || cityFilter !== "all"
+                ? "Essayez de modifier vos critères de recherche ou de filtrage"
+                : "Commencez par ajouter votre première propriété"}
+            </p>
+            {!searchTerm && statusFilter === "all" && typeFilter === "all" && cityFilter === "all" && (
+              <Button asChild variant="outline">
+                <Link to="/dashboard/admin/add-property">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter la première propriété
+                </Link>
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Propriété</TableHead>
+                  <TableHead>Propriétaire</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Localisation</TableHead>
+                  <TableHead>Prix/nuit</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date création</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProperties.map((property) => (
+                  <TableRow key={property.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                          <Home className="w-6 h-6 text-muted-foreground" />
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage src={property.owner?.avatar_url} />
-                            <AvatarFallback>
-                              <User className="w-4 h-4" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-medium">{property.owner?.full_name}</p>
-                            <p className="text-xs text-muted-foreground">{property.owner?.email}</p>
-                          </div>
+                        <div>
+                          <p className="font-medium">{property.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {property.max_guests} personnes
+                          </p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {property.property_type?.name}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-sm">
-                            {property.city?.name}, {property.city?.region}
-                          </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={property.owner?.avatar_url} />
+                          <AvatarFallback>
+                            <User className="w-4 h-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium">{property.owner?.full_name}</p>
+                          <p className="text-xs text-muted-foreground">{property.owner?.email}</p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="w-3 h-3 text-muted-foreground" />
-                          <span className="font-medium">{property.price_per_night} DT</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(property.status)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-sm">
-                            {new Date(property.created_at).toLocaleDateString('fr-FR')}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Select
-                            value={property.status}
-                            onValueChange={(value) => handleStatusChange(property.id, value)}
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="published">Publier</SelectItem>
-                              <SelectItem value="draft">Brouillon</SelectItem>
-                              <SelectItem value="pending">En attente</SelectItem>
-                              <SelectItem value="inactive">Désactiver</SelectItem>
-                              <SelectItem value="rejected">Rejeter</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Link to={`/dashboard/admin/edit-property/${property.id}`}>
-                            <Button variant="outline" size="sm">
-                              <Edit className="w-4 h-4" />
-                            </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {property.property_type?.name}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-sm">
+                          {property.city?.name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="w-3 h-3 text-muted-foreground" />
+                        <span className="font-medium">{property.price_per_night} DT</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(property.status)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-sm">
+                          {new Date(property.created_at).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          title="Voir les détails"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Link to={`/property/${property.slug}`}>
+                            <Eye className="h-4 w-4" />
                           </Link>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Supprimer définitivement</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Êtes-vous sûr de vouloir supprimer définitivement cette propriété ?
-                                  <span className="block mt-2 text-sm text-muted-foreground">
-                                    Propriété : <strong>{property.title}</strong>
-                                  </span>
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">
-                                  Annuler
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(property.id)}
-                                  className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
-                                >
-                                  Supprimer
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                          title="Modifier"
+                          className="h-8 w-8 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
+                        >
+                          <Link to={`/dashboard/admin/edit-property/${property.id}`}>
+                            <Edit className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              title="Supprimer"
+                              className="h-8 w-8 p-0 hover:text-red-600 hover:border-red-300"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Supprimer la propriété</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Êtes-vous sûr de vouloir supprimer la propriété <strong>"{property.title}"</strong> ?
+                                <br />
+                                <br />
+                                <strong>Cette action est irréversible.</strong>
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">
+                                Annuler
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteProperty(property.id)}
+                                className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+
+      {/* Version Mobile/Tablette - Cards */}
+      <div className="lg:hidden">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Chargement des propriétés...</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        ) : filteredProperties.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Building className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">
+              {searchTerm || statusFilter !== "all" || typeFilter !== "all" || cityFilter !== "all"
+                ? "Aucune propriété trouvée"
+                : "Aucune propriété"}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm || statusFilter !== "all" || typeFilter !== "all" || cityFilter !== "all"
+                ? "Essayez de modifier vos critères de recherche ou de filtrage"
+                : "Commencez par ajouter votre première propriété"}
+            </p>
+            {!searchTerm && statusFilter === "all" && typeFilter === "all" && cityFilter === "all" && (
+              <Button asChild variant="outline">
+                <Link to="/dashboard/admin/add-property">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter la première propriété
+                </Link>
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredProperties.map((property) => (
+              <div key={property.id} className="p-4 border rounded-lg bg-card">
+                <div className="space-y-3">
+                  {/* En-tête avec nom et statut */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                        <Home className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-sm">{property.title}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {property.max_guests} personnes
+                        </p>
+                      </div>
+                    </div>
+                    {getStatusBadge(property.status)}
+                  </div>
+
+                  {/* Propriétaire */}
+                  <div className="flex items-center gap-2">
+                    <Avatar className="w-6 h-6">
+                      <AvatarImage src={property.owner?.avatar_url} />
+                      <AvatarFallback>
+                        <User className="w-3 h-3" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{property.owner?.full_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{property.owner?.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Type et Localisation */}
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="text-xs">
+                      {property.property_type?.name}
+                    </Badge>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MapPin className="w-3 h-3" />
+                      <span className="truncate">
+                        {property.city?.name}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Prix et Date */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="w-3 h-3 text-muted-foreground" />
+                      <span className="font-medium text-sm">{property.price_per_night} DT</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar className="w-3 h-3" />
+                      <span>{new Date(property.created_at).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Actions:</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* Bouton Voir */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        title="Voir les détails"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Link to={`/property/${property.slug}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      
+                      {/* Bouton Modifier */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        title="Modifier"
+                        className="h-8 w-8 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
+                      >
+                        <Link to={`/dashboard/admin/edit-property/${property.id}`}>
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      
+                      {/* Bouton Supprimer avec Modal */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            title="Supprimer"
+                            className="h-8 w-8 p-0 hover:text-red-600 hover:border-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer la propriété</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Êtes-vous sûr de vouloir supprimer la propriété <strong>"{property.title}"</strong> ?
+                              <br />
+                              <br />
+                              <strong>Cette action est irréversible.</strong>
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]">
+                              Annuler
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteProperty(property.id)}
+                              className="bg-[#bc2d2b] hover:bg-[#a82523] text-white"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -379,7 +379,7 @@ const CitiesManagement = () => {
     <div className="space-y-6">
       {/* Bouton d'action principal */}
       <div className="flex justify-end">
-        <Button onClick={() => openCityDialog()}>
+        <Button onClick={() => openCityDialog()} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle Ville
         </Button>
@@ -389,19 +389,19 @@ const CitiesManagement = () => {
       <div className="space-y-2">
         {cities.map((city) => (
           <Card key={city.id}>
-            <CardHeader className="py-3">
+            <CardHeader className="py-2 px-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleCityExpansion(city.id)}
-                    className="h-8 w-8 p-0"
+                    className="h-6 w-6 p-0"
                   >
                     {expandedCities.has(city.id) ? (
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-3 w-3" />
                     ) : (
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-3 w-3" />
                     )}
                   </Button>
                   <div className="flex items-center space-x-2">
@@ -415,7 +415,7 @@ const CitiesManagement = () => {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge variant={city.is_active ? "default" : "secondary"} className="text-xs">
+                  <Badge variant={city.is_active ? "default" : "secondary"} className="text-xs hidden sm:inline-flex mr-36">
                     {city.is_active ? "Active" : "Inactive"}
                   </Badge>
                   <Switch
@@ -459,7 +459,7 @@ const CitiesManagement = () => {
 
             {/* Régions de la ville */}
             {expandedCities.has(city.id) && (
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 px-2">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="font-medium text-sm">Régions ({city.regions.length})</h3>
@@ -467,10 +467,10 @@ const CitiesManagement = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => openRegionDialog(undefined, city.id)}
-                      className="h-7 text-xs"
+                      className="h-6 sm:h-7 text-xs"
                     >
                       <Plus className="h-3 w-3 mr-1" />
-                      Ajouter
+                      <span className="hidden sm:inline">Ajouter</span>
                     </Button>
                   </div>
                   
@@ -483,10 +483,10 @@ const CitiesManagement = () => {
                       {city.regions.map((region) => (
                         <div
                           key={region.id}
-                          className="flex items-center justify-between p-2 border rounded-md min-h-[40px]"
+                          className="flex items-center justify-between p-1 border rounded-md min-h-[32px] sm:min-h-[36px]"
                         >
-                          <div className="flex items-center space-x-2">
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <div className="flex items-center space-x-1 sm:space-x-2">
+                            <Building2 className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                             <div className="flex flex-col justify-center">
                               <p className="font-medium text-xs leading-tight">{region.name}</p>
                               <p className="text-xs text-muted-foreground leading-tight">
@@ -498,19 +498,11 @@ const CitiesManagement = () => {
                             <Switch
                               checked={region.is_active}
                               onCheckedChange={(checked) => handleToggleRegionStatus(region.id, checked)}
-                              className="scale-90"
+                              className="scale-75 sm:scale-90"
                             />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openRegionDialog(region)}
-                              className="h-7 w-7 p-0"
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                <Button variant="outline" size="sm" className="h-6 w-6 sm:h-7 sm:w-7 p-0 hover:text-red-600 hover:border-red-300">
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
                               </AlertDialogTrigger>
@@ -529,6 +521,14 @@ const CitiesManagement = () => {
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openRegionDialog(region)}
+                              className="h-6 w-6 sm:h-7 sm:w-7 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
                           </div>
                         </div>
                       ))}

@@ -353,7 +353,7 @@ const AddSubscriptionPlan = () => {
       {/* Formulaire - 2/3 de la largeur */}
       <div className="lg:col-span-2 space-y-6">
         {/* Informations générales */}
-        <Card>
+        <Card className="lg:block hidden">
           <CardHeader>
             <CardTitle className="text-base">Informations de base</CardTitle>
             <CardDescription>
@@ -509,8 +509,164 @@ const AddSubscriptionPlan = () => {
           </CardContent>
         </Card>
 
+        {/* Version mobile - Informations générales sans cadre */}
+        <div className="lg:hidden space-y-4">
+          <div>
+            <h3 className="text-base font-semibold mb-2">Informations de base</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Définissez les informations principales du plan d'abonnement
+            </p>
+          </div>
+          
+          {/* Type de produit */}
+          <div className="space-y-2">
+            <Label htmlFor="productType-mobile">
+              Type de produit <span className="text-red-500">*</span>
+            </Label>
+            <Select value={formData.productType} onValueChange={(value) => handleInputChange("productType", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez un type de produit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="annonce">Mise en ligne d'annonce</SelectItem>
+                <SelectItem value="vedette">Mise en vedette</SelectItem>
+                <SelectItem value="pub">Publicité</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Nom du plan */}
+          <div className="space-y-2">
+            <Label htmlFor="name-mobile">
+              Nom du plan <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="name-mobile"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="Ex: Basic, Premium, Pro"
+              required
+            />
+          </div>
+
+          {/* Prix et Prix promo */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="price-mobile">
+                Prix (TND) <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="price-mobile"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => handleInputChange("price", e.target.value)}
+                placeholder="Ex: 50"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pricePromo-mobile">Prix promo (TND)</Label>
+              <Input
+                id="pricePromo-mobile"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.pricePromo}
+                onChange={(e) => handleInputChange("pricePromo", e.target.value)}
+                placeholder="Ex: 70 (sera affiché barré)"
+              />
+              <p className="text-xs text-muted-foreground">
+                Le prix promo sera affiché barré à côté du prix normal
+              </p>
+            </div>
+          </div>
+
+          {/* Durée et Période de grâce */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="duration-mobile">
+                Durée (jours) <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="duration-mobile"
+                type="number"
+                min="1"
+                value={formData.duration}
+                onChange={(e) => handleInputChange("duration", e.target.value)}
+                placeholder="Ex: 30, 90, 365"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gracePeriod-mobile">Période de grâce (mois gratuits)</Label>
+              <Input
+                id="gracePeriod-mobile"
+                type="number"
+                min="0"
+                value={formData.gracePeriod}
+                onChange={(e) => handleInputChange("gracePeriod", e.target.value)}
+                placeholder="Ex: 0, 1, 2"
+              />
+              <p className="text-xs text-muted-foreground">
+                Nombre de mois gratuits inclus dans l'abonnement
+              </p>
+            </div>
+          </div>
+
+          {/* Badge */}
+          <div className="space-y-2">
+            <Label htmlFor="badge-mobile">Badge</Label>
+            <Select value={formData.badge} onValueChange={(value) => handleInputChange("badge", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez un badge (optionnel)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="promo">Promo</SelectItem>
+                <SelectItem value="populaire">Populaire</SelectItem>
+                <SelectItem value="reduction">Réduction</SelectItem>
+                <SelectItem value="special">Spécial</SelectItem>
+                <SelectItem value="nouveau">Nouveau</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Le badge sera affiché sur la fiche de l'abonnement
+            </p>
+          </div>
+
+          {/* Sous-titre */}
+          <div className="space-y-2">
+            <Label htmlFor="subtitle-mobile">Sous-titre</Label>
+            <Input
+              id="subtitle-mobile"
+              value={formData.subtitle}
+              onChange={(e) => handleInputChange("subtitle", e.target.value)}
+              placeholder="Ex: Switch plans or cancel anytime."
+            />
+            <p className="text-xs text-muted-foreground">
+              Texte affiché sous le nom du plan
+            </p>
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description-mobile">Description du plan</Label>
+            <textarea
+              id="description-mobile"
+              value={formData.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              placeholder="Ex: Notre plan Mise en ligne d'annonce vous permet de publier vos propriétés..."
+              className="w-full min-h-[100px] px-3 py-2 text-sm rounded-md border border-input bg-background"
+            />
+            <p className="text-xs text-muted-foreground">
+              Description détaillée du plan affichée dans l'aperçu
+            </p>
+          </div>
+        </div>
+
         {/* Limitations */}
-        <Card>
+        <Card className="lg:block hidden">
           <CardHeader>
             <CardTitle className="text-base">Limitations du plan</CardTitle>
             <CardDescription>
@@ -528,8 +684,26 @@ const AddSubscriptionPlan = () => {
           </CardContent>
         </Card>
 
+        {/* Version mobile - Limitations sans cadre */}
+        <div className="lg:hidden space-y-4">
+          <div>
+            <h3 className="text-base font-semibold mb-2">Limitations du plan</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Définissez les limitations spécifiques selon le type de produit
+            </p>
+          </div>
+          
+          {!formData.productType ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Veuillez d'abord sélectionner un type de produit
+            </div>
+          ) : (
+            renderLimitations()
+          )}
+        </div>
+
         {/* Fonctionnalités */}
-        <Card>
+        <Card className="lg:block hidden">
           <CardHeader>
             <CardTitle className="text-base">Fonctionnalités incluses</CardTitle>
             <CardDescription>
@@ -561,9 +735,9 @@ const AddSubscriptionPlan = () => {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleRemoveFeature(feature.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 h-6 w-6 p-0 hover:bg-red-500 hover:text-white"
                     >
-                      <X className="w-4 h-4 text-red-500" />
+                      <X className="w-3 h-3" />
                     </Button>
                   </div>
                 ))}
@@ -591,16 +765,68 @@ const AddSubscriptionPlan = () => {
           </CardContent>
         </Card>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-4">
-          <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
-            Annuler
-          </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
-            <Save className="w-4 h-4 mr-2" />
-            {isLoading ? "Enregistrement..." : "Enregistrer"}
-          </Button>
+        {/* Version mobile - Fonctionnalités sans cadre */}
+        <div className="lg:hidden space-y-4">
+          <div>
+            <h3 className="text-base font-semibold mb-2">Fonctionnalités incluses</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Ajoutez les fonctionnalités incluses dans ce plan
+            </p>
+          </div>
+          
+          {/* Liste des fonctionnalités */}
+          {features.length > 0 && (
+            <div className="space-y-2">
+              {features.map((feature, index) => (
+                <div
+                  key={feature.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-2 p-3 bg-gray-50 rounded-lg group cursor-move transition-opacity ${
+                    draggedIndex === index ? 'opacity-50' : 'opacity-100'
+                  }`}
+                >
+                  <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0 cursor-grab active:cursor-grabbing" />
+                  <Input
+                    value={feature.text}
+                    onChange={(e) => handleEditFeature(feature.id, e.target.value)}
+                    className="flex-1 text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveFeature(feature.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 h-6 w-6 p-0 hover:bg-red-500 hover:text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Ajouter une fonctionnalité */}
+          <div className="flex gap-2">
+            <Input
+              value={newFeature}
+              onChange={(e) => setNewFeature(e.target.value)}
+              placeholder="Ex: 10 annonces max"
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddFeature();
+                }
+              }}
+            />
+            <Button onClick={handleAddFeature} variant="outline">
+              <Plus className="w-4 h-4 mr-2" />
+              Ajouter
+            </Button>
+          </div>
         </div>
+
       </div>
 
       {/* Aperçu - 1/3 de la largeur */}
@@ -673,6 +899,41 @@ const AddSubscriptionPlan = () => {
               )}
             </CardContent>
           </Card>
+        </div>
+      </div>
+
+      {/* Actions - Version mobile en dessous de l'aperçu */}
+      <div className="lg:hidden space-y-4">
+        <div className="space-y-3">
+          <Button 
+            onClick={handleSave} 
+            disabled={isLoading}
+            className="w-full"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {isLoading ? "Enregistrement..." : "Enregistrer"}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleCancel} 
+            disabled={isLoading}
+            className="w-full hover:bg-[#32323a] hover:text-white hover:border-[#32323a] active:bg-[#32323a] active:text-white active:border-[#32323a]"
+          >
+            Annuler
+          </Button>
+        </div>
+      </div>
+
+      {/* Actions - Version desktop (conservée) */}
+      <div className="hidden lg:block lg:col-span-2">
+        <div className="flex justify-end gap-4">
+          <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
+            Annuler
+          </Button>
+          <Button onClick={handleSave} disabled={isLoading}>
+            <Save className="w-4 h-4 mr-2" />
+            {isLoading ? "Enregistrement..." : "Enregistrer"}
+          </Button>
         </div>
       </div>
     </div>
