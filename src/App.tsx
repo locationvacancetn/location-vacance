@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useUpdateLastSignIn } from "@/hooks/useUpdateLastSignIn";
+import { useModalSystem } from "@/hooks/useModalSystem";
+import { ModalDisplay } from "@/components/ModalDisplay";
+import { useUserRole } from "@/hooks/useUserRole";
 import HomePage from "./pages/Home";
 import SignupPage from "./pages/Signup";
 import LoginPage from "./pages/Login";
@@ -20,6 +23,15 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   // Mettre à jour la dernière connexion à chaque fois qu'un utilisateur se connecte
   useUpdateLastSignIn();
+  
+  // Récupérer le rôle de l'utilisateur pour les modals
+  const { userRole, loading: userRoleLoading } = useUserRole();
+  
+  // Système de modals pour l'entrée sur le site
+  const { modal, markAsViewed } = useModalSystem({
+    trigger: 'site_entry',
+    userRole: userRoleLoading ? undefined : userRole
+  });
 
   return (
     <ErrorBoundary context="App">
@@ -28,6 +40,12 @@ const AppContent = () => {
           <Toaster />
           <BrowserRouter>
             <ErrorBoundary context="Router">
+              {/* Modal global pour l'entrée sur le site */}
+              <ModalDisplay 
+                modal={modal}
+                isOpen={!!modal}
+                onClose={markAsViewed}
+              />
               <Routes>
                 {/* Routes publiques */}
                 <Route path={ROUTES.HOME} element={<HomePage />} />

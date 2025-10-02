@@ -200,6 +200,104 @@ export type Database = {
         }
         Relationships: []
       }
+      modal_views: {
+        Row: {
+          id: string
+          ip_address: unknown | null
+          modal_id: string | null
+          trigger_context: string
+          user_agent: string | null
+          user_id: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          ip_address?: unknown | null
+          modal_id?: string | null
+          trigger_context: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          ip_address?: unknown | null
+          modal_id?: string | null
+          trigger_context?: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modal_views_modal_id_fkey"
+            columns: ["modal_id"]
+            isOneToOne: false
+            referencedRelation: "modals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modals: {
+        Row: {
+          button_action: string | null
+          button_style: string | null
+          button_text: string | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          has_button: boolean | null
+          has_image: boolean | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          target_roles: string[] | null
+          target_type: string
+          title: string
+          trigger_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          button_action?: string | null
+          button_style?: string | null
+          button_text?: string | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          has_button?: boolean | null
+          has_image?: boolean | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          target_roles?: string[] | null
+          target_type: string
+          title: string
+          trigger_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          button_action?: string | null
+          button_style?: string | null
+          button_text?: string | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          has_button?: boolean | null
+          has_image?: boolean | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          target_roles?: string[] | null
+          target_type?: string
+          title?: string
+          trigger_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -442,13 +540,6 @@ export type Database = {
             columns: ["region_id"]
             isOneToOne: false
             referencedRelation: "regions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "properties_subscription_id_fkey"
-            columns: ["subscription_id"]
-            isOneToOne: false
-            referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
         ]
@@ -791,65 +882,234 @@ export type Database = {
           },
         ]
       }
-      subscriptions: {
+      subscription_plan_features: {
         Row: {
           created_at: string | null
-          duration_months: number
-          end_date: string
+          feature_text: string
+          feature_type: string
           id: string
-          owner_id: string
-          payment_id: string | null
-          payment_method: string | null
-          payment_status: string | null
-          plan_type: string
-          price: number
-          property_id: string
-          start_date: string
-          status: string
+          plan_id: string
+          sort_order: number
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          duration_months: number
-          end_date: string
+          feature_text: string
+          feature_type: string
           id?: string
-          owner_id: string
-          payment_id?: string | null
-          payment_method?: string | null
-          payment_status?: string | null
-          plan_type: string
-          price: number
-          property_id: string
-          start_date: string
-          status?: string
+          plan_id: string
+          sort_order?: number
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          duration_months?: number
-          end_date?: string
+          feature_text?: string
+          feature_type?: string
           id?: string
-          owner_id?: string
-          payment_id?: string | null
-          payment_method?: string | null
-          payment_status?: string | null
-          plan_type?: string
-          price?: number
-          property_id?: string
-          start_date?: string
-          status?: string
+          plan_id?: string
+          sort_order?: number
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "subscriptions_owner_id_fkey"
-            columns: ["owner_id"]
+            foreignKeyName: "subscription_plan_features_plan_id_fkey"
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plan_limitations: {
+        Row: {
+          created_at: string | null
+          id: string
+          limitation_key: string
+          limitation_value: string
+          plan_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          limitation_key: string
+          limitation_value: string
+          plan_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          limitation_key?: string
+          limitation_value?: string
+          plan_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_plan_limitations_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          badge: string | null
+          created_at: string | null
+          duration_days: number
+          grace_period_months: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+          price_promo: number | null
+          product_id: string
+          slug: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          badge?: string | null
+          created_at?: string | null
+          duration_days: number
+          grace_period_months?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price: number
+          price_promo?: number | null
+          product_id: string
+          slug: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          badge?: string | null
+          created_at?: string | null
+          duration_days?: number
+          grace_period_months?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          price_promo?: number | null
+          product_id?: string
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_plans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_products: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          target_role: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          target_role: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          target_role?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          advertisement_id: string | null
+          created_at: string | null
+          end_date: string | null
+          id: string
+          payment_id: string | null
+          payment_method: string | null
+          payment_status: string | null
+          plan_id: string
+          price_paid: number
+          property_id: string | null
+          start_date: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          advertisement_id?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          plan_id: string
+          price_paid: number
+          property_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          advertisement_id?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          payment_id?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          plan_id?: string
+          price_paid?: number
+          property_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_advertisement_id_fkey"
+            columns: ["advertisement_id"]
+            isOneToOne: false
+            referencedRelation: "advertisements"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "subscriptions_property_id_fkey"
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
@@ -880,8 +1140,7 @@ export type Database = {
         Returns: boolean
       }
       create_property: {
-        Args:
-          | {
+        Args: {
               p_address: string
               p_bathrooms: number
               p_bedrooms: number
@@ -897,31 +1156,7 @@ export type Database = {
               p_longitude: string
               p_max_guests: number
               p_min_nights: number
-              p_owner_id?: string
-              p_parties_allowed: boolean
-              p_pets_allowed: boolean
-              p_price_per_night: number
-              p_property_type_id: string
-              p_region_id: string
-              p_smoking_allowed: boolean
-              p_title: string
-            }
-          | {
-              p_address: string
-              p_bathrooms: number
-              p_bedrooms: number
-              p_check_in_time: string
-              p_check_out_time: string
-              p_children_allowed: boolean
-              p_city_id: string
-              p_description: string
-              p_equipment_ids: string[]
-              p_images: string[]
-              p_latitude: string
-              p_longitude: string
-              p_max_guests: number
-              p_min_nights: number
-              p_owner_id?: string
+          p_owner_id: string
               p_parties_allowed: boolean
               p_pets_allowed: boolean
               p_price_per_night: number
@@ -932,9 +1167,60 @@ export type Database = {
             }
         Returns: string
       }
+      daitch_mokotoff: {
+        Args: { "": string }
+        Returns: string[]
+      }
       deactivate_city: {
         Args: { city_uuid: string }
         Returns: undefined
+      }
+      dmetaphone: {
+        Args: { "": string }
+        Returns: string
+      }
+      dmetaphone_alt: {
+        Args: { "": string }
+        Returns: string
+      }
+      generate_property_slug: {
+        Args: {
+          city_name: string
+          property_title: string
+          property_type_name: string
+          region_name?: string
+        }
+        Returns: string
+      }
+      generate_slug: {
+        Args: { input_text: string }
+        Returns: string
+      }
+      generate_unique_slug: {
+        Args: { base_slug: string; column_name?: string; table_name?: string }
+        Returns: string
+      }
+      get_active_modals: {
+        Args: {
+          p_trigger_type: string
+          p_user_id?: string
+          p_user_role?: string
+        }
+        Returns: {
+          button_action: string
+          button_style: string
+          button_text: string
+          content: string
+          created_at: string
+          has_button: boolean
+          has_image: boolean
+          id: string
+          image_url: string
+          target_roles: string[]
+          target_type: string
+          title: string
+          trigger_type: string
+        }[]
       }
       get_cities_and_regions: {
         Args: Record<PropertyKey, never>
@@ -986,6 +1272,30 @@ export type Database = {
           role: string
         }[]
       }
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      immutable_unaccent: {
+        Args: { "": string }
+        Returns: string
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -994,9 +1304,50 @@ export type Database = {
         Args: { property_uuid: string }
         Returns: boolean
       }
+      record_modal_view: {
+        Args: {
+          p_ip_address?: unknown
+          p_modal_id: string
+          p_trigger_context: string
+          p_user_agent?: string
+        }
+        Returns: string
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
+      }
+      soundex: {
+        Args: { "": string }
+        Returns: string
+      }
+      text_soundex: {
+        Args: { "": string }
+        Returns: string
+      }
+      toggle_modal_status: {
+        Args: { p_modal_id: string }
+        Returns: boolean
+      }
       toggle_property_availability: {
         Args: { p_date: string; p_property_id: string; p_reason?: string }
         Returns: Json
+      }
+      unaccent: {
+        Args: { "": string }
+        Returns: string
+      }
+      unaccent_init: {
+        Args: { "": unknown }
+        Returns: unknown
       }
       unblock_property_dates: {
         Args: {
@@ -1039,6 +1390,7 @@ export type Database = {
           p_address: string
           p_bathrooms: number
           p_bedrooms: number
+          p_characteristic_ids: string[]
           p_check_in_time: string
           p_check_out_time: string
           p_children_allowed: boolean

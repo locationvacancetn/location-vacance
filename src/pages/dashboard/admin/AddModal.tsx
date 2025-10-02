@@ -28,7 +28,7 @@ import {
 interface ModalFormData {
   title: string;
   content: string;
-  trigger_type: 'site_entry' | 'after_login' | 'dashboard_entry';
+  trigger_type: 'site_entry' | 'dashboard_entry';
   target_type: 'anonymous' | 'authenticated';
   target_roles: string[];
   has_image: boolean;
@@ -78,7 +78,6 @@ const AddModal = () => {
   // Options pour les triggers
   const triggerOptions = [
     { value: "site_entry", label: "Ouverture du site", icon: Home },
-    { value: "after_login", label: "Après connexion", icon: LogIn },
     { value: "dashboard_entry", label: "Ouverture dashboard", icon: Monitor }
   ];
 
@@ -328,6 +327,11 @@ const AddModal = () => {
      );
   };
 
+  // Code hint pour nettoyer le localStorage en cas de besoin
+  const clearModalStorageHint = `// Code pour nettoyer le localStorage des modals (utile pour les tests)
+localStorage.removeItem('modal_views');
+window.location.reload();`;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -390,7 +394,16 @@ const AddModal = () => {
                 <Label htmlFor="trigger">Type de déclencheur</Label>
                 <Select 
                   value={modalForm.trigger_type} 
-                  onValueChange={(value: any) => setModalForm(prev => ({ ...prev, trigger_type: value }))}
+                  onValueChange={(value: any) => setModalForm(prev => ({ 
+                    ...prev, 
+                    trigger_type: value,
+                    // Forcer le type d'utilisateur selon le trigger
+                    target_type: value === 'site_entry' ? 'anonymous' : 
+                                value === 'dashboard_entry' ? 'authenticated' : 
+                                prev.target_type,
+                    // Vider les rôles si on force sur anonymous
+                    target_roles: value === 'site_entry' ? [] : prev.target_roles
+                  }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -436,10 +449,36 @@ const AddModal = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="anonymous">Utilisateurs anonymes</SelectItem>
-                    <SelectItem value="authenticated">Utilisateurs connectés</SelectItem>
+                    <SelectItem 
+                      value="anonymous" 
+                      disabled={modalForm.trigger_type === 'dashboard_entry'}
+                    >
+                      Utilisateurs anonymes
+                      {modalForm.trigger_type === 'dashboard_entry' && (
+                        <span className="text-xs text-muted-foreground ml-2">(Non disponible pour le dashboard)</span>
+                      )}
+                    </SelectItem>
+                    <SelectItem 
+                      value="authenticated" 
+                      disabled={modalForm.trigger_type === 'site_entry'}
+                    >
+                      Utilisateurs connectés
+                      {modalForm.trigger_type === 'site_entry' && (
+                        <span className="text-xs text-muted-foreground ml-2">(Non disponible pour l'ouverture du site)</span>
+                      )}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+                {modalForm.trigger_type === 'site_entry' && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    💡 Les modals à l'ouverture du site ne peuvent cibler que les utilisateurs anonymes car le statut de connexion n'est pas encore déterminé.
+                  </p>
+                )}
+                {modalForm.trigger_type === 'dashboard_entry' && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    💡 Les modals à l'entrée du dashboard ne peuvent cibler que les utilisateurs connectés car seuls les utilisateurs authentifiés peuvent accéder au dashboard.
+                  </p>
+                )}
               </div>
 
               {modalForm.target_type === 'authenticated' && (
@@ -612,8 +651,19 @@ const AddModal = () => {
                 Prévisualisation en temps réel de votre modal
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <ModalPreview />
+              
+              {/* Code hint pour les tests */}
+              <div className="text-xs bg-muted/30 p-3 rounded border border-dashed">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <Eye className="h-3 w-3" />
+                  <span className="font-medium">Code utile pour les tests :</span>
+                </div>
+                <pre className="text-[10px] text-muted-foreground leading-relaxed overflow-x-auto">
+                  <code>{clearModalStorageHint}</code>
+                </pre>
+              </div>
             </CardContent>
           </Card>
          </div>

@@ -4,57 +4,32 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { Tables, TablesInsert } from '@/integrations/supabase/types';
 
-// Types pour les modals
-export interface Modal {
+// Types pour les modals basés sur les types Supabase
+export type Modal = Tables<'modals'>;
+export type ModalView = Tables<'modal_views'>;
+export type CreateModalData = TablesInsert<'modals'>;
+
+// Type pour les modals retournés par la fonction get_active_modals
+export interface ActiveModal {
   id: string;
   title: string;
   content: string;
-  trigger_type: 'site_entry' | 'after_login' | 'dashboard_entry';
-  target_type: 'anonymous' | 'authenticated';
-  target_roles: string[] | null;
+  trigger_type: string;
+  target_type: string;
+  target_roles: string[];
   has_image: boolean;
-  image_url: string | null;
   has_button: boolean;
-  button_text: string | null;
-  button_action: string | null;
-  button_style: 'primary' | 'secondary';
-  is_active: boolean;
-  expires_at: string | null;
+  image_url: string;
+  button_text: string;
+  button_action: string;
+  button_style: string;
   created_at: string;
-  updated_at: string;
-  created_by: string | null;
 }
 
-export interface ModalView {
-  id: string;
-  modal_id: string;
-  user_id: string | null;
-  viewed_at: string;
-  trigger_context: string;
-  user_agent: string | null;
-  ip_address: string | null;
-}
 
-export interface CreateModalData {
-  title: string;
-  content: string;
-  trigger_type: 'site_entry' | 'after_login' | 'dashboard_entry';
-  target_type: 'anonymous' | 'authenticated';
-  target_roles: string[] | null;
-  has_image: boolean;
-  image_url: string | null;
-  has_button: boolean;
-  button_text: string | null;
-  button_action: string | null;
-  button_style: 'primary' | 'secondary';
-  is_active: boolean;
-  expires_at: string | null;
-}
-
-export interface UpdateModalData extends Partial<CreateModalData> {
-  id: string;
-}
+export type UpdateModalData = { id: string } & Partial<CreateModalData>;
 
 class ModalService {
   /**
@@ -271,9 +246,9 @@ class ModalService {
    * Cette fonction est utilisée côté frontend pour afficher les modals
    */
   async getActiveModalsForUser(
-    triggerType: 'site_entry' | 'after_login' | 'dashboard_entry',
+    triggerType: 'site_entry' | 'dashboard_entry',
     userRole?: string
-  ): Promise<{ data: Modal[] | null; error: string | null }> {
+  ): Promise<{ data: ActiveModal[] | null; error: string | null }> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -289,7 +264,7 @@ class ModalService {
         return { data: null, error: 'Erreur lors du chargement des modals.' };
       }
 
-      return { data, error: null };
+      return { data: data as ActiveModal[], error: null };
     } catch (error) {
       console.error('Erreur inattendue lors du chargement des modals actifs:', error);
       return { data: null, error: 'Erreur inattendue lors du chargement des modals.' };
@@ -355,6 +330,74 @@ class ModalService {
     } catch (error) {
       console.error('Erreur inattendue lors du basculement du statut:', error);
       return { success: false, error: 'Erreur inattendue lors du basculement du statut.' };
+    }
+  }
+
+  /**
+   * Récupérer les modals actifs par trigger et rôle utilisateur
+   * Fonction principale pour le système de modals globaux
+   */
+  async getActiveModalsByTrigger(
+    trigger: 'site_entry' | 'dashboard_entry',
+    userRole?: string
+  ): Promise<{ data: ActiveModal[] | null; error: string | null }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { data, error } = await supabase.rpc('get_active_modals', {
+        p_trigger_type: trigger,
+        p_user_role: userRole || null,
+        p_user_id: user?.id || null
+      });
+
+      if (error) {
+        console.error('Erreur lors du chargement des modals actifs:', error);
+        return { data: null, error: 'Erreur lors du chargement des modals.' };
+      }
+
+      return { data: data as ActiveModal[], error: null };
+    } catch (error) {
+      console.error('Erreur inattendue lors du chargement des modals actifs:', error);
+      return { data: null, error: 'Erreur inattendue lors du chargement des modals.' };
+    }
+  }
+
+  /**
+   * Récupérer les modals par type de cible et rôles
+   */
+  async getModalsByTarget(
+    targetType: 'anonymous' | 'authenticated',
+    userRoles?: string[]
+  ): Promise<{ data: Modal[] | null; error: string | null }> {
+    try {
+      let query = supabase
+        .from('modals')
+        .select('*')
+        .eq('target_type', targetType)
+        .eq('is_active', true)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString());
+
+      const { data, error } = await query.order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Erreur lors du chargement des modals par cible:', error);
+        return { data: null, error: 'Erreur lors du chargement des modals.' };
+      }
+
+      // Filtrer par rôles si spécifiés
+      let filteredData = data;
+      if (targetType === 'authenticated' && userRoles && userRoles.length > 0) {
+        filteredData = data.filter(modal => 
+          !modal.target_roles || 
+          modal.target_roles.length === 0 || 
+          modal.target_roles.some(role => userRoles.includes(role))
+        );
+      }
+
+      return { data: filteredData, error: null };
+    } catch (error) {
+      console.error('Erreur inattendue lors du chargement des modals par cible:', error);
+      return { data: null, error: 'Erreur inattendue lors du chargement des modals.' };
     }
   }
 

@@ -2,6 +2,9 @@ import { ReactNode, useState, useEffect } from 'react';
 import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardHeader } from './DashboardHeader';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useModalSystem } from '@/hooks/useModalSystem';
+import { useUserRole } from '@/hooks/useUserRole';
+import { ModalDisplay } from '@/components/ModalDisplay';
 import { cn } from '@/lib/utils';
 
 interface DashboardLayoutProps {
@@ -12,6 +15,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { title, description } = usePageTitle();
+  
+  // Système de modals pour l'entrée du dashboard
+  const { userRole, loading: userRoleLoading } = useUserRole();
+  const { modal, markAsViewed } = useModalSystem({
+    trigger: 'dashboard_entry',
+    userRole: userRoleLoading ? undefined : userRole
+  });
 
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
@@ -35,6 +45,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Modal pour l'entrée du dashboard */}
+      <ModalDisplay 
+        modal={modal}
+        isOpen={!!modal}
+        onClose={markAsViewed}
+      />
+      
       <div className="flex h-screen">
         {/* Mobile Overlay */}
         {isMobileSidebarOpen && (

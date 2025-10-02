@@ -36,7 +36,7 @@ import {
   CreditCard,
   Package,
   Mail,
-  MessageSquare
+  PictureInPicture2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
@@ -57,12 +57,12 @@ const getMobileMenuItems = (role: string) => {
         { label: 'Utilisateurs', path: '/dashboard/admin/users', icon: Users },
         { label: 'SEO', path: '/dashboard/admin/seo', icon: Search },
         { label: 'Email', path: '/dashboard/admin/email', icon: Mail },
+        { label: 'Modals', path: '/dashboard/admin/modals', icon: PictureInPicture2 },
         { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
         { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
         { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
         { label: 'Caractéristiques', path: '/dashboard/admin/characteristics', icon: Settings },
         { label: 'Abonnements', path: '/dashboard/admin/subscriptions', icon: Package },
-        { label: 'Modals', path: '/dashboard/admin/modals', icon: MessageSquare },
         { label: 'Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
         { label: 'Profil', path: '/dashboard/admin/profile', icon: User },
       ];

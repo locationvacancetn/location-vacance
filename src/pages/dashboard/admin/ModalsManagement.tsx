@@ -56,7 +56,6 @@ const ModalsManagement = () => {
   // Options pour les triggers
   const triggerOptions = [
     { value: "site_entry", label: "Ouverture du site", icon: Home },
-    { value: "after_login", label: "Après connexion", icon: LogIn },
     { value: "dashboard_entry", label: "Ouverture dashboard", icon: Monitor }
   ];
 

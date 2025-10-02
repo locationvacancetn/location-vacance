@@ -1,7 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useModalSystem } from "@/hooks/useModalSystem";
+import { ModalDisplay } from "@/components/ModalDisplay";
+import { useUserRole } from "@/hooks/useUserRole";
 import LoginForm from "@/components/auth/LoginForm";
 
 const LoginPage = () => {

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS modals (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    trigger_type TEXT NOT NULL CHECK (trigger_type IN ('site_entry', 'after_login', 'dashboard_entry')),
+    trigger_type TEXT NOT NULL CHECK (trigger_type IN ('site_entry', 'dashboard_entry')),
     target_type TEXT NOT NULL CHECK (target_type IN ('anonymous', 'authenticated')),
     target_roles TEXT[] DEFAULT NULL, -- Array des rôles ciblés (tenant, owner, advertiser)
     has_image BOOLEAN DEFAULT FALSE,
