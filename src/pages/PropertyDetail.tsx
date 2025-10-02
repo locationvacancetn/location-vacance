@@ -1312,7 +1312,7 @@ const PropertyDetail = () => {
               </div>
 
               {/* Boutons d'action - Mobile uniquement */}
-              <div className="lg:hidden flex flex-col gap-3 pt-6">
+              <div className="lg:hidden flex flex-col gap-3 pt-6 pb-12">
                 <Button variant="outline" className="flex items-center justify-center gap-2 text-gray-500 w-full">
                   <Heart className="h-4 w-4" />
                   Ajouter aux Favoris
@@ -1332,8 +1332,11 @@ const PropertyDetail = () => {
                     <div className="space-y-5">
               {/* Prix */}
               <div className="pb-3 border-b">
-                <div className="text-2xl font-bold mb-1 text-primaryText">
-                  {property.price_per_night}<sup className="text-sm font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-[10px] text-muted-foreground self-start">A partir</span>
+                  <div className="text-2xl font-bold text-primaryText">
+                    {property.price_per_night}<sup className="text-sm font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
+                  </div>
                 </div>
               </div>
 
@@ -1459,7 +1462,7 @@ const PropertyDetail = () => {
                           </div>
 
                         {/* Boutons d'action */}
-                        <div className="flex flex-col gap-3 pt-4">
+                        <div className="flex flex-col gap-3 pt-4 pb-20">
                           <Button variant="outline" className="flex items-center justify-center gap-2 text-gray-500 w-full">
                             <Heart className="h-4 w-4" />
                             Ajouter aux Favoris
@@ -1562,11 +1565,12 @@ const PropertyDetail = () => {
         </div>
       )}
 
-      {/* Bannière mobile sticky avec prix et bouton Réserver */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-[0]">
+      {/* Bannière mobile et tablette sticky avec prix et bouton Réserver */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
         <div className="flex items-center justify-between px-4" style={{ paddingTop: "0.8rem", paddingBottom: "0.8rem" }}>
           {/* Prix */}
-          <div className="flex flex-col">
+          <div className="flex items-baseline gap-1">
+            <span className="text-[10px] text-muted-foreground self-start">A partir</span>
             <div className="text-2xl font-bold text-primaryText">
               {property.price_per_night}<sup className="text-base font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
             </div>
@@ -1583,7 +1587,7 @@ const PropertyDetail = () => {
               </Button>
             </DialogTrigger>
              <DialogContent 
-               className="!fixed !top-0 !left-0 !right-0 !bottom-0 !w-full !h-screen !max-w-none !max-h-none !m-0 !rounded-none !p-0 !border-0 !shadow-none !transform-none !fade-in-0 !fade-out-0 md:!max-w-md md:!h-auto md:!max-h-[90vh] md:!mx-4 md:!rounded-lg md:!p-6 md:!border md:!shadow-lg [&>button]:hidden"
+               className="!fixed !top-0 !left-0 !right-0 !bottom-0 !w-full !h-screen !max-w-none !max-h-none !m-0 !rounded-none !p-0 !border-0 !shadow-none !transform-none !fade-in-0 !fade-out-0 lg:!max-w-md lg:!h-auto lg:!max-h-[90vh] lg:!mx-4 lg:!rounded-lg lg:!p-6 lg:!border lg:!shadow-lg [&>button]:hidden"
                style={{
                  border: 'none',
                  boxShadow: 'none',
@@ -1602,8 +1606,11 @@ const PropertyDetail = () => {
                     <div className="pb-3 border-b">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="text-2xl font-bold mb-1 text-primaryText">
-                            {property.price_per_night}<sup className="text-sm font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
+                          <div className="flex items-baseline gap-1 mb-1">
+                            <span className="text-[10px] text-muted-foreground self-start">A partir</span>
+                            <div className="text-2xl font-bold text-primaryText">
+                              {property.price_per_night}<sup className="text-sm font-bold">TND</sup><span className="text-sm font-normal text-gray-600">/nuitée</span>
+                            </div>
                           </div>
                           <div className="text-xs text-gray-500 italic">
                             Prix à vérifier directement avec le propriétaire.

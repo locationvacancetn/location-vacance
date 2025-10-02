@@ -640,6 +640,7 @@ const HomePage = () => {
                                          <div className="mt-4 space-y-3">
                       <div className="flex items-center justify-between">
                          <div className="flex items-baseline gap-1">
+                           <span className="text-[10px] text-muted-foreground self-start">A partir</span>
                            <span className="text-xl font-bold text-primary">
                              1300<sup className="text-sm font-medium text-primary">TND</sup>
                            </span>

@@ -39,7 +39,8 @@ import {
   HomeIcon,
   CreditCard,
   Mail,
-  Package
+  Package,
+  MessageSquare
 } from 'lucide-react';
 
 // Configuration des menus par rôle - STRUCTURE UNIFIÉE
@@ -55,17 +56,20 @@ const getMenuItems = (role: string) => {
   switch (role) {
     case 'admin':
       return [
-        ...commonItems,
-        { label: 'Utilisateurs', path: '/dashboard/admin/users', icon: Users },
+        { label: 'Dashboard', path: '/dashboard', icon: Home },
         { label: 'Propriétés', path: '/dashboard/admin/properties', icon: Building },
-        { label: 'Abonnements', path: '/dashboard/admin/subscriptions', icon: Package },
+        { label: 'Publicités', path: '/dashboard/admin/ads', icon: Megaphone },
+        { label: 'Utilisateurs', path: '/dashboard/admin/users', icon: Users },
+        { label: 'SEO', path: '/dashboard/admin/seo', icon: Search },
+        { label: 'Email', path: '/dashboard/admin/email', icon: Mail },
         { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
+        { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
         { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
         { label: 'Caractéristiques', path: '/dashboard/admin/characteristics', icon: Settings },
-        { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
+        { label: 'Abonnements', path: '/dashboard/admin/subscriptions', icon: Package },
+        { label: 'Modals', path: '/dashboard/admin/modals', icon: MessageSquare },
         { label: 'Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
-        { label: 'Email', path: '/dashboard/admin/email', icon: Mail },
-        { label: 'SEO', path: '/dashboard/admin/seo', icon: Search },
+        { label: 'Profil', path: '/dashboard/admin/profile', icon: User },
       ];
     
     case 'owner':

@@ -292,7 +292,7 @@ const PropertiesManagement = () => {
           placeholder="Rechercher par nom ou type..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-80 pl-10 pr-4 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-sm placeholder:text-gray-400"
         />
       </div>
 
@@ -313,31 +313,33 @@ const PropertiesManagement = () => {
             </div>
           </div>
         ) : filteredProperties.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Home className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">
-              {searchTerm ? "Aucune propriété trouvée" : "Aucune propriété"}
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              {searchTerm 
-                ? "Essayez de modifier vos critères de recherche"
-                : "Commencez par ajouter votre première propriété"}
-            </p>
-            {!searchTerm && (
-            <Button 
-              onClick={() => {
-                clearPropertyWizardData();
-                navigate('/dashboard/owner/add-property');
-              }}
-                variant="outline"
-            >
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter la première propriété
-            </Button>
-            )}
-          </div>
+          <Card className="w-full">
+            <CardContent className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Home className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                {searchTerm ? "Aucune propriété trouvée" : "Aucune propriété"}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm 
+                  ? "Essayez de modifier vos critères de recherche"
+                  : "Commencez par ajouter votre première propriété"}
+              </p>
+              {!searchTerm && (
+              <Button 
+                onClick={() => {
+                  clearPropertyWizardData();
+                  navigate('/dashboard/owner/add-property');
+                }}
+                  variant="outline"
+              >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter la première propriété
+              </Button>
+              )}
+            </CardContent>
+          </Card>
         ) : (
           <div className="border rounded-lg overflow-hidden">
             <Table>
@@ -502,31 +504,33 @@ const PropertiesManagement = () => {
                </div>
              </div>
         ) : filteredProperties.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Home className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">
-              {searchTerm ? "Aucune propriété trouvée" : "Aucune propriété"}
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              {searchTerm 
-                ? "Essayez de modifier vos critères de recherche"
-                : "Commencez par ajouter votre première propriété"}
-            </p>
-            {!searchTerm && (
-              <Button 
-                onClick={() => {
-                  clearPropertyWizardData();
-                  navigate('/dashboard/owner/add-property');
-                }}
-                variant="outline"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter la première propriété
-              </Button>
-            )}
-           </div>
+          <Card className="w-full">
+            <CardContent className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Home className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                {searchTerm ? "Aucune propriété trouvée" : "Aucune propriété"}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm 
+                  ? "Essayez de modifier vos critères de recherche"
+                  : "Commencez par ajouter votre première propriété"}
+              </p>
+              {!searchTerm && (
+                <Button 
+                  onClick={() => {
+                    clearPropertyWizardData();
+                    navigate('/dashboard/owner/add-property');
+                  }}
+                  variant="outline"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Ajouter la première propriété
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         ) : (
            <div className="space-y-4">
             {filteredProperties.map((property) => (
@@ -657,6 +661,78 @@ const PropertiesManagement = () => {
            </div>
         )}
          </div>
+
+      {/* Section publicitaire - Services pour propriétaires */}
+      <div className="mt-8 mb-6">
+        <h2 className="text-lg font-semibold mb-2 text-gray-700">Besoin d'aide ?</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Confiez vos besoins à des professionnels qualifiés
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Assurance Propriétaire */}
+          <div 
+            className="flex gap-3 cursor-pointer items-center"
+            onClick={() => window.open('https://example.com/assurance-proprietaire', '_blank')}
+          >
+            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+              <img
+                src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=200&h=200&fit=crop"
+                alt="Assurance Propriétaire"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-primaryText mb-1 text-sm">Assurance Propriétaire</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Protégez votre investissement avec une assurance adaptée aux locations saisonnières.
+              </p>
+            </div>
+          </div>
+
+          {/* Comptabilité Locative */}
+          <div 
+            className="flex gap-3 cursor-pointer items-center"
+            onClick={() => window.open('https://example.com/comptabilite-locative', '_blank')}
+          >
+            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+              <img
+                src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=200&h=200&fit=crop"
+                alt="Comptabilité Locative"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-primaryText mb-1 text-sm">Comptabilité Locative</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Simplifiez votre gestion fiscale avec nos experts-comptables spécialisés.
+              </p>
+            </div>
+          </div>
+
+          {/* Conciergerie Premium */}
+          <div 
+            className="flex gap-3 cursor-pointer items-center"
+            onClick={() => window.open('https://example.com/conciergerie-premium', '_blank')}
+          >
+            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+              <img
+                src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop"
+                alt="Conciergerie Premium"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-primaryText mb-1 text-sm">Conciergerie Premium</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Service complet d'accueil et de gestion pour vos voyageurs.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Modales de confirmation */}
       <AlertDialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>

@@ -16,7 +16,13 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Building
+  Building,
+  HelpCircle,
+  Phone,
+  Mail,
+  MessageCircle,
+  FileText,
+  ExternalLink
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isBefore, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -301,7 +307,7 @@ const CalendarManagement = () => {
         {/* Navigation avec flèches */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">
-            Calendrier - cliquer sur les flèches pour défiler
+            Cliquer sur les flèches pour défiler
           </span>
           
           <div className="flex gap-2">
@@ -330,10 +336,16 @@ const CalendarManagement = () => {
           </div>
         </div>
 
-        {/* Deux calendriers côte à côte */}
-        <div className="flex gap-4">
+        {/* Calendriers - deux sur desktop, un sur mobile */}
+        {/* Version Desktop - deux calendriers côte à côte */}
+        <div className="hidden lg:flex gap-4">
           {renderMonth(currentMonth, format(currentMonth, 'MMMM yyyy', { locale: fr }))}
           {renderMonth(nextMonth, format(nextMonth, 'MMMM yyyy', { locale: fr }))}
+        </div>
+        
+        {/* Version Mobile - un seul calendrier */}
+        <div className="lg:hidden">
+          {renderMonth(currentMonth, format(currentMonth, 'MMMM yyyy', { locale: fr }))}
         </div>
 
         {/* Légende */}
@@ -366,9 +378,13 @@ const CalendarManagement = () => {
 
   return (
     <div className="space-y-6">
-
+      {/* Layout principal avec section d'aide toujours visible */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Contenu principal - 2/3 de la largeur */}
+        <div className="flex-1 lg:w-2/3 space-y-6">
       {/* Sélection de propriété */}
-      <Card>
+          {/* Version Desktop avec Card */}
+          <Card className="hidden lg:block">
         <CardHeader>
           <CardTitle className="text-lg">Sélectionner une annonce</CardTitle>
           <CardDescription>
@@ -425,13 +441,74 @@ const CalendarManagement = () => {
         </CardContent>
       </Card>
 
+          {/* Version Mobile sans Card */}
+          <div className="lg:hidden space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold mb-2">Sélectionner une annonce</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Choisissez la propriété dont vous souhaitez gérer le calendrier
+              </p>
+            </div>
+            
+            <div>
+              <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionnez une propriété" />
+                </SelectTrigger>
+                <SelectContent>
+                  {properties.map((property) => (
+                <SelectItem key={property.id} value={property.id}>
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    <span className="truncate max-w-[120px]" title={property.title}>
+                      {property.title.length > 15 ? `${property.title.substring(0, 15)}...` : property.title}
+                    </span>
+                    <Badge variant={property.status === 'active' ? "default" : "secondary"}>
+                      {property.status === 'active' ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedProperty && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
+                    {selectedProperty.images && selectedProperty.images.length > 0 ? (
+                      <img
+                        src={selectedProperty.images[0]}
+                        alt={selectedProperty.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Home className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-gray-900" title={selectedProperty.title}>
+                      {selectedProperty.title.length > 25 ? `${selectedProperty.title.substring(0, 25)}...` : selectedProperty.title}
+                    </h3>
+                    <p className="text-sm text-gray-600">{selectedProperty.location}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
       {/* Calendrier */}
       {selectedPropertyId && (
-        <Card>
+            <>
+              {/* Version Desktop avec Card */}
+              <Card className="hidden lg:block">
             <CardHeader>
               <CardTitle className="text-lg">Calendrier de disponibilité</CardTitle>
               <CardDescription>
-                Cliquez sur les dates réservées pour les libérer
+                    Cliquez sur une date pour la bloquer et sur une date réservée pour la libérer
               </CardDescription>
             </CardHeader>
           <CardContent>
@@ -447,6 +524,28 @@ const CalendarManagement = () => {
             )}
           </CardContent>
         </Card>
+
+              {/* Version Mobile sans Card */}
+              <div className="lg:hidden space-y-4">
+                <div>
+                  <h2 className="text-lg font-semibold mb-2">Calendrier de disponibilité</h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Cliquez sur une date pour la bloquer et sur une date réservée pour la libérer
+                  </p>
+                </div>
+                
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-4" />
+                      <p className="text-muted-foreground">Chargement du calendrier...</p>
+                    </div>
+                  </div>
+                ) : (
+                  renderCalendarGrid()
+                )}
+              </div>
+            </>
       )}
 
       {/* Message si aucune propriété */}
@@ -461,24 +560,170 @@ const CalendarManagement = () => {
           </CardContent>
         </Card>
       )}
+        </div>
 
-      {/* Information */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-              <div className="text-sm">
-                <p className="text-blue-800 font-medium">Comment utiliser le calendrier ?</p>
-                <ul className="text-blue-700 mt-1 space-y-1 text-xs">
-                  <li>• Sélectionnez d'abord une propriété dans la liste déroulante</li>
-                  <li>• Cliquez sur les dates réservées (vertes) pour les libérer</li>
-                  <li>• Les dates réservées empêchent les nouvelles réservations</li>
-                  <li>• Utilisez les flèches pour naviguer entre les mois</li>
-                </ul>
+        {/* Section Besoin d'aide - 1/3 de la largeur - toujours visible */}
+        <div className="lg:w-1/3">
+          {/* Version Desktop avec Card */}
+          <Card className="h-fit sticky top-6 hidden lg:block">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2 text-gray-700">
+                Besoin d'aide ?
+              </CardTitle>
+              <CardDescription>
+                Faites appel à un professionnel
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pr-0">
+              {/* Services professionnels - Style PropertyDetail */}
+              <div className="space-y-4">
+                {/* SOS Piscine */}
+                <div 
+                  className="flex gap-3 cursor-pointer items-center"
+                  onClick={() => window.open('https://example.com/sos-piscine', '_blank')}
+                >
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=200&h=200&fit=crop"
+                      alt="SOS Piscine"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-primaryText mb-1 text-sm">SOS Piscine</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Besoin d'entretenir votre piscine ? Nos experts interviennent rapidement pour un service de qualité.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Ménage Express */}
+                <div 
+                  className="flex gap-3 cursor-pointer items-center"
+                  onClick={() => window.open('https://example.com/menage-express', '_blank')}
+                >
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=200&fit=crop"
+                      alt="Ménage Express"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-primaryText mb-1 text-sm">Ménage Express</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Service de ménage professionnel entre deux locations pour un logement impeccable.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Réparation Urgente */}
+                <div 
+                  className="flex gap-3 cursor-pointer items-center"
+                  onClick={() => window.open('https://example.com/reparation-urgente', '_blank')}
+                >
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=200&h=200&fit=crop"
+                      alt="Réparation Urgente"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-primaryText mb-1 text-sm">Réparation Urgente</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Dépannage rapide pour tous vos problèmes techniques. Intervention sous 24h garantie.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Version Mobile sans Card */}
+          <div className="lg:hidden space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold mb-2 flex items-center gap-2 text-gray-700">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Besoin d'aide ?
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Faites appel à un professionnel
+              </p>
+            </div>
+            
+            {/* Services professionnels - Style PropertyDetail */}
+            <div className="space-y-4">
+              {/* SOS Piscine */}
+              <div 
+                className="flex gap-3 cursor-pointer items-center"
+                onClick={() => window.open('https://example.com/sos-piscine', '_blank')}
+              >
+                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=200&h=200&fit=crop"
+                    alt="SOS Piscine"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-primaryText mb-1 text-sm">SOS Piscine</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Besoin d'entretenir votre piscine ? Nos experts interviennent rapidement pour un service de qualité.
+                  </p>
+                </div>
+              </div>
+
+              {/* Ménage Express */}
+              <div 
+                className="flex gap-3 cursor-pointer items-center"
+                onClick={() => window.open('https://example.com/menage-express', '_blank')}
+              >
+                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=200&fit=crop"
+                    alt="Ménage Express"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-primaryText mb-1 text-sm">Ménage Express</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Service de ménage professionnel entre deux locations pour un logement impeccable.
+                  </p>
+                </div>
+              </div>
+
+              {/* Réparation Urgente */}
+              <div 
+                className="flex gap-3 cursor-pointer items-center"
+                onClick={() => window.open('https://example.com/reparation-urgente', '_blank')}
+              >
+                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=200&h=200&fit=crop"
+                    alt="Réparation Urgente"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-primaryText mb-1 text-sm">Réparation Urgente</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Dépannage rapide pour tous vos problèmes techniques. Intervention sous 24h garantie.
+                  </p>
+                </div>
+              </div>
               </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
     </div>
   );
 };

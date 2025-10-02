@@ -25,6 +25,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/admin/seo': 'Gestion SEO',
   '/dashboard/admin/subscriptions': 'Gestion des Abonnements',
   '/dashboard/admin/subscriptions/add': 'Créer un Plan d\'Abonnement',
+  '/dashboard/admin/modals': 'Gestion des Modals',
+  '/dashboard/admin/modals/add': 'Créer un Modal',
+  '/dashboard/admin/modals/edit': 'Modifier un Modal',
   '/dashboard/users': 'Gestion des Utilisateurs',
   
   // Pages Owner
@@ -66,6 +69,9 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/dashboard/admin/seo': 'Optimisez le référencement de vos annonces pour améliorer leur visibilité',
   '/dashboard/admin/subscriptions': 'Gérez les plans d\'abonnement pour les propriétaires et annonceurs',
   '/dashboard/admin/subscriptions/add': 'Définissez les détails du nouveau plan d\'abonnement',
+  '/dashboard/admin/modals': 'Créez et gérez les modals d\'information pour vos utilisateurs',
+  '/dashboard/admin/modals/add': 'Configurez votre modal avec un aperçu en temps réel',
+  '/dashboard/admin/modals/edit': 'Modifiez votre modal avec un aperçu en temps réel',
   '/dashboard/users': 'Administrez les comptes utilisateurs',
   '/dashboard/add-property': 'Créez votre annonce étape par étape',
   '/dashboard/owner/add-property': 'Créez votre annonce étape par étape',

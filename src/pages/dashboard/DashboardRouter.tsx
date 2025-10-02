@@ -26,6 +26,8 @@ import AdminPropertiesManagement from './admin/AdminPropertiesManagement';
 import SEOManagement from './admin/SEOManagement';
 import AdminSubscriptions from './admin/AdminSubscriptions';
 import AddSubscriptionPlan from './admin/AddSubscriptionPlan';
+import ModalsManagement from './admin/ModalsManagement';
+import AddModal from './admin/AddModal';
 
 
 // Import des pages Profil par rôle
@@ -164,6 +166,9 @@ export const DashboardRouter = () => {
               <Route path="/seo" element={<SEOManagement />} />
               <Route path="/subscriptions" element={<AdminSubscriptions />} />
               <Route path="/subscriptions/add" element={<AddSubscriptionPlan />} />
+              <Route path="/modals" element={<ModalsManagement />} />
+              <Route path="/modals/add" element={<AddModal />} />
+              <Route path="/modals/edit/:id" element={<AddModal />} />
               <Route path="/users" element={<UsersManagement />} />
               <Route path="/add-user" element={<AddUser />} />
               <Route path="/add-property" element={<AddPropertyWizard />} />

@@ -33,7 +33,10 @@ import {
   HomeIcon,
   MapPin,
   Wrench,
-  CreditCard
+  CreditCard,
+  Package,
+  Mail,
+  MessageSquare
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
@@ -48,19 +51,20 @@ const getMobileMenuItems = (role: string) => {
   switch (role) {
     case 'admin':
       return [
-        ...commonItems,
-        { label: 'Utilisateurs', path: '/dashboard/users', icon: Users },
-        { label: 'Propriétés', path: '/dashboard/all-properties', icon: Building },
-        { label: 'Réservations', path: '/dashboard/all-bookings', icon: Calendar },
+        { label: 'Dashboard', path: '/dashboard', icon: Home },
+        { label: 'Propriétés', path: '/dashboard/admin/properties', icon: Building },
+        { label: 'Publicités', path: '/dashboard/admin/ads', icon: Megaphone },
+        { label: 'Utilisateurs', path: '/dashboard/admin/users', icon: Users },
+        { label: 'SEO', path: '/dashboard/admin/seo', icon: Search },
+        { label: 'Email', path: '/dashboard/admin/email', icon: Mail },
         { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
+        { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
         { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
         { label: 'Caractéristiques', path: '/dashboard/admin/characteristics', icon: Settings },
-        { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
-        { label: 'Configuration Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
-        { label: 'SEO', path: '/dashboard/admin/seo', icon: Search },
-        { label: 'Système', path: '/dashboard/system', icon: Shield },
-        { label: 'Logs', path: '/dashboard/logs', icon: Activity },
-        { label: 'Profil', path: '/dashboard/profile', icon: User },
+        { label: 'Abonnements', path: '/dashboard/admin/subscriptions', icon: Package },
+        { label: 'Modals', path: '/dashboard/admin/modals', icon: MessageSquare },
+        { label: 'Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
+        { label: 'Profil', path: '/dashboard/admin/profile', icon: User },
       ];
     
     case 'owner':
