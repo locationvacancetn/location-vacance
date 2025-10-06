@@ -36,7 +36,8 @@ import {
   CreditCard,
   Package,
   Mail,
-  PictureInPicture2
+  PictureInPicture2,
+  Monitor
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
@@ -64,6 +65,7 @@ const getMobileMenuItems = (role: string) => {
         { label: 'Caractéristiques', path: '/dashboard/admin/characteristics', icon: Settings },
         { label: 'Abonnements', path: '/dashboard/admin/subscriptions', icon: Package },
         { label: 'Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
+        { label: 'Analytics', path: '/dashboard/admin/analytics', icon: Monitor },
         { label: 'Profil', path: '/dashboard/admin/profile', icon: User },
       ];
     
@@ -161,14 +163,14 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
     .join("") || "U";
 
   return (
-    <header className="bg-background px-6 py-4">
-      <div className="flex items-start justify-between">
+    <header className="bg-background px-6 py-4 md:border md:border-border md:rounded-lg md:shadow-sm md:mx-4 md:mt-4 md:mb-4 md:ml-8">
+      <div className="flex items-center justify-between">
         {/* Logo à gauche sur mobile, titre sur desktop */}
-        <div className="flex items-start gap-4 flex-1">
+        <div className="flex items-center gap-4 flex-1">
           {/* Logo sur mobile */}
           <div className="md:hidden">
             <Link to="/">
-              <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
+              <img src="/icons/logo.svg" alt="Logo" className="h-10 w-auto" />
             </Link>
           </div>
           
@@ -185,16 +187,16 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
           </div>
         </div>
 
-        <div className="flex items-start gap-4">
+        <div className="flex items-center gap-4">
           {/* Bouton kebab sur mobile */}
           <div className="md:hidden">
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 rounded-md text-green-600 hover:text-green-700 border-green-600 hover:border-green-700 active:bg-green-600 active:text-white active:border-green-600"
+              className="h-10 w-10 rounded-md text-green-600 hover:text-green-700 border-green-600 hover:border-green-700 active:bg-green-600 active:text-white active:border-green-600"
               onClick={() => setIsMobileMenuOpen(true)}
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </Button>
@@ -204,21 +206,21 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
           <div className="hidden md:block">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-start gap-3 p-2 hover:bg-transparent">
-                  <div className="text-right flex flex-col justify-start">
+                <Button variant="ghost" className="flex items-center gap-3 p-2 hover:bg-muted/50">
+                  <div className="text-right flex flex-col justify-center">
                     <p className="text-xs text-muted-foreground">Bonjour,</p>
                     <p className="text-base font-medium text-foreground">
                       {userProfile?.full_name || 'Utilisateur'}
                     </p>
                   </div>
                   <div className="relative flex-shrink-0">
-                    <Avatar className="h-12 w-12">
+                    <Avatar className="h-10 w-10">
                       <AvatarImage src={userProfile?.avatar_url} className="object-cover" />
                       <AvatarFallback className="bg-gray-200 text-gray-600">
                         {userProfile?.full_name?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
@@ -263,51 +265,52 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
                   {/* Header avec logo et bouton fermer */}
                   <div className="flex items-center justify-between">
                     <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center">
-                      <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
+                      <img src="/icons/logo.svg" alt="Logo" className="h-10 w-auto" />
                     </Link>
                      <Button
                        variant="outline"
                        size="icon"
-                       className="h-9 w-9 rounded-md text-green-600 hover:text-green-700 border-green-600 hover:border-green-700 active:bg-green-600 active:text-white active:border-green-600"
+                       className="h-10 w-10 rounded-md text-green-600 hover:text-green-700 border-green-600 hover:border-green-700 active:bg-green-600 active:text-white active:border-green-600"
                        onClick={() => setIsMobileMenuOpen(false)}
                      >
-                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                        </svg>
                      </Button>
                    </div>
                   {/* Section utilisateur */}
-                  <div className="py-4 sm:py-[45px] mb-8 sm:mb-12">
-                    <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                  <div className="py-6 mb-8">
+                    <div className="flex items-center gap-4 mb-6">
                       <div className="relative">
-                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20 rounded-full">
+                        <Avatar className="h-16 w-16 rounded-full">
                           <AvatarImage
                             src={userProfile?.avatar_url || "/placeholder.svg"}
                             alt={displayName}
                             className="object-cover"
                           />
-                          <AvatarFallback className="text-lg sm:text-xl rounded-full">{initials}</AvatarFallback>
+                          <AvatarFallback className="text-lg rounded-full">{initials}</AvatarFallback>
                         </Avatar>
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
                       <div className="flex-1">
-                        <CardTitle className="text-base sm:text-lg font-bold text-foreground mb-1">
+                        <CardTitle className="text-lg font-bold text-foreground mb-1">
                           {displayName}
                         </CardTitle>
-                        <p className="text-muted-foreground text-xs sm:text-sm mb-1">
+                        <p className="text-muted-foreground text-sm mb-1">
                           {userProfile?.email || 'email@example.com'}
                         </p>
-                        <p className={`text-xs font-medium ${roleInfo.color}`}>
+                        <Badge variant="secondary" className="text-xs">
                           {roleInfo.label}
-                        </p>
+                        </Badge>
                       </div>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="px-4 pb-4">
-                  <div className="space-y-2 sm:space-y-4">
+                <CardContent className="px-6 pb-6">
+                  <div className="space-y-3">
                     
                     {/* Navigation basée sur le rôle */}
-                    <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                    <div className="grid grid-cols-1 gap-3">
                       {menuItems.map((item) => {
                         const isActive = window.location.pathname === item.path;
                         return (
@@ -318,9 +321,9 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
                           >
                             <Button 
                               variant={isActive ? "default" : "outline"} 
-                              className={`w-full justify-start text-sm sm:text-base py-2 sm:py-3 ${isActive ? "bg-primary text-primary-foreground" : ""}`}
+                              className={`w-full justify-start text-base py-3 h-auto ${isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                             >
-                              <item.icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                              <item.icon className="w-5 h-5 mr-3" />
                               {item.label}
                             </Button>
                           </Link>
@@ -329,15 +332,16 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
                     </div>
                     
                     {/* Bouton de déconnexion en bas du contenu */}
-                    <div className="mt-6 pt-4 border-t border-gray-200">
+                    <div className="mt-8 pt-4 border-t border-border">
                       <Button 
                         variant="outline" 
-                        className="w-full"
+                        className="w-full py-3"
                         onClick={() => {
                           handleSignOut();
                           setIsMobileMenuOpen(false);
                         }}
                       >
+                        <LogOut className="w-5 h-5 mr-3" />
                         Se déconnecter
                       </Button>
                     </div>

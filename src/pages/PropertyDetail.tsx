@@ -12,6 +12,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { PropertyService, Property } from "@/lib/propertyService";
 import { useToast } from "@/hooks/use-toast";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { supabase } from "@/integrations/supabase/client";
 
 // Configuration des icônes Leaflet
@@ -183,6 +184,7 @@ const BookingWidgetSkeleton = () => (
 const PropertyDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
+  const { setPageTitle } = usePageTitle();
   
   // États pour les données de la propriété
   const [property, setProperty] = useState<Property | null>(null);
@@ -262,6 +264,11 @@ const PropertyDetail = () => {
           return;
         }
         setProperty(propertyData);
+        
+        // Mettre à jour le titre de la page avec le nom de la propriété
+        if (propertyData.title) {
+          setPageTitle(propertyData.title);
+        }
         
         // Charger la disponibilité pour cette propriété
         await loadPropertyAvailability(propertyData.id);

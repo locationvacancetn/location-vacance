@@ -40,7 +40,8 @@ import {
   CreditCard,
   Mail,
   Package,
-  PictureInPicture2
+  PictureInPicture2,
+  Monitor
 } from 'lucide-react';
 
 // Configuration des menus par rôle - STRUCTURE UNIFIÉE
@@ -69,6 +70,7 @@ const getMenuItems = (role: string) => {
         { label: 'Caractéristiques', path: '/dashboard/admin/characteristics', icon: Settings },
         { label: 'Abonnements', path: '/dashboard/admin/subscriptions', icon: Package },
         { label: 'Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
+        { label: 'Analytics', path: '/dashboard/admin/analytics', icon: Monitor },
         { label: 'Profil', path: '/dashboard/admin/profile', icon: User },
       ];
     
@@ -136,15 +138,17 @@ export const DashboardSidebar = ({ onMobileClose }: DashboardSidebarProps) => {
   return (
     <div 
       className={cn(
-        "bg-card transition-all duration-300 flex flex-col h-screen group",
+        "bg-card transition-all duration-300 flex flex-col group",
+        "h-screen md:h-[calc(100vh-2rem)]",
         "border-r border-border",
+        "md:border md:border-border md:rounded-lg md:shadow-sm md:mx-4 md:mt-4 md:mb-4",
         isCollapsed ? "w-16" : "w-56"
       )}
       data-collapsed={isCollapsed}
     >
-      <div className="p-4 flex-1">
-        {/* Header avec logo et bouton fermer mobile */}
-        <div className="flex items-center justify-between mb-6">
+      {/* Header avec logo et bouton fermer mobile - Fixe en haut */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between">
           <Link to="/" className="block" onClick={handleLinkClick}>
             {isCollapsed ? (
               <img 
@@ -172,8 +176,10 @@ export const DashboardSidebar = ({ onMobileClose }: DashboardSidebarProps) => {
             <X className="h-4 w-4" />
           </Button>
         </div>
+      </div>
 
-        {/* Menu items */}
+      {/* Zone de navigation avec scroll */}
+      <div className="flex-1 overflow-y-auto p-4">
         <nav className="space-y-2">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -200,11 +206,10 @@ export const DashboardSidebar = ({ onMobileClose }: DashboardSidebarProps) => {
             );
           })}
         </nav>
-
       </div>
       
-      {/* Boutons en bas */}
-      <div className="px-4 pb-4 pt-2">
+      {/* Boutons en bas - Fixe */}
+      <div className="px-4 pb-4 pt-2 border-t border-border bg-card">
         <div className="flex flex-col gap-3">
           {/* Bouton de déconnexion */}
           <AlertDialog>

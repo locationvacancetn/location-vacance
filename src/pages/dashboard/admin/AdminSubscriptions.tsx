@@ -478,12 +478,7 @@ const AdminSubscriptions = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                toast({
-                                  title: "En développement",
-                                  description: "La page de modification sera bientôt disponible",
-                                });
-                              }}
+                              onClick={() => navigate(`/dashboard/admin/subscriptions/edit/${plan.id}`)}
                               title="Modifier"
                               className="h-8 w-8 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
                             >
@@ -642,12 +637,7 @@ const AdminSubscriptions = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              toast({
-                                title: "En développement",
-                                description: "La page de modification sera bientôt disponible",
-                              });
-                            }}
+                            onClick={() => navigate(`/dashboard/admin/subscriptions/edit/${plan.id}`)}
                             title="Modifier"
                             className="h-8 w-8 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
                           >

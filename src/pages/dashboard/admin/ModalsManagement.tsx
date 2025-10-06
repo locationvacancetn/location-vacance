@@ -313,22 +313,22 @@ const ModalsManagement = () => {
           </div>
         ) : (
           <div className="border rounded-lg overflow-hidden">
-              <Table>
+              <Table className="table-fixed w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Déclencheur</TableHead>
-                    <TableHead>Cible</TableHead>
-                    <TableHead>Expiration</TableHead>
-                    <TableHead>Créé le</TableHead>
-                    <TableHead className="text-right">Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[300px]">Titre</TableHead>
+                    <TableHead className="w-[150px]">Déclencheur</TableHead>
+                    <TableHead className="w-[150px]">Cible</TableHead>
+                    <TableHead className="w-[120px]">Expiration</TableHead>
+                    <TableHead className="w-[120px]">Crée le</TableHead>
+                    <TableHead className="w-[80px] text-right">Statut</TableHead>
+                    <TableHead className="w-[120px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredModals.map((modal) => (
                     <TableRow key={modal.id}>
-                    <TableCell>
+                    <TableCell className="w-[300px]">
                       <div className="flex items-center gap-3">
                         {/* Image ou icône */}
                         <div className="flex-shrink-0">
@@ -347,20 +347,20 @@ const ModalsManagement = () => {
                         
                         {/* Contenu */}
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium mb-1">{modal.title}</div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {modal.content}
+                          <div className="font-medium mb-1 truncate">{modal.title}</div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {modal.content.length > 50 ? `${modal.content.substring(0, 50)}...` : modal.content}
                           </div>
                         </div>
                       </div>
                     </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[150px]">
                         {getTriggerBadge(modal.trigger_type)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[150px]">
                         {getTargetBadge(modal.target_type, modal.target_roles)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[120px]">
                         {modal.expires_at ? (
                           <div className="text-sm">
                             <Calendar className="h-4 w-4 inline mr-1" />
@@ -370,17 +370,17 @@ const ModalsManagement = () => {
                           <Badge variant="outline">Permanent</Badge>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-[120px]">
                         <div className="text-sm text-gray-500">
                           {formatDate(modal.created_at)}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="w-[80px] text-right">
                         <Badge variant={modal.is_active ? "default" : "secondary"}>
                           {modal.is_active ? "Actif" : "Inactif"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="w-[120px] text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Switch
                             checked={modal.is_active}
@@ -508,7 +508,9 @@ const ModalsManagement = () => {
 
                   {/* Contenu */}
                   <div className="text-sm text-muted-foreground mb-8">
-                    <p className="line-clamp-2">{modal.content}</p>
+                    <p className="line-clamp-2">
+                      {modal.content.length > 100 ? `${modal.content.substring(0, 100)}...` : modal.content}
+                    </p>
                   </div>
 
                   {/* Déclencheur et Cible */}

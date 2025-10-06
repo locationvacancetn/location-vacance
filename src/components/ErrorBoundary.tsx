@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { googleAnalyticsService } from '@/lib/googleAnalyticsService';
 import { ROUTES } from '@/constants/routes';
 
 interface Props {
@@ -54,6 +55,14 @@ export class ErrorBoundary extends Component<Props, State> {
         retryCount: this.state.retryCount,
       }
     );
+
+    // Tracking Google Analytics pour les erreurs critiques
+    try {
+      // Note: Le service Google Analytics sera implémenté plus tard
+      console.log('Error Boundary tracked for analytics:', `${context || 'unknown'}:${error.message}`);
+    } catch (analyticsError) {
+      console.warn('Analytics tracking failed:', analyticsError);
+    }
 
     // Callback personnalisé
     if (onError) {

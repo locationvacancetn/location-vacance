@@ -86,8 +86,9 @@ const LoginForm = ({ onSuccess, showTitle = true, showForgotPassword = true }: L
                 <FormControl>
                   <Input
                     type="text"
-                    placeholder="votre@email.com"
+                    placeholder="votre adresse email"
                     autoComplete="email"
+                    className="text-sm"
                     {...field}
                   />
                 </FormControl>
@@ -107,8 +108,9 @@ const LoginForm = ({ onSuccess, showTitle = true, showForgotPassword = true }: L
                   <div className="relative mt-1">
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Entrez votre mot de passe"
+                      placeholder="••••••••"
                       autoComplete="current-password"
+                      className="text-sm"
                       {...field}
                     />
                     <button

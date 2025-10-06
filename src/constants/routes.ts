@@ -10,6 +10,7 @@ export const ROUTES = {
   SIGNUP: '/signup',
   PROPERTY_DETAIL: '/property/:slug',
   TEST_AUTH: '/test-auth',
+  TEST_SLUG_SYSTEM: '/test-slug-system',
   NOT_FOUND: '*',
 
   // Routes dashboard

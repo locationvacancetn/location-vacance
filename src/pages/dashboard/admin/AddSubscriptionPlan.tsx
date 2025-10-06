@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Save, Plus, X, GripVertical, Check } from "lucide-react";
-import { saveSubscriptionPlan } from "@/lib/subscriptionService";
+import { saveSubscriptionPlan, getSubscriptionPlanById, updateSubscriptionPlan } from "@/lib/subscriptionService";
 
 interface Feature {
   id: string;
@@ -17,6 +18,9 @@ interface Feature {
 const AddSubscriptionPlan = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { title, description } = usePageTitle();
+  const { id } = useParams();
+  const isEditing = Boolean(id);
   const [isLoading, setIsLoading] = useState(false);
 
   // État du formulaire
@@ -42,6 +46,96 @@ const AddSubscriptionPlan = () => {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [newFeature, setNewFeature] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  // Le titre est maintenant géré automatiquement par usePageTitle
+
+  // Charger les données du plan si on est en mode édition
+  useEffect(() => {
+    if (isEditing && id) {
+      loadSubscriptionPlan(id);
+    }
+  }, [isEditing, id]);
+
+  // Charger les données d'un plan existant
+  const loadSubscriptionPlan = async (planId: string) => {
+    try {
+      setIsLoading(true);
+      const result = await getSubscriptionPlanById(planId);
+      
+      if (!result.success || !result.plan) {
+        toast({
+          title: "Erreur",
+          description: result.error || "Impossible de charger le plan d'abonnement",
+          variant: "destructive",
+        });
+        navigate("/dashboard/admin/subscriptions");
+        return;
+      }
+
+      const plan = result.plan;
+      
+      // Mapper le slug du produit vers le type
+      const productTypeMap: Record<string, string> = {
+        "annonce-listing": "annonce",
+        "featured-listing": "vedette", 
+        "advertisement": "pub"
+      };
+
+      // Récupérer les limitations
+      const limitations: Record<string, string> = {};
+      if (plan.limitations) {
+        plan.limitations.forEach((lim: any) => {
+          limitations[lim.limitation_key] = lim.limitation_value;
+        });
+      }
+
+      // Récupérer les fonctionnalités
+      const planFeatures: Feature[] = [];
+      if (plan.features) {
+        plan.features
+          .filter((f: any) => f.feature_type === "feature")
+          .sort((a: any, b: any) => a.sort_order - b.sort_order)
+          .forEach((f: any) => {
+            planFeatures.push({
+              id: f.id,
+              text: f.feature_text
+            });
+          });
+      }
+
+      // Remplir le formulaire
+      setFormData({
+        productType: productTypeMap[plan.product.slug] || "",
+        name: plan.name || "",
+        price: plan.price?.toString() || "",
+        pricePromo: plan.price_promo?.toString() || "",
+        duration: plan.duration_days?.toString() || "",
+        gracePeriod: plan.grace_period_months?.toString() || "0",
+        badge: plan.badge || "",
+        subtitle: plan.subtitle || "Switch plans or cancel anytime.",
+        description: plan.description || "",
+        // Limitations
+        maxAnnounces: limitations.max_announces || "",
+        maxImagesPerAnnounce: limitations.max_images_per_announce || "",
+        maxDaysFeatured: limitations.max_days_featured || "",
+        maxAds: limitations.max_ads || "",
+        adDurationDays: limitations.ad_duration_days || "",
+      });
+
+      setFeatures(planFeatures);
+
+    } catch (error: any) {
+      console.error("Erreur lors du chargement du plan:", error);
+      toast({
+        title: "Erreur",
+        description: "Erreur inattendue lors du chargement du plan",
+        variant: "destructive",
+      });
+      navigate("/dashboard/admin/subscriptions");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -162,10 +256,10 @@ const AddSubscriptionPlan = () => {
       return;
     }
 
-    if (!formData.price || parseFloat(formData.price) <= 0) {
+    if (!formData.price || parseFloat(formData.price) < 0) {
       toast({
         title: "Erreur de validation",
-        description: "Le prix doit être supérieur à 0",
+        description: "Le prix doit être supérieur ou égal à 0",
         variant: "destructive",
       });
       return;
@@ -191,7 +285,12 @@ const AddSubscriptionPlan = () => {
       const highlightsList: typeof features = []; // Vide pour l'instant
 
       // Appel du service de sauvegarde
-      const result = await saveSubscriptionPlan(formData, featuresList, highlightsList);
+      let result;
+      if (isEditing && id) {
+        result = await updateSubscriptionPlan(id, formData, featuresList, highlightsList);
+      } else {
+        result = await saveSubscriptionPlan(formData, featuresList, highlightsList);
+      }
 
       if (!result.success) {
         throw new Error(result.error || "Erreur lors de la sauvegarde");
@@ -201,7 +300,7 @@ const AddSubscriptionPlan = () => {
 
       toast({
         title: "Succès",
-        description: "Le plan d'abonnement a été créé avec succès",
+        description: isEditing ? "Le plan d'abonnement a été modifié avec succès" : "Le plan d'abonnement a été créé avec succès",
       });
 
       // Redirection vers la liste

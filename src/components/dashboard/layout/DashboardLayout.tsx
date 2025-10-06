@@ -72,12 +72,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         
         {/* Main content - Avec marge pour la sidebar sur desktop */}
         <div className={cn(
-          "flex-1 w-full transition-all duration-300",
+          "flex-1 w-full transition-all duration-300 flex flex-col",
           "md:ml-56", // Marge par défaut pour sidebar étendue
           isSidebarCollapsed && "md:ml-16" // Marge réduite quand sidebar est collapsed
         )}>
-          <DashboardHeader onMobileMenuToggle={toggleMobileSidebar} />
-          <main className="px-6 pb-6 pt-0">
+          <div className="md:sticky md:top-0 md:z-10 md:bg-background">
+            <DashboardHeader onMobileMenuToggle={toggleMobileSidebar} />
+          </div>
+          <main className="flex-1 px-6 pb-6 pt-0 overflow-y-auto md:ml-2">
             {/* Titre de la page sur mobile */}
             <div className="md:hidden mb-6">
               <h1 className="text-2xl font-bold text-foreground">

@@ -51,19 +51,19 @@ const SignupForm = ({ onSuccess, showTitle = true }: SignupFormProps) => {
     {
       id: "tenant",
       title: "Locataire",
-      subtitle: "Looking for rental properties",
+      subtitle: "Rechercher et réserver des locations de vacances",
       icon: <Users className="w-6 h-6" />
     },
     {
       id: "owner",
       title: "Propriétaire",
-      subtitle: "List and manage rental properties",
+      subtitle: "Publier et gérer vos maisons de vacances",
       icon: <Home className="w-6 h-6" />
     },
     {
       id: "advertiser",
       title: "Annonceur",
-      subtitle: "Promote businesses and services",
+      subtitle: "Promouvoir vos services et activités touristiques",
       icon: <Megaphone className="w-6 h-6" />
     }
   ];
@@ -155,7 +155,7 @@ const SignupForm = ({ onSuccess, showTitle = true }: SignupFormProps) => {
             Créer votre compte
           </h1>
           <p className="text-muted-foreground">
-            Rejoignez location-vacance.tn et commencez votre parcours
+            Rejoignez gratuitement location-vacance.tn.
           </p>
         </div>
       )}
@@ -229,6 +229,7 @@ const SignupForm = ({ onSuccess, showTitle = true }: SignupFormProps) => {
                     value={field.value}
                     onChange={(e) => field.onChange(formatFullName(e.target.value))}
                     autoComplete="name"
+                    className="text-sm"
                   />
                 </FormControl>
                 <FormMessage />
@@ -244,8 +245,15 @@ const SignupForm = ({ onSuccess, showTitle = true }: SignupFormProps) => {
               <FormItem>
                 <FormLabel>Adresse email *</FormLabel>
                 <FormControl>
-                  <Input type="email" inputMode="email" className="lowercase" placeholder="votre@email.com" value={field.value}
-                    onChange={(e) => field.onChange(e.target.value.toLowerCase())} autoComplete="email" />
+                  <Input 
+                    type="email" 
+                    inputMode="email" 
+                    className="lowercase text-sm" 
+                    placeholder="votre adresse email" 
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value.toLowerCase())} 
+                    autoComplete="email" 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -264,6 +272,7 @@ const SignupForm = ({ onSuccess, showTitle = true }: SignupFormProps) => {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
+                      className="text-sm"
                       {...field}
                     />
                     <button
@@ -292,6 +301,7 @@ const SignupForm = ({ onSuccess, showTitle = true }: SignupFormProps) => {
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="••••••••"
+                      className="text-sm"
                       {...field}
                     />
                     <button

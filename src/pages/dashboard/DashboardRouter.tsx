@@ -5,6 +5,7 @@ import { AdminRouteGuard } from '@/components/dashboard/admin/AdminRouteGuard';
 import { OwnerRouteGuard } from '@/components/dashboard/owner/OwnerRouteGuard';
 import { TenantRouteGuard } from '@/components/dashboard/tenant/TenantRouteGuard';
 import { AdvertiserRouteGuard } from '@/components/dashboard/advertiser/AdvertiserRouteGuard';
+import { DashboardNotFound } from '@/components/DashboardNotFound';
 import { Routes, Route } from 'react-router-dom';
 
 // Import des dashboards par rôle
@@ -28,6 +29,7 @@ import AdminSubscriptions from './admin/AdminSubscriptions';
 import AddSubscriptionPlan from './admin/AddSubscriptionPlan';
 import ModalsManagement from './admin/ModalsManagement';
 import AddModal from './admin/AddModal';
+import { AnalyticsDashboard } from './admin/AnalyticsDashboard';
 
 
 // Import des pages Profil par rôle
@@ -166,20 +168,20 @@ export const DashboardRouter = () => {
               <Route path="/seo" element={<SEOManagement />} />
               <Route path="/subscriptions" element={<AdminSubscriptions />} />
               <Route path="/subscriptions/add" element={<AddSubscriptionPlan />} />
+              <Route path="/subscriptions/edit/:id" element={<AddSubscriptionPlan />} />
               <Route path="/modals" element={<ModalsManagement />} />
               <Route path="/modals/add" element={<AddModal />} />
               <Route path="/modals/edit/:id" element={<AddModal />} />
+              <Route path="/analytics" element={<AnalyticsDashboard />} />
               <Route path="/users" element={<UsersManagement />} />
               <Route path="/add-user" element={<AddUser />} />
               <Route path="/add-property" element={<AddPropertyWizard />} />
               <Route path="/edit-property/:id" element={<AddPropertyWizard />} />
               <Route path="/*" element={
-                <div className="min-h-screen bg-background flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className="text-2xl font-bold text-foreground mb-4">Page admin non trouvée</h1>
-                    <p className="text-muted-foreground">Cette page d'administration n'existe pas.</p>
-                  </div>
-                </div>
+                <DashboardNotFound 
+                  section="admin" 
+                  customMessage="Cette page d'administration n'existe pas."
+                />
               } />
             </Routes>
           </AdminRouteGuard>
@@ -204,12 +206,10 @@ export const DashboardRouter = () => {
               } />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/*" element={
-                <div className="min-h-screen bg-background flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className="text-2xl font-bold text-foreground mb-4">Page propriétaire non trouvée</h1>
-                    <p className="text-muted-foreground">Cette page de gestion n'existe pas.</p>
-                  </div>
-                </div>
+                <DashboardNotFound 
+                  section="owner" 
+                  customMessage="Cette page de gestion propriétaire n'existe pas."
+                />
               } />
             </Routes>
           </OwnerRouteGuard>
@@ -245,12 +245,10 @@ export const DashboardRouter = () => {
                 </div>
               } />
               <Route path="/*" element={
-                <div className="min-h-screen bg-background flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className="text-2xl font-bold text-foreground mb-4">Page locataire non trouvée</h1>
-                    <p className="text-muted-foreground">Cette page n'existe pas.</p>
-                  </div>
-                </div>
+                <DashboardNotFound 
+                  section="tenant" 
+                  customMessage="Cette page locataire n'existe pas."
+                />
               } />
             </Routes>
           </TenantRouteGuard>
@@ -289,12 +287,10 @@ export const DashboardRouter = () => {
                 </div>
               } />
               <Route path="/*" element={
-                <div className="min-h-screen bg-background flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className="text-2xl font-bold text-foreground mb-4">Page annonceur non trouvée</h1>
-                    <p className="text-muted-foreground">Cette page n'existe pas.</p>
-                  </div>
-                </div>
+                <DashboardNotFound 
+                  section="advertiser" 
+                  customMessage="Cette page annonceur n'existe pas."
+                />
               } />
             </Routes>
           </AdvertiserRouteGuard>

@@ -207,6 +207,12 @@ const AdminDashboard = () => {
                 Configuration Konnect
               </Link>
             </Button>
+            <Button className="w-full justify-start" variant="outline" asChild>
+              <Link to="/dashboard/admin/analytics">
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Analytics & Monitoring
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

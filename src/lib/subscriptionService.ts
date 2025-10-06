@@ -132,8 +132,8 @@ export async function saveSubscriptionPlan(
       throw new Error("Le nom du plan est obligatoire");
     }
 
-    if (!formData.price || parseFloat(formData.price) <= 0) {
-      throw new Error("Le prix doit être supérieur à 0");
+    if (!formData.price || parseFloat(formData.price) < 0) {
+      throw new Error("Le prix doit être supérieur ou égal à 0");
     }
 
     if (!formData.duration || parseInt(formData.duration) <= 0) {
@@ -170,6 +170,8 @@ export async function saveSubscriptionPlan(
       duration_days: parseInt(formData.duration),
       grace_period_months: formData.gracePeriod ? parseInt(formData.gracePeriod) : 0,
       badge: formData.badge || null,
+      subtitle: formData.subtitle || "Switch plans or cancel anytime.",
+      description: formData.description || null,
       is_active: true,
       sort_order: 0, // Par défaut, peut être modifié plus tard
     };
@@ -305,6 +307,186 @@ export async function getAllSubscriptionPlans() {
   } catch (error: any) {
     console.error("Erreur lors de la récupération des plans:", error);
     return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Met à jour un plan d'abonnement existant
+ */
+export async function updateSubscriptionPlan(
+  planId: string,
+  formData: SubscriptionPlanFormData,
+  features: Feature[],
+  highlights: Feature[]
+): Promise<{ success: boolean; planId?: string; error?: string }> {
+  try {
+    // 1. Validation des données
+    if (!formData.productType) {
+      throw new Error("Le type de produit est obligatoire");
+    }
+
+    if (!formData.name.trim()) {
+      throw new Error("Le nom du plan est obligatoire");
+    }
+
+    if (!formData.price || parseFloat(formData.price) < 0) {
+      throw new Error("Le prix doit être supérieur ou égal à 0");
+    }
+
+    if (!formData.duration || parseInt(formData.duration) <= 0) {
+      throw new Error("La durée doit être supérieure à 0");
+    }
+
+    // 2. Récupérer l'ID du produit
+    const productId = await getProductId(formData.productType);
+    if (!productId) {
+      throw new Error("Produit non trouvé");
+    }
+
+    // 3. Générer le slug unique (vérifier s'il existe déjà pour un autre plan)
+    const slug = createSlug(formData.name);
+
+    const { data: existingPlan } = await supabase
+      .from("subscription_plans")
+      .select("id")
+      .eq("slug", slug)
+      .neq("id", planId) // Exclure le plan actuel
+      .single();
+
+    if (existingPlan) {
+      throw new Error(`Un autre plan avec le nom "${formData.name}" existe déjà`);
+    }
+
+    // 4. Préparer les données du plan
+    const planData = {
+      product_id: productId,
+      name: formData.name.trim(),
+      slug: slug,
+      price: parseFloat(formData.price),
+      price_promo: formData.pricePromo ? parseFloat(formData.pricePromo) : null,
+      duration_days: parseInt(formData.duration),
+      grace_period_months: formData.gracePeriod ? parseInt(formData.gracePeriod) : 0,
+      badge: formData.badge || null,
+      subtitle: formData.subtitle || "Switch plans or cancel anytime.",
+      description: formData.description || null,
+      is_active: true,
+      sort_order: 0,
+    };
+
+    console.log("📦 Données du plan à mettre à jour:", planData);
+
+    // 5. Mettre à jour le plan
+    const { data: updatedPlan, error: planError } = await supabase
+      .from("subscription_plans")
+      .update(planData)
+      .eq("id", planId)
+      .select()
+      .single();
+
+    if (planError) {
+      console.error("❌ Erreur lors de la mise à jour du plan:", planError);
+      throw new Error(`Erreur lors de la mise à jour du plan: ${planError.message}`);
+    }
+
+    console.log("✅ Plan mis à jour avec succès, ID:", updatedPlan.id);
+
+    // 6. Supprimer les anciennes limitations
+    const { error: deleteLimitationsError } = await supabase
+      .from("subscription_plan_limitations")
+      .delete()
+      .eq("plan_id", planId);
+
+    if (deleteLimitationsError) {
+      console.error("❌ Erreur lors de la suppression des limitations:", deleteLimitationsError);
+      throw new Error(`Erreur lors de la suppression des limitations: ${deleteLimitationsError.message}`);
+    }
+
+    // 7. Insérer les nouvelles limitations
+    const limitations = prepareLimitations(formData.productType, formData);
+    if (Object.keys(limitations).length > 0) {
+      const limitationsToInsert = Object.entries(limitations).map(([key, value]) => ({
+        plan_id: planId,
+        limitation_key: key,
+        limitation_value: value,
+      }));
+
+      console.log("🔒 Nouvelles limitations à insérer:", limitationsToInsert);
+
+      const { error: limitationsError } = await supabase
+        .from("subscription_plan_limitations")
+        .insert(limitationsToInsert);
+
+      if (limitationsError) {
+        console.error("❌ Erreur lors de l'insertion des limitations:", limitationsError);
+        throw new Error(`Erreur lors de l'ajout des limitations: ${limitationsError.message}`);
+      }
+
+      console.log("✅ Limitations mises à jour avec succès");
+    }
+
+    // 8. Supprimer les anciennes fonctionnalités
+    const { error: deleteFeaturesError } = await supabase
+      .from("subscription_plan_features")
+      .delete()
+      .eq("plan_id", planId);
+
+    if (deleteFeaturesError) {
+      console.error("❌ Erreur lors de la suppression des fonctionnalités:", deleteFeaturesError);
+      throw new Error(`Erreur lors de la suppression des fonctionnalités: ${deleteFeaturesError.message}`);
+    }
+
+    // 9. Insérer les nouvelles fonctionnalités
+    if (features.length > 0) {
+      const featuresToInsert = features.map((feature, index) => ({
+        plan_id: planId,
+        feature_type: "feature",
+        feature_text: feature.text.trim(),
+        sort_order: index,
+      }));
+
+      console.log("✨ Nouvelles fonctionnalités à insérer:", featuresToInsert);
+
+      const { error: featuresError } = await supabase
+        .from("subscription_plan_features")
+        .insert(featuresToInsert);
+
+      if (featuresError) {
+        console.error("❌ Erreur lors de l'insertion des fonctionnalités:", featuresError);
+        throw new Error(`Erreur lors de l'ajout des fonctionnalités: ${featuresError.message}`);
+      }
+
+      console.log("✅ Fonctionnalités mises à jour avec succès");
+    }
+
+    // 10. Insérer les nouveaux points forts
+    if (highlights.length > 0) {
+      const highlightsToInsert = highlights.map((highlight, index) => ({
+        plan_id: planId,
+        feature_type: "highlight",
+        feature_text: highlight.text.trim(),
+        sort_order: index,
+      }));
+
+      console.log("🎯 Nouveaux points forts à insérer:", highlightsToInsert);
+
+      const { error: highlightsError } = await supabase
+        .from("subscription_plan_features")
+        .insert(highlightsToInsert);
+
+      if (highlightsError) {
+        console.error("❌ Erreur lors de l'insertion des points forts:", highlightsError);
+        throw new Error(`Erreur lors de l'ajout des points forts: ${highlightsError.message}`);
+      }
+
+      console.log("✅ Points forts mis à jour avec succès");
+    }
+
+    console.log("🎉 Plan d'abonnement mis à jour avec succès !");
+    return { success: true, planId };
+
+  } catch (error: any) {
+    console.error("❌ Erreur lors de la mise à jour du plan:", error);
+    return { success: false, error: error.message || "Erreur inconnue" };
   }
 }
 

@@ -1,8 +1,14 @@
 import { useLocation } from 'react-router-dom';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 
 // Configuration des titres par route
 const PAGE_TITLES: Record<string, string> = {
+  // Routes publiques
+  '/': 'Accueil',
+  '/login': 'Connexion',
+  '/signup': 'Inscription',
+  '/test-auth': 'Test d\'authentification',
+  
   // Dashboard principal
   '/dashboard': 'Tableau de bord',
   
@@ -25,9 +31,11 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/admin/seo': 'Gestion SEO',
   '/dashboard/admin/subscriptions': 'Gestion des Abonnements',
   '/dashboard/admin/subscriptions/add': 'Créer un Plan d\'Abonnement',
+  '/dashboard/admin/subscriptions/edit': 'Modifier un Plan d\'Abonnement',
   '/dashboard/admin/modals': 'Gestion des Modals',
   '/dashboard/admin/modals/add': 'Créer un Modal',
   '/dashboard/admin/modals/edit': 'Modifier un Modal',
+  '/dashboard/admin/analytics': 'Analytics',
   '/dashboard/users': 'Gestion des Utilisateurs',
   
   // Pages Owner
@@ -36,8 +44,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/edit-property': 'Modification propriété',
   '/dashboard/owner/edit-property': 'Modification propriété',
   '/dashboard/owner/properties': 'Mes Propriétés',
-  '/dashboard/calendar': 'Calendrier de Blocage',
-  '/dashboard/owner/calendar': 'Calendrier de Blocage',
+  '/dashboard/calendar': 'Calendrier',
+  '/dashboard/owner/calendar': 'Calendrier',
   
   // Pages Advertiser
   '/dashboard/advertiser/ads': 'Mes Publicités',
@@ -52,6 +60,12 @@ const PAGE_TITLES: Record<string, string> = {
 
 // Configuration des descriptions par route
 const PAGE_DESCRIPTIONS: Record<string, string> = {
+  // Routes publiques
+  '/': 'Découvrez les meilleures locations de vacances en Tunisie',
+  '/login': 'Connectez-vous à votre compte Location-vacance.tn',
+  '/signup': 'Créez votre compte pour louer ou proposer des locations',
+  '/test-auth': 'Page de test pour l\'authentification',
+  
   '/dashboard': 'Vue d\'ensemble de votre compte',
   '/dashboard/profile': 'Gérez vos informations personnelles',
   '/dashboard/admin/profile': 'Gérez vos informations personnelles et vos privilèges administrateur',
@@ -69,17 +83,19 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/dashboard/admin/seo': 'Optimisez le référencement de vos annonces pour améliorer leur visibilité',
   '/dashboard/admin/subscriptions': 'Gérez les plans d\'abonnement pour les propriétaires et annonceurs',
   '/dashboard/admin/subscriptions/add': 'Définissez les détails du nouveau plan d\'abonnement',
+  '/dashboard/admin/subscriptions/edit': 'Modifiez les détails du plan d\'abonnement existant',
   '/dashboard/admin/modals': 'Créez et gérez les modals d\'information pour vos utilisateurs',
   '/dashboard/admin/modals/add': 'Configurez votre modal avec un aperçu en temps réel',
   '/dashboard/admin/modals/edit': 'Modifiez votre modal avec un aperçu en temps réel',
+  '/dashboard/admin/analytics': 'Surveillez l\'activité du site en temps réel et les performances',
   '/dashboard/users': 'Administrez les comptes utilisateurs',
   '/dashboard/add-property': 'Créez votre annonce étape par étape',
   '/dashboard/owner/add-property': 'Créez votre annonce étape par étape',
   '/dashboard/edit-property': 'Modifiez votre annonce étape par étape',
   '/dashboard/owner/edit-property': 'Modifiez votre annonce étape par étape',
   '/dashboard/owner/properties': 'Gérez vos propriétés et leurs statuts',
-  '/dashboard/calendar': 'Gérez la disponibilité de vos propriétés en bloquant ou libérant des dates',
-  '/dashboard/owner/calendar': 'Gérez la disponibilité de vos propriétés en bloquant ou libérant des dates',
+  '/dashboard/calendar': 'Gérez la disponibilité de vos propriétés',
+  '/dashboard/owner/calendar': 'Gérez la disponibilité de vos propriétés',
   '/dashboard/advertiser/ads': 'Gérez vos campagnes publicitaires et leurs performances',
   '/dashboard/advertiser/add-advertisement': 'Créez une nouvelle campagne publicitaire pour promouvoir votre entreprise',
 };
@@ -101,7 +117,21 @@ export const usePageTitle = () => {
     let title = PAGE_TITLES[pathname];
     let description = PAGE_DESCRIPTIONS[pathname];
     
-    // Si pas de correspondance exacte, chercher par préfixe
+    // Gestion spéciale pour les routes dynamiques d'édition (AVANT la correspondance par préfixe)
+    if (!title && pathname.includes('/edit/')) {
+      if (pathname.includes('/subscriptions/edit/')) {
+        title = PAGE_TITLES['/dashboard/admin/subscriptions/edit'];
+        description = PAGE_DESCRIPTIONS['/dashboard/admin/subscriptions/edit'];
+      } else if (pathname.includes('/modals/edit/')) {
+        title = PAGE_TITLES['/dashboard/admin/modals/edit'];
+        description = PAGE_DESCRIPTIONS['/dashboard/admin/modals/edit'];
+      } else if (pathname.includes('/edit-property/')) {
+        title = PAGE_TITLES['/dashboard/edit-property'];
+        description = PAGE_DESCRIPTIONS['/dashboard/edit-property'];
+      }
+    }
+    
+    // Si pas de correspondance exacte et pas de route dynamique, chercher par préfixe
     if (!title) {
       const matchingKey = Object.keys(PAGE_TITLES).find(key => 
         pathname.startsWith(key) && key !== '/dashboard'
@@ -121,6 +151,13 @@ export const usePageTitle = () => {
     
     return { title, description };
   }, [location.pathname, customTitle, customDescription]);
+  
+  // Mettre à jour le titre du document à chaque changement
+  useEffect(() => {
+    if (title) {
+      document.title = `${title} - Location-vacance.tn`;
+    }
+  }, [title]);
   
   const setPageTitle = useCallback((newTitle: string) => {
     setCustomTitle(newTitle);

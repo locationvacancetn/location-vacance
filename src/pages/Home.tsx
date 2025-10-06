@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import { LocationSelect } from "@/components/LocationSelect";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, isAfter, isBefore, startOfDay } from "date-fns";
@@ -48,6 +49,7 @@ import {
 const HomePage = () => {
   const categories = ["Maisons", "Appartements", "Bureaux", "Chambres"];
   const { user } = useAuth();
+  usePageTitle(); // Utilise le hook pour mettre à jour le titre de la page
   const filterPanelRef = useRef<HTMLDivElement>(null);
   
   // États pour la langue et la devise
@@ -986,7 +988,7 @@ const HomePage = () => {
                 <img 
                   src="/icons/logo.svg" 
                   alt="Location Vacance Logo" 
-                  className="h-16 w-auto"
+                  className="h-10 w-auto md:h-16"
                 />
               </div>
               <p className="text-gray-600 text-sm leading-relaxed mb-4">
@@ -1094,7 +1096,7 @@ const HomePage = () => {
                 <img 
                   src="/2ClicToPay_logo.webp" 
                   alt="2ClicToPay Logo" 
-                  className="h-12 w-auto filter grayscale"
+                  className="h-10 w-auto md:h-12 filter grayscale"
                 />
               </div>
             </div>

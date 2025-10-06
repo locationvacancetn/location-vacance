@@ -331,7 +331,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center py-4">
           <Link to="/" className="flex items-center">
-            <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
+            <img src="/icons/logo.svg" alt="Logo" className="h-10 w-auto md:h-12" />
           </Link>
           
           <div className="flex items-center space-x-3">
@@ -468,7 +468,7 @@ const Navbar = () => {
                   {/* Header avec logo et bouton fermer */}
                   <div className="flex justify-between items-center">
                     <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center">
-                      <img src="/icons/logo.svg" alt="Logo" className="h-12 w-auto" />
+                      <img src="/icons/logo.svg" alt="Logo" className="h-10 w-auto" />
                     </Link>
                      <Button
                        variant="outline"

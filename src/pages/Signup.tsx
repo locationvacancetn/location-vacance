@@ -18,8 +18,8 @@ const SignupPage = () => {
               <SignupForm />
               {/* Lien vers connexion */}
               <div className="text-center">
-                <span className="text-muted-foreground">Déjà un compte ? </span>
-                <Link to="/login" className="text-primary hover:underline font-medium">
+                <span className="text-muted-foreground text-sm">Déjà un compte ? </span>
+                <Link to="/login" className="text-primary hover:underline font-medium text-sm">
                   Se connecter
                 </Link>
               </div>

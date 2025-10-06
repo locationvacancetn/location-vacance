@@ -7,6 +7,7 @@ import { useUpdateLastSignIn } from "@/hooks/useUpdateLastSignIn";
 import { useModalSystem } from "@/hooks/useModalSystem";
 import { ModalDisplay } from "@/components/ModalDisplay";
 import { useUserRole } from "@/hooks/useUserRole";
+import { GoogleAnalyticsTracker } from "@/components/GoogleAnalyticsTracker";
 import HomePage from "./pages/Home";
 import SignupPage from "./pages/Signup";
 import LoginPage from "./pages/Login";
@@ -33,6 +34,7 @@ const AppContent = () => {
     userRole: userRoleLoading ? undefined : userRole
   });
 
+
   return (
     <ErrorBoundary context="App">
       <QueryClientProvider client={queryClient}>
@@ -40,6 +42,9 @@ const AppContent = () => {
           <Toaster />
           <BrowserRouter>
             <ErrorBoundary context="Router">
+              {/* Tracker Google Analytics pour toutes les pages */}
+              <GoogleAnalyticsTracker />
+              
               {/* Modal global pour l'entrée sur le site */}
               <ModalDisplay 
                 modal={modal}
@@ -53,7 +58,7 @@ const AppContent = () => {
                 <Route path={ROUTES.LOGIN} element={<LoginPage />} />
                 <Route path={ROUTES.PROPERTY_DETAIL} element={<PropertyDetail />} />
                 <Route path={ROUTES.TEST_AUTH} element={<TestAuth />} />
-                <Route path="/test-slug-system" element={<TestSlugSystem />} />
+                <Route path={ROUTES.TEST_SLUG_SYSTEM} element={<TestSlugSystem />} />
                 
                 {/* Route dashboard protégée */}
                 <Route 
