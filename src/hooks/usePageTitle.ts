@@ -36,6 +36,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/admin/modals/add': 'Créer un Modal',
   '/dashboard/admin/modals/edit': 'Modifier un Modal',
   '/dashboard/admin/analytics': 'Analytics',
+  '/dashboard/admin/blogs': 'Gestion des Articles',
+  '/dashboard/admin/blogs/new': 'Nouvel Article',
   '/dashboard/users': 'Gestion des Utilisateurs',
   
   // Pages Owner
@@ -80,6 +82,8 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/dashboard/admin/properties': 'Gérez toutes les propriétés de la plateforme',
   '/dashboard/admin/konnect': 'Configurez les paramètres de l\'intégration avec le service de paiement Konnect',
   '/dashboard/admin/email': 'Gérez l\'envoi d\'emails et les paramètres SMTP',
+  '/dashboard/admin/blogs': 'Gérez vos articles de blog et optimisez leur référencement',
+  '/dashboard/admin/blogs/new': 'Créez un nouvel article de blog optimisé SEO',
   '/dashboard/admin/seo': 'Optimisez le référencement de vos annonces pour améliorer leur visibilité',
   '/dashboard/admin/subscriptions': 'Gérez les plans d\'abonnement pour les propriétaires et annonceurs',
   '/dashboard/admin/subscriptions/add': 'Définissez les détails du nouveau plan d\'abonnement',
@@ -118,7 +122,7 @@ export const usePageTitle = () => {
     let description = PAGE_DESCRIPTIONS[pathname];
     
     // Gestion spéciale pour les routes dynamiques d'édition (AVANT la correspondance par préfixe)
-    if (!title && pathname.includes('/edit/')) {
+    if (!title) {
       if (pathname.includes('/subscriptions/edit/')) {
         title = PAGE_TITLES['/dashboard/admin/subscriptions/edit'];
         description = PAGE_DESCRIPTIONS['/dashboard/admin/subscriptions/edit'];
@@ -128,6 +132,15 @@ export const usePageTitle = () => {
       } else if (pathname.includes('/edit-property/')) {
         title = PAGE_TITLES['/dashboard/edit-property'];
         description = PAGE_DESCRIPTIONS['/dashboard/edit-property'];
+      } else if (pathname.includes('/blogs/') && pathname !== '/dashboard/admin/blogs') {
+        title = 'Modifier l\'Article';
+        description = 'Modifiez votre article de blog et optimisez son référencement';
+      } else if (pathname.includes('/edit/')) {
+        // Autres routes d'édition
+        if (pathname.includes('/blogs/')) {
+          title = 'Modifier l\'Article';
+          description = 'Modifiez votre article de blog et optimisez son référencement';
+        }
       }
     }
     

@@ -7,7 +7,7 @@ import {
   Calendar, 
   MapPin, 
   Wrench, 
-  HomeIcon, 
+  Warehouse, 
   CreditCard, 
   Shield, 
   Activity, 
@@ -19,7 +19,8 @@ import {
   Heart,
   MessageSquare,
   Bell,
-  Search
+  Search,
+  BookOpen
 } from 'lucide-react';
 
 /**
@@ -28,6 +29,7 @@ import {
 const getMobileMenuItems = (role: string) => {
   const commonItems = [
     { label: 'Dashboard', path: '/dashboard', icon: Home },
+    { label: 'Blog', path: '/blog', icon: BookOpen },
     { label: 'Paramètres', path: '/dashboard/settings', icon: Settings },
   ];
 
@@ -41,9 +43,10 @@ const getMobileMenuItems = (role: string) => {
         { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
         { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
         { label: 'Caractéristiques', path: '/dashboard/admin/characteristics', icon: Settings },
-        { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
+        { label: 'Types', path: '/dashboard/admin/property-types', icon: Warehouse },
         { label: 'Configuration Konnect', path: '/dashboard/admin/konnect', icon: CreditCard },
         { label: 'SEO', path: '/dashboard/admin/seo', icon: Search },
+        { label: 'Blog', path: '/dashboard/admin/blogs', icon: BookOpen },
         { label: 'Système', path: '/dashboard/system', icon: Shield },
         { label: 'Logs', path: '/dashboard/logs', icon: Activity },
         { label: 'Profil', path: '/dashboard/profile', icon: User },

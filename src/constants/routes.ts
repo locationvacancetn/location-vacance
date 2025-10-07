@@ -9,6 +9,8 @@ export const ROUTES = {
   LOGIN: '/login',
   SIGNUP: '/signup',
   PROPERTY_DETAIL: '/property/:slug',
+  BLOG: '/blog',
+  BLOG_DETAIL: '/blog/:slug',
   TEST_AUTH: '/test-auth',
   TEST_SLUG_SYSTEM: '/test-slug-system',
   NOT_FOUND: '*',

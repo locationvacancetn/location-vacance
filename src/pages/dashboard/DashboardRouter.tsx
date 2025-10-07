@@ -30,6 +30,9 @@ import AddSubscriptionPlan from './admin/AddSubscriptionPlan';
 import ModalsManagement from './admin/ModalsManagement';
 import AddModal from './admin/AddModal';
 import { AnalyticsDashboard } from './admin/AnalyticsDashboard';
+import BlogList from './admin/BlogList';
+import BlogManagement from './admin/BlogManagement';
+import TestBlogSystem from '../TestBlogSystem';
 
 
 // Import des pages Profil par rôle
@@ -177,6 +180,10 @@ export const DashboardRouter = () => {
               <Route path="/add-user" element={<AddUser />} />
               <Route path="/add-property" element={<AddPropertyWizard />} />
               <Route path="/edit-property/:id" element={<AddPropertyWizard />} />
+              <Route path="/blogs" element={<BlogList />} />
+              <Route path="/blogs/new" element={<BlogManagement />} />
+              <Route path="/blogs/:id" element={<BlogManagement />} />
+              <Route path="/test-blog" element={<TestBlogSystem />} />
               <Route path="/*" element={
                 <DashboardNotFound 
                   section="admin" 

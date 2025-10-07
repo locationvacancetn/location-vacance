@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AlertDialog,
@@ -34,7 +36,9 @@ import {
   Clock,
   EyeOff,
   CheckCircle,
-  SquareCheckBig
+  SquareCheckBig,
+  Filter,
+  XCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -54,7 +58,11 @@ const PropertiesManagement = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [cityFilter, setCityFilter] = useState<string>("all");
   const [propertyTypes, setPropertyTypes] = useState<Record<string, string>>({});
+  const [cities, setCities] = useState<Record<string, string>>({});
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [propertyToDeactivate, setPropertyToDeactivate] = useState<Property | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -65,6 +73,7 @@ const PropertiesManagement = () => {
   useEffect(() => {
     loadProperties();
     loadPropertyTypes();
+    loadCities();
   }, []);
 
   const loadProperties = async () => {
@@ -104,6 +113,29 @@ const PropertiesManagement = () => {
       setPropertyTypes(typesMap);
     } catch (error) {
       console.error("Erreur lors du chargement des types:", error);
+    }
+  };
+
+  const loadCities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cities')
+        .select('id, name')
+        .eq('is_active', true);
+      
+      if (error) {
+        console.error("Erreur lors du chargement des villes:", error);
+        return;
+      }
+      
+      const citiesMap: Record<string, string> = {};
+      data?.forEach(city => {
+        citiesMap[city.id] = city.name;
+      });
+      
+      setCities(citiesMap);
+    } catch (error) {
+      console.error("Erreur lors du chargement des villes:", error);
     }
   };
 
@@ -190,9 +222,14 @@ const PropertiesManagement = () => {
   const filteredProperties = properties.filter(property => {
     const matchesSearch = !searchTerm || 
       property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      propertyTypes[property.property_type_id]?.toLowerCase().includes(searchTerm.toLowerCase());
+      propertyTypes[property.property_type_id]?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cities[property.city_id]?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch;
+    const matchesStatus = statusFilter === "all" || property.status === statusFilter;
+    const matchesType = typeFilter === "all" || property.property_type_id === typeFilter;
+    const matchesCity = cityFilter === "all" || property.city_id === cityFilter;
+    
+    return matchesSearch && matchesStatus && matchesType && matchesCity;
   });
 
   const getStatusButton = (property: Property) => {
@@ -284,16 +321,119 @@ const PropertiesManagement = () => {
          </Button>
        </div>
 
-      {/* Barre de recherche */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Rechercher par nom ou type..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-80 pl-10 pr-4 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring text-sm placeholder:text-gray-400"
-        />
+      {/* Cartes de statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2">
+              <Home className="w-5 h-5 text-blue-500" />
+              <div>
+                <p className="text-2xl font-bold">{properties.length}</p>
+                <p className="text-sm text-muted-foreground">Total</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-green-500" />
+              <div>
+                <p className="text-2xl font-bold">
+                  {properties.filter(p => p.status === 'active').length}
+                </p>
+                <p className="text-sm text-muted-foreground">Actives</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-yellow-500" />
+              <div>
+                <p className="text-2xl font-bold">
+                  {properties.filter(p => p.status === 'pending_approval').length}
+                </p>
+                <p className="text-sm text-muted-foreground">En attente</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-500" />
+              <div>
+                <p className="text-2xl font-bold">
+                  {properties.filter(p => p.status === 'inactive' || p.status === 'pending_payment').length}
+                </p>
+                <p className="text-sm text-muted-foreground">Inactives</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Barre de recherche et filtres */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Recherche */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Titre, type, ville..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full"
+          />
+        </div>
+        
+        {/* Filtre par statut */}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Tous les statuts" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="pending_payment">En attente de paiement</SelectItem>
+            <SelectItem value="pending_approval">En attente d'approbation</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        {/* Filtre par type */}
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-full">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Tous les types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les types</SelectItem>
+            {Object.entries(propertyTypes).map(([id, name]) => (
+              <SelectItem key={id} value={id}>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        {/* Filtre par ville */}
+        <Select value={cityFilter} onValueChange={setCityFilter}>
+          <SelectTrigger className="w-full">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Toutes les villes" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les villes</SelectItem>
+            {Object.entries(cities).map(([id, name]) => (
+              <SelectItem key={id} value={id}>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Compteur */}
@@ -360,7 +500,7 @@ const PropertiesManagement = () => {
                   <TableRow key={property.id}>
                      {/* Image */}
                      <TableCell>
-                       <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
+                       <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
                          {property.images && property.images.length > 0 ? (
                            <img
                              src={property.images[0]}
@@ -371,7 +511,7 @@ const PropertiesManagement = () => {
                            />
                          ) : (
                            <div className="w-full h-full flex items-center justify-center">
-                             <Home className={`h-8 w-8 text-muted-foreground ${
+                             <Home className={`h-6 w-6 text-muted-foreground ${
                                property.status === 'inactive' ? 'grayscale' : ''
                              }`} />
                            </div>
@@ -440,47 +580,50 @@ const PropertiesManagement = () => {
 
                     {/* Actions */}
                     <TableCell>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-end space-x-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 w-8 p-0 border border-[#e2c044] hover:border-[#e2c044] bg-transparent hover:bg-[#e2c044] text-[#e2c044] hover:text-white transition-colors"
-                          title="Mise en vedette"
-                        >
-                          <Star className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 w-8 p-0 border border-[#385aa2] hover:border-[#385aa2] bg-transparent hover:bg-[#385aa2] text-[#385aa2] hover:text-white transition-colors"
-                          onClick={() => {
-                            navigate(`/dashboard/owner/edit-property/${property.id}`);
-                          }}
-                          title="Modifier"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 w-8 p-0 border border-[#d54745] hover:border-[#d54745] bg-transparent hover:bg-[#d54745] text-[#d54745] hover:text-white transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteClick(property);
                           }}
                           title="Supprimer"
+                          className="h-8 w-8 p-0 hover:text-red-600 hover:border-red-300"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
+                        
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 w-8 p-0 border border-[#387e64] hover:border-[#387e64] bg-transparent hover:bg-[#387e64] text-[#387e64] hover:text-white transition-colors"
-                          onClick={() => window.open(`/property/${property.slug}`, '_blank')}
-                          title="Voir"
+                          title="Mise en vedette"
+                          className="h-8 w-8 p-0 hover:text-[#e2c044] hover:border-[#e2c044]"
+                        >
+                          <Star className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title="Voir les détails"
+                          className="h-8 w-8 p-0"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigate(`/dashboard/owner/edit-property/${property.id}`);
+                          }}
+                          title="Modifier"
+                          className="h-8 w-8 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        
                         <div className="ml-1">
                           {getStatusButton(property)}
                         </div>
@@ -538,7 +681,7 @@ const PropertiesManagement = () => {
            <div className="space-y-3">
                   {/* En-tête avec image et statut */}
                   <div className="flex items-start gap-3">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                      {property.images && property.images.length > 0 ? (
                        <img
                          src={property.images[0]}
@@ -605,48 +748,47 @@ const PropertiesManagement = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 w-8 p-0 border border-[#d54745] hover:border-[#d54745] bg-transparent hover:bg-[#d54745] text-[#d54745] hover:text-white transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteClick(property);
                         }}
                         title="Supprimer"
+                        className="h-8 w-8 p-0 hover:text-red-600 hover:border-red-300"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
-                      
-                      {/* Bouton Modifier */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 border border-[#385aa2] hover:border-[#385aa2] bg-transparent hover:bg-[#385aa2] text-[#385aa2] hover:text-white transition-colors"
-                        onClick={() => {
-                          navigate(`/dashboard/owner/edit-property/${property.id}`);
-                        }}
-                        title="Modifier"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      
-                      {/* Bouton Voir */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 border border-[#387e64] hover:border-[#387e64] bg-transparent hover:bg-[#387e64] text-[#387e64] hover:text-white transition-colors"
-                        onClick={() => window.open(`/property/${property.slug}`, '_blank')}
-                        title="Voir"
-                      >
-                        <Eye className="h-4 w-4" />
                       </Button>
                       
                       {/* Bouton Mise en vedette */}
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 w-8 p-0 border border-[#e2c044] hover:border-[#e2c044] bg-transparent hover:bg-[#e2c044] text-[#e2c044] hover:text-white transition-colors"
                         title="Mise en vedette"
+                        className="h-8 w-8 p-0 hover:text-[#e2c044] hover:border-[#e2c044]"
                       >
                         <Star className="h-4 w-4" />
+                      </Button>
+                      
+                      {/* Bouton Voir */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        title="Voir les détails"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      
+                      {/* Bouton Modifier */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigate(`/dashboard/owner/edit-property/${property.id}`);
+                        }}
+                        title="Modifier"
+                        className="h-8 w-8 p-0 hover:text-[#385aa2] hover:border-[#385aa2]"
+                      >
+                        <Edit className="h-4 w-4" />
                       </Button>
                     </div>
                     

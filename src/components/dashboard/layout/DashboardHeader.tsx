@@ -1,6 +1,7 @@
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -37,7 +38,8 @@ import {
   Package,
   Mail,
   PictureInPicture2,
-  Monitor
+  Monitor,
+  BookOpen
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
@@ -58,6 +60,7 @@ const getMobileMenuItems = (role: string) => {
         { label: 'Utilisateurs', path: '/dashboard/admin/users', icon: Users },
         { label: 'SEO', path: '/dashboard/admin/seo', icon: Search },
         { label: 'Email', path: '/dashboard/admin/email', icon: Mail },
+        { label: 'Blogs', path: '/dashboard/admin/blogs', icon: BookOpen },
         { label: 'Modals', path: '/dashboard/admin/modals', icon: PictureInPicture2 },
         { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
         { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
@@ -146,6 +149,7 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
   const { userProfile, userRole } = useUserRole();
   const { signOut } = useAuth();
   const { title, description } = usePageTitle();
+  const scrollToTop = useScrollToTop();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const roleInfo = getRoleInfo(userRole || 'tenant');
@@ -317,7 +321,10 @@ export const DashboardHeader = ({ onMobileMenuToggle }: DashboardHeaderProps) =>
                           <Link 
                             key={item.path} 
                             to={item.path} 
-                            onClick={() => setIsMobileMenuOpen(false)}
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              scrollToTop();
+                            }}
                           >
                             <Button 
                               variant={isActive ? "default" : "outline"} 

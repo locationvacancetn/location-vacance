@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -36,12 +37,13 @@ import {
   MapPin,
   Wrench,
   X,
-  HomeIcon,
+  Warehouse,
   CreditCard,
   Mail,
   Package,
   PictureInPicture2,
-  Monitor
+  Monitor,
+  BookOpen
 } from 'lucide-react';
 
 // Configuration des menus par rôle - STRUCTURE UNIFIÉE
@@ -63,9 +65,10 @@ const getMenuItems = (role: string) => {
         { label: 'Utilisateurs', path: '/dashboard/admin/users', icon: Users },
         { label: 'SEO', path: '/dashboard/admin/seo', icon: Search },
         { label: 'Email', path: '/dashboard/admin/email', icon: Mail },
+        { label: 'Blogs', path: '/dashboard/admin/blogs', icon: BookOpen },
         { label: 'Modals', path: '/dashboard/admin/modals', icon: PictureInPicture2 },
         { label: 'Villes & Régions', path: '/dashboard/admin/cities', icon: MapPin },
-        { label: 'Types', path: '/dashboard/admin/property-types', icon: HomeIcon },
+        { label: 'Types', path: '/dashboard/admin/property-types', icon: Warehouse },
         { label: 'Équipements', path: '/dashboard/admin/equipments', icon: Wrench },
         { label: 'Caractéristiques', path: '/dashboard/admin/characteristics', icon: Settings },
         { label: 'Abonnements', path: '/dashboard/admin/subscriptions', icon: Package },
@@ -113,6 +116,7 @@ export const DashboardSidebar = ({ onMobileClose }: DashboardSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { userRole } = useUserRole();
   const { signOut } = useAuth();
+  const scrollToTop = useScrollToTop();
   const location = useLocation();
 
   const menuItems = getMenuItems(userRole || 'tenant');
@@ -122,6 +126,8 @@ export const DashboardSidebar = ({ onMobileClose }: DashboardSidebarProps) => {
     if (onMobileClose) {
       onMobileClose();
     }
+    // Scroll vers le haut après navigation
+    scrollToTop();
   };
 
   const handleToggleCollapse = () => {

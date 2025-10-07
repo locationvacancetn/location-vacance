@@ -2,16 +2,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useUpdateLastSignIn } from "@/hooks/useUpdateLastSignIn";
 import { useModalSystem } from "@/hooks/useModalSystem";
 import { ModalDisplay } from "@/components/ModalDisplay";
 import { useUserRole } from "@/hooks/useUserRole";
 import { GoogleAnalyticsTracker } from "@/components/GoogleAnalyticsTracker";
+import ScrollToTop from "./components/ScrollToTop";
 import HomePage from "./pages/Home";
 import SignupPage from "./pages/Signup";
 import LoginPage from "./pages/Login";
 import PropertyDetail from "./pages/PropertyDetail";
+import BlogPage from "./pages/Blog";
+import BlogDetailsPage from "./pages/BlogDetails";
 import TestAuth from "./pages/TestAuth";
 import TestSlugSystem from "./pages/TestSlugSystem";
 import NotFound from "./pages/NotFound";
@@ -39,8 +43,10 @@ const AppContent = () => {
     <ErrorBoundary context="App">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
+          <HelmetProvider>
+            <Toaster />
+            <BrowserRouter>
+              <ScrollToTop />
             <ErrorBoundary context="Router">
               {/* Tracker Google Analytics pour toutes les pages */}
               <GoogleAnalyticsTracker />
@@ -57,6 +63,8 @@ const AppContent = () => {
                 <Route path={ROUTES.SIGNUP} element={<SignupPage />} />
                 <Route path={ROUTES.LOGIN} element={<LoginPage />} />
                 <Route path={ROUTES.PROPERTY_DETAIL} element={<PropertyDetail />} />
+                <Route path={ROUTES.BLOG} element={<BlogPage />} />
+                <Route path={ROUTES.BLOG_DETAIL} element={<BlogDetailsPage />} />
                 <Route path={ROUTES.TEST_AUTH} element={<TestAuth />} />
                 <Route path={ROUTES.TEST_SLUG_SYSTEM} element={<TestSlugSystem />} />
                 
@@ -74,7 +82,8 @@ const AppContent = () => {
                 <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
               </Routes>
             </ErrorBoundary>
-          </BrowserRouter>
+            </BrowserRouter>
+          </HelmetProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>
