@@ -312,13 +312,12 @@ export class GoogleAnalyticsService {
 
   /**
    * Vide le cache (force un nouveau token)
+   * ✅ OPT-001 : Le rechargement de page est laissé au composant appelant
    */
   clearCache(): void {
     this.accessToken = null;
     this.cache.clear(); // Vider le cache des données
-
-    // Forcer le rafraîchissement immédiat
-    window.location.reload();
+    // Le composant appelant décide s'il veut rafraîchir les données
   }
 }
 
