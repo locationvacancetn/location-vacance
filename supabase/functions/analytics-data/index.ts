@@ -1,14 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders, getPreflightHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
+  // 🔒 SEC-006: Récupérer l'origine de la requête
+  const origin = req.headers.get('origin');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: getPreflightHeaders(origin) })
   }
 
   try {
@@ -73,7 +72,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify(data),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
         status: 200,
       }
     )
@@ -86,7 +85,7 @@ serve(async (req) => {
         details: 'Google Analytics data retrieval failed'
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
         status: 500,
       }
     )

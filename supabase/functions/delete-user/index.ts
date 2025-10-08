@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders, getPreflightHeaders } from '../_shared/cors.ts'
 
 interface DeleteUserRequest {
   userId: string;
@@ -12,9 +8,12 @@ interface DeleteUserRequest {
 }
 
 serve(async (req) => {
+  // 🔒 SEC-006: Récupérer l'origine de la requête
+  const origin = req.headers.get('origin');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: getPreflightHeaders(origin) })
   }
 
   try {
@@ -35,7 +34,7 @@ serve(async (req) => {
         }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
         }
       )
     }
@@ -54,7 +53,7 @@ serve(async (req) => {
         }),
         { 
           status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
         }
       )
     }
@@ -66,7 +65,7 @@ serve(async (req) => {
         }),
         { 
           status: 403, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
         }
       )
     }
@@ -85,7 +84,7 @@ serve(async (req) => {
         }),
         { 
           status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
         }
       )
     }
@@ -97,7 +96,7 @@ serve(async (req) => {
         }),
         { 
           status: 403, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
         }
       )
     }
@@ -117,7 +116,7 @@ serve(async (req) => {
         }),
         { 
           status: 403, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
         }
       )
     }

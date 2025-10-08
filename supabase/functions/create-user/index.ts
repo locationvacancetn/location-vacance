@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { getCorsHeaders, getPreflightHeaders } from '../_shared/cors.ts';
 
 // Interface pour les données de création d'utilisateur
 // Correspond EXACTEMENT aux champs de votre table profiles
@@ -32,13 +33,21 @@ interface CreateUserResponse {
 }
 
 Deno.serve(async (req: Request) => {
+  // 🔒 SEC-006: Récupérer l'origine de la requête
+  const origin = req.headers.get('origin');
+  
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: getPreflightHeaders(origin) });
+  }
+  
   // Vérifier que la méthode est POST
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ success: false, error: 'Méthode non autorisée' }),
       { 
         status: 405, 
-        headers: { 'Content-Type': 'application/json' } 
+        headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
       }
     );
   }
@@ -242,9 +251,8 @@ Deno.serve(async (req: Request) => {
       { 
         status: 201, 
         headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+          ...getCorsHeaders(origin),
+          'Content-Type': 'application/json'
         } 
       }
     );

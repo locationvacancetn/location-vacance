@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders, getPreflightHeaders, validateOrigin } from '../_shared/cors.ts'
 
 interface EmailRequest {
   to: string;
@@ -15,10 +11,17 @@ interface EmailRequest {
 }
 
 serve(async (req) => {
+  // 🔒 SEC-006: Récupérer l'origine de la requête
+  const origin = req.headers.get('origin');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: getPreflightHeaders(origin) })
   }
+
+  // 🔒 SEC-006: Valider l'origine (optionnel - plus strict)
+  // const originError = validateOrigin(origin);
+  // if (originError) return originError;
 
   try {
     // Initialize Supabase client with service role key
@@ -39,7 +42,7 @@ serve(async (req) => {
         }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
         }
       )
     }
@@ -54,7 +57,7 @@ serve(async (req) => {
         }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
         }
       )
     }
@@ -78,7 +81,7 @@ serve(async (req) => {
         }),
         { 
           status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
         }
       );
     }
