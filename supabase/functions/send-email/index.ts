@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { getCorsHeaders, getPreflightHeaders } from '../_shared/cors.ts'
+import { validateEmail } from '../_shared/validation.ts'
 
 interface EmailRequest {
   to: string;
@@ -205,8 +206,8 @@ serve(async (req) => {
     }
 
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(to)) {
+    // ✅ CODE-003 : Utilise la fonction centralisée de validation
+    if (!validateEmail(to)) {
       return new Response(
         JSON.stringify({ 
           error: 'Format d\'email invalide' 

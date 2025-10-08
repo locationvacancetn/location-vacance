@@ -1,5 +1,6 @@
 import { EmailConfigService, EmailConfig } from './email-config-service';
 import { EmailServiceSecure } from './email-service-secure';
+import { validateEmail } from './utils/validation';
 
 export interface EmailRequest {
   to: string;
@@ -117,10 +118,10 @@ export class EmailService {
 
   /**
    * Valide le format d'un email
+   * ✅ CODE-003 : Utilise la fonction centralisée de validation
    */
   static validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return validateEmail(email);
   }
 
   /**

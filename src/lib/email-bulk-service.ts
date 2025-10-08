@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { EmailService } from './email-service';
 import { USER_ROLES } from './constants';
+import { validateEmailList } from './utils/validation';
 
 export interface BulkEmailRequest {
   recipients: 'single' | 'all' | 'role' | 'specific';
@@ -71,21 +72,10 @@ export class EmailBulkService {
 
   /**
    * Valide les emails spécifiques
+   * ✅ CODE-003 : Utilise la fonction centralisée de validation
    */
   static validateSpecificEmails(emails: string[]): { valid: string[]; invalid: string[] } {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const valid: string[] = [];
-    const invalid: string[] = [];
-
-    emails.forEach(email => {
-      if (emailRegex.test(email.trim())) {
-        valid.push(email.trim());
-      } else {
-        invalid.push(email);
-      }
-    });
-
-    return { valid, invalid };
+    return validateEmailList(emails);
   }
 
   /**

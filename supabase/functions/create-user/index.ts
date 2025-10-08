@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { validateEmail } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -138,8 +139,8 @@ Deno.serve(async (req: Request) => {
     }
 
     // Validation de l'email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userData.email)) {
+    // ✅ CODE-003 : Utilise la fonction centralisée de validation
+    if (!validateEmail(userData.email)) {
       return new Response(
         JSON.stringify({ 
           success: false, 
