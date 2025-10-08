@@ -46,8 +46,6 @@ serve(async (req) => {
     if (!accessToken) {
       throw new Error('Failed to obtain access token from Google')
     }
-
-    console.log('✅ Real Google Analytics token obtained successfully!')
     
     return new Response(
       JSON.stringify({

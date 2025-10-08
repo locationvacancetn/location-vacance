@@ -45,9 +45,6 @@ serve(async (req) => {
       }
     }
 
-    console.log('🔧 Configuration reçue:', JSON.stringify(config, null, 2))
-    console.log('📊 Requête API:', JSON.stringify(requestBody, null, 2))
-
     // Créer les headers
     const headers = new Headers()
     headers.set('Authorization', `Bearer ${accessToken}`)
@@ -61,13 +58,11 @@ serve(async (req) => {
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error('❌ Google Analytics API error:', errorText)
+      const errorText = await response.text()  
       throw new Error(`Analytics API request failed: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('✅ Données Google Analytics reçues:', JSON.stringify(data, null, 2))
 
     return new Response(
       JSON.stringify(data),
@@ -78,7 +73,6 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('❌ Error in analytics-data:', error.message)
     return new Response(
       JSON.stringify({ 
         error: error.message,

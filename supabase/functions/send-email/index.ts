@@ -277,15 +277,6 @@ serve(async (req) => {
     // Close connection
     await client.close();
 
-    // Log success
-    console.log(`Email envoyé avec succès à ${to}`, {
-      subject,
-      isTest,
-      timestamp: new Date().toISOString(),
-      smtpHost,
-      smtpUser
-    });
-
     return new Response(
       JSON.stringify({ 
         success: true, 

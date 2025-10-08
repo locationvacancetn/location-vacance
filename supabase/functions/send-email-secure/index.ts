@@ -103,13 +103,6 @@ serve(async (req) => {
       decodedPassword = smtpPassword;
     }
 
-    console.log('📧 Envoi email sécurisé via Edge Function...', {
-      to: emailData.to,
-      subject: emailData.subject,
-      smtp_host: emailConfig.smtp_host,
-      smtp_user: emailConfig.smtp_user
-    });
-
     // ✅ Appeler l'API PHP avec la configuration complète (depuis le serveur)
     const response = await fetch('https://location-vacance.tn/send-email.php', {
       method: 'POST',
@@ -142,13 +135,6 @@ serve(async (req) => {
     if (!response.ok) {
       throw new Error(result.error || `Erreur HTTP ${response.status}`);
     }
-
-    // Log success
-    console.log(`✅ Email envoyé avec succès à ${emailData.to}`, {
-      subject: emailData.subject,
-      isTest: emailData.isTest,
-      timestamp: new Date().toISOString(),
-    });
 
     return new Response(
       JSON.stringify({

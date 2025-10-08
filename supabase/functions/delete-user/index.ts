@@ -139,13 +139,6 @@ serve(async (req) => {
       // On continue même si la suppression auth échoue, le profil est déjà supprimé
     }
 
-    // Log success
-    console.log(`Utilisateur supprimé avec succès: ${userId}`, {
-      adminUserId,
-      timestamp: new Date().toISOString(),
-      authDeleted: !authError
-    })
-
     return new Response(
       JSON.stringify({ 
         success: true, 
