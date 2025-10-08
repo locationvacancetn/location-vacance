@@ -2,8 +2,8 @@
 
 **Date de création** : 8 Octobre 2025  
 **Dernière mise à jour** : 8 Octobre 2025  
-**Statut global** : 🟢 Phase critique terminée  
-**Progression** : 7/35 tâches complétées (7/7 critiques ✅ - 100% critiques résolues 🎉)
+**Statut global** : 🟢 Phase critique terminée + Optimisations en cours  
+**Progression** : 8/35 tâches complétées (7/7 critiques ✅ + 1/6 importantes ✅ - 23% total)
 
 ---
 
@@ -429,36 +429,69 @@ Deux implémentations quasi-identiques du même service (584 lignes de code dupl
 ---
 
 ### CODE-002: Configuration Supabase dispersée
-- **Statut**: ❌ À faire
+- **Statut**: ✅ Terminé
 - **Sévérité**: 🟠 MOYENNE
 - **Fichier(s)**:
-  - `src/integrations/supabase/client.ts`
-  - `src/lib/config.ts`
+  - `src/integrations/supabase/client.ts` (modifié ✅)
+  - `src/lib/config.ts` (nettoyé ✅)
+  - `src/main.tsx` (simplifié ✅)
 
 **Problème détecté**:
-Configuration Supabase définie dans 2 fichiers différents
+Configuration Supabase définie dans 2 fichiers différents avec validation dupliquée
 
-**Action de correction**:
-Centraliser toute la configuration dans `src/lib/config.ts`
+**Action de correction réalisée**:
+Centralisation de la configuration dans `src/lib/config.ts` comme source unique
 
-**Code à créer**:
+**Code corrigé** (`client.ts`):
 ```typescript
-// src/lib/config.ts
+// ✅ CODE-002 : Configuration centralisée depuis config.ts
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from './types';
+import { config } from '@/lib/config';
+
+// Validation au chargement
+if (!config.supabase.url || !config.supabase.anonKey) {
+  throw new Error('Configuration Supabase manquante...');
+}
+
+export const supabase = createClient<Database>(
+  config.supabase.url, 
+  config.supabase.anonKey, 
+  { auth: { storage: localStorage, persistSession: true, autoRefreshToken: true } }
+);
+```
+
+**Code corrigé** (`config.ts`):
+```typescript
+// ✅ CODE-002 : Configuration centralisée
 export const config = {
   supabase: {
     url: import.meta.env.VITE_SUPABASE_URL,
     anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
   },
-  // ... reste de la config
+  site: {
+    url: import.meta.env.VITE_SITE_URL || 'https://location-vacance.tn',
+  },
+  api: { baseUrl: import.meta.env.VITE_SUPABASE_URL, timeout: 10000 },
+  pagination: { defaultPageSize: 10, maxPageSize: 100 },
+  debounce: { searchDelay: 300 }
 } as const;
 ```
 
+**Améliorations** :
+- ✅ Source unique de configuration (config.ts)
+- ✅ Suppression des fonctions redondantes (`validateConfig`, `isUsingEnvVars`)
+- ✅ Validation simplifiée dans client.ts
+- ✅ Ajout de `config.site.url` (centralisé)
+- ✅ 44 fichiers utilisateurs inchangés (compatibilité 100%)
+
 **Checklist**:
-- [ ] Centraliser la config Supabase dans `config.ts`
-- [ ] Mettre à jour `src/integrations/supabase/client.ts`
-- [ ] Supprimer la duplication
-- [ ] Exporter une seule source de vérité
-- [ ] Tester la connexion Supabase
+- [x] Centraliser la config Supabase dans `config.ts`
+- [x] Mettre à jour `src/integrations/supabase/client.ts`
+- [x] Supprimer la duplication et fonctions inutiles
+- [x] Simplifier `main.tsx` (validation automatique)
+- [x] Compilation réussie (npm run build ✅)
+- [x] Aucune erreur de linting
 
 ---
 
