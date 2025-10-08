@@ -269,27 +269,46 @@ export class EmailConfigService {
   }
 
   /**
-   * Teste une configuration email
+   * 🔴 FONCTION DÉSACTIVÉE - SEC-007
+   * 
+   * Cette fonction a été désactivée car elle présente 2 failles de sécurité :
+   * 1. URL hardcodée (https://location-vacance.tn/send-email.php)
+   * 2. Mot de passe SMTP envoyé depuis le client (faille SEC-004)
+   * 
+   * ⚠️ NE PAS RÉACTIVER sans créer une Edge Function sécurisée
+   * 
+   * TODO : Créer une Edge Function 'test-email-config' qui :
+   * - Reçoit uniquement l'ID de config ou les paramètres SMTP
+   * - Lit/décode le mot de passe côté serveur
+   * - Teste l'envoi d'email
+   * - Retourne succès/échec sans exposer le mot de passe
    */
   static async testConfig(config: EmailConfigUpdate): Promise<{ success: boolean; error?: string }> {
+    console.warn('⚠️ testConfig() est désactivée pour des raisons de sécurité (SEC-007)');
+    
+    return {
+      success: false,
+      error: 'Fonction de test désactivée temporairement pour des raisons de sécurité. Utilisez l\'envoi d\'email test depuis le tableau de bord.'
+    };
+    
+    /* ==================== CODE DÉSACTIVÉ (SEC-007) ====================
     try {
-      // Utiliser l'API PHP pour tester la configuration
+      // 🔴 FAILLE 1 : URL hardcodée
       const response = await fetch('https://location-vacance.tn/send-email.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          to: config.from_email, // Envoyer à soi-même pour le test
+          to: config.from_email,
           subject: 'Test de configuration SMTP',
           message: 'Ceci est un test de configuration SMTP.',
           isTest: true,
-          // Paramètres SMTP personnalisés
           smtp_config: {
             host: config.smtp_host,
             port: config.smtp_port,
             user: config.smtp_user,
-            password: config.smtp_password,
+            password: config.smtp_password, // 🔴 FAILLE 2 : Mot de passe exposé côté client
             ssl: config.is_ssl
           }
         }),
@@ -312,6 +331,7 @@ export class EmailConfigService {
         error: error instanceof Error ? error.message : 'Erreur de connexion' 
       };
     }
+    ==================== FIN CODE DÉSACTIVÉ ==================== */
   }
 
   /**

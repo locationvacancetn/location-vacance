@@ -160,7 +160,7 @@ serve(async (req) => {
       }),
       { 
         status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
       }
     );
 
@@ -175,7 +175,7 @@ serve(async (req) => {
       }),
       { 
         status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
       }
     );
   }

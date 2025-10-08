@@ -16,6 +16,9 @@ import { EmailConfigService, EmailConfig, EmailConfigUpdate } from "@/lib/email-
 import { EmailBulkService, BulkEmailRequest } from "@/lib/email-bulk-service";
 import { USER_ROLES } from "@/lib/constants";
 
+// ✅ SEC-007 : URL du site depuis variable d'environnement
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://location-vacance.tn';
+
 interface EmailTestForm {
   to: string;
   subject: string;
@@ -104,7 +107,7 @@ export default function EmailSettings() {
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
             <td style="padding-right: 0px;padding-left: 0px;" align="center">
-            <a href="https://location-vacance.tn" target="_blank">
+            <a href="${SITE_URL}" target="_blank">
                 <img align="center" border="0" src="/icons/logo.svg" alt="Location Vacance" title="Location Vacance" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 31%;max-width: 148.8px;" width="148.8"/>
             </a>
             </td>
