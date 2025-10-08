@@ -1,4 +1,5 @@
 import { EmailConfigService, EmailConfig } from './email-config-service';
+import { EmailServiceSecure } from './email-service-secure';
 
 export interface EmailRequest {
   to: string;
@@ -20,9 +21,14 @@ export interface EmailResponse {
 
 export class EmailService {
   /**
-   * Envoie un email via l'API PHP avec configuration dynamique
+   * ✅ Envoie un email via Edge Function sécurisée (SEC-004 corrigé)
+   * 
+   * 🔄 ROLLBACK : Pour revenir à l'ancien système, décommentez le bloc ci-dessous
+   * et commentez la ligne "return EmailServiceSecure.sendEmail(emailData);"
    */
   static async sendEmail(emailData: EmailRequest): Promise<EmailResponse> {
+    /* ==================== ANCIEN SYSTÈME (ROLLBACK) ====================
+    // 🔴 FAILLE SEC-004 : Mot de passe SMTP exposé côté client (Base64)
     try {
       // Récupérer la configuration email active
       const emailConfig = await EmailConfigService.getActiveConfig();
@@ -55,7 +61,7 @@ export class EmailService {
             host: emailConfig.smtp_host,
             port: emailConfig.smtp_port,
             user: emailConfig.smtp_user,
-            password: emailConfig.smtp_password,
+            password: emailConfig.smtp_password, // 🔴 Mot de passe exposé
             ssl: emailConfig.is_ssl,
             from_email: emailConfig.from_email,
             from_name: emailConfig.from_name
@@ -90,6 +96,10 @@ export class EmailService {
         message: 'Erreur lors de l\'envoi de l\'email'
       };
     }
+    ==================== FIN ANCIEN SYSTÈME ====================  */
+
+    // ✅ NOUVEAU SYSTÈME SÉCURISÉ : Edge Function (mot de passe côté serveur uniquement)
+    return EmailServiceSecure.sendEmail(emailData);
   }
 
   /**
