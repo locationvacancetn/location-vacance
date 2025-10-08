@@ -49,7 +49,7 @@ export const useNotFound = ({
           label: `${section || 'main'}:${location.pathname}`,
           value: 1
         };
-        console.log('404 Error tracked for analytics:', analyticsData);
+
       } catch (error) {
         console.warn('Analytics tracking failed:', error);
       }

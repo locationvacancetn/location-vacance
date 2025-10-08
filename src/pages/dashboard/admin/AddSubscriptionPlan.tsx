@@ -276,9 +276,9 @@ const AddSubscriptionPlan = () => {
 
     setIsLoading(true);
     try {
-      console.log("📝 Sauvegarde du plan d'abonnement...");
-      console.log("Données du formulaire:", formData);
-      console.log("Fonctionnalités:", features);
+
+
+
 
       // Séparer les features par type (on n'utilise que features, pas highlights)
       const featuresList = features.filter(f => f.text.trim() !== "");
@@ -296,7 +296,7 @@ const AddSubscriptionPlan = () => {
         throw new Error(result.error || "Erreur lors de la sauvegarde");
       }
 
-      console.log("✅ Plan sauvegardé avec succès, ID:", result.planId);
+
 
       toast({
         title: "Succès",

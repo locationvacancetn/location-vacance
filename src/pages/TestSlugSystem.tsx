@@ -44,7 +44,7 @@ const TestSlugSystem = () => {
   const testDatabaseIntegration = async () => {
     try {
       const isAvailable = await PropertyService.checkSlugAvailability(generatedSlug);
-      console.log(`Slug "${generatedSlug}" disponible:`, isAvailable);
+
       
       if (isAvailable) {
         const uniqueSlug = await PropertyService.generateUniquePropertySlug(
@@ -53,7 +53,7 @@ const TestSlugSystem = () => {
           title,
           'Test Region'
         );
-        console.log('Slug unique généré:', uniqueSlug);
+
       }
     } catch (error) {
       console.error('Erreur lors du test d\'intégration:', error);

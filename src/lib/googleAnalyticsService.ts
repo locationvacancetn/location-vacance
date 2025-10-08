@@ -107,17 +107,17 @@ export class GoogleAnalyticsService {
       }
 
       const data = await response.json();
-      console.log('✅ Real Google Analytics data received!', data);
-      console.log('🔍 Data structure:', JSON.stringify(data, null, 2));
+
+
       
       // FORCER LE DEBUG - DÉSACTIVER LE CACHE TEMPORAIREMENT
-      console.log('🔧 CACHE DÉSACTIVÉ POUR DEBUG - NOUVELLES DONNÉES FRAÎCHES');
+
       
       // Debug: Afficher les premières lignes de données
       if (data.rows && data.rows.length > 0) {
-        console.log('🔍 First row data:', data.rows[0]);
-        console.log('🔍 Dimensions:', data.rows[0].dimensionValues);
-        console.log('🔍 Metrics:', data.rows[0].metricValues);
+
+
+
       }
       
       // Pour l'API temps réel, calculer le total des utilisateurs actifs
@@ -134,9 +134,9 @@ export class GoogleAnalyticsService {
       }
 
       // Debug: Afficher la structure exacte des données
-      console.log('🔍 Dimensions configurées:', ['pagePath', 'pageTitle', 'country']);
-      console.log('🔍 Première ligne de données:', data.rows?.[0]);
-      console.log('🔍 Toutes les lignes:', data.rows);
+
+
+
       
       // CORRECTION selon la documentation Google Analytics
       // Utiliser une Map pour agréger correctement les données
@@ -144,16 +144,16 @@ export class GoogleAnalyticsService {
       const countryMap = new Map<string, number>();
 
       data.rows?.forEach((row: any) => {
-        console.log('🔍 Processing row:', row);
-        console.log('🔍 Dimension values:', row.dimensionValues);
-        console.log('🔍 Metric values:', row.metricValues);
+
+
+
         
         const pagePath = row.dimensionValues?.[0]?.value || '';
         const pageTitle = row.dimensionValues?.[1]?.value || '';
         const country = row.dimensionValues?.[2]?.value || '';
         const users = parseInt(row.metricValues?.[0]?.value || '0');
 
-        console.log('🔍 Extracted data:', { pagePath, pageTitle, country, users });
+
 
         // Agréger les pages par pagePath
         if (pagePath) {
@@ -185,7 +185,7 @@ export class GoogleAnalyticsService {
         .sort((a, b) => b.activeUsers - a.activeUsers)
         .slice(0, 5);
 
-      console.log('🔍 Processed real-time data:', { activeUsers, topPages, topCountries });
+
 
       return {
         activeUsers,
@@ -236,7 +236,7 @@ export class GoogleAnalyticsService {
       }
 
       const data = await response.json();
-      console.log('✅ Real Google Analytics historical data received!', data);
+
       
       // Traitement des données
       const topPages = data.rows?.slice(0, 5).map((row: any) => ({
@@ -316,7 +316,7 @@ export class GoogleAnalyticsService {
   clearCache(): void {
     this.accessToken = null;
     this.cache.clear(); // Vider le cache des données
-    console.log('🗑️ Cache vidé - prochain appel sera frais');
+
     // Forcer le rafraîchissement immédiat
     window.location.reload();
   }

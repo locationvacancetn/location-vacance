@@ -61,7 +61,7 @@ export const AuthDebugger = () => {
 
   const handleValidateSession = async () => {
     const isValid = await checkSessionValidity();
-    console.log('Session validity check result:', isValid);
+
     refreshDebugInfo();
   };
 

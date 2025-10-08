@@ -87,7 +87,7 @@ export class BlogService {
       // Vérifier si le slug contient des caractères spéciaux problématiques
       const cleanSlug = decodeURIComponent(slug.trim());
       
-      console.log('Récupération du blog avec slug:', cleanSlug);
+
       
       const { data, error } = await supabase
         .from('blogs')
@@ -106,11 +106,11 @@ export class BlogService {
       }
       
       if (!data) {
-        console.log('Aucun blog trouvé avec ce slug');
+
         throw new Error('Blog non trouvé');
       }
       
-      console.log('Blog récupéré avec succès:', data.id, data.titre);
+
       
       // Convertir le type Json en type plus spécifique pour liens_internes
       const blogData: Blog = {

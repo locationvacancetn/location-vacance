@@ -176,7 +176,7 @@ export async function saveSubscriptionPlan(
       sort_order: 0, // Par défaut, peut être modifié plus tard
     };
 
-    console.log("📦 Données du plan à sauvegarder:", planData);
+
 
     // 5. Insérer le plan
     const { data: insertedPlan, error: planError } = await supabase
@@ -191,7 +191,7 @@ export async function saveSubscriptionPlan(
     }
 
     const planId = insertedPlan.id;
-    console.log("✅ Plan créé avec succès, ID:", planId);
+
 
     // 6. Insérer les limitations
     const limitations = prepareLimitations(formData.productType, formData);
@@ -202,7 +202,7 @@ export async function saveSubscriptionPlan(
         limitation_value: value,
       }));
 
-      console.log("🔒 Limitations à insérer:", limitationsToInsert);
+
 
       const { error: limitationsError } = await supabase
         .from("subscription_plan_limitations")
@@ -215,7 +215,7 @@ export async function saveSubscriptionPlan(
         throw new Error(`Erreur lors de l'ajout des limitations: ${limitationsError.message}`);
       }
 
-      console.log("✅ Limitations insérées avec succès");
+
     }
 
     // 7. Insérer les fonctionnalités (avec ordre préservé)
@@ -227,7 +227,7 @@ export async function saveSubscriptionPlan(
         sort_order: index, // ⭐ IMPORTANT : préserver l'ordre
       }));
 
-      console.log("✨ Fonctionnalités à insérer (avec ordre):", featuresToInsert);
+
 
       const { error: featuresError } = await supabase
         .from("subscription_plan_features")
@@ -240,7 +240,7 @@ export async function saveSubscriptionPlan(
         throw new Error(`Erreur lors de l'ajout des fonctionnalités: ${featuresError.message}`);
       }
 
-      console.log("✅ Fonctionnalités insérées avec succès");
+
     }
 
     // 8. Insérer les points forts (avec ordre préservé)
@@ -252,7 +252,7 @@ export async function saveSubscriptionPlan(
         sort_order: index, // ⭐ IMPORTANT : préserver l'ordre
       }));
 
-      console.log("🎯 Points forts à insérer (avec ordre):", highlightsToInsert);
+
 
       const { error: highlightsError } = await supabase
         .from("subscription_plan_features")
@@ -265,10 +265,10 @@ export async function saveSubscriptionPlan(
         throw new Error(`Erreur lors de l'ajout des points forts: ${highlightsError.message}`);
       }
 
-      console.log("✅ Points forts insérés avec succès");
+
     }
 
-    console.log("🎉 Plan d'abonnement créé avec succès !");
+
     return { success: true, planId };
 
   } catch (error: any) {
@@ -373,7 +373,7 @@ export async function updateSubscriptionPlan(
       sort_order: 0,
     };
 
-    console.log("📦 Données du plan à mettre à jour:", planData);
+
 
     // 5. Mettre à jour le plan
     const { data: updatedPlan, error: planError } = await supabase
@@ -388,7 +388,7 @@ export async function updateSubscriptionPlan(
       throw new Error(`Erreur lors de la mise à jour du plan: ${planError.message}`);
     }
 
-    console.log("✅ Plan mis à jour avec succès, ID:", updatedPlan.id);
+
 
     // 6. Supprimer les anciennes limitations
     const { error: deleteLimitationsError } = await supabase
@@ -410,7 +410,7 @@ export async function updateSubscriptionPlan(
         limitation_value: value,
       }));
 
-      console.log("🔒 Nouvelles limitations à insérer:", limitationsToInsert);
+
 
       const { error: limitationsError } = await supabase
         .from("subscription_plan_limitations")
@@ -421,7 +421,7 @@ export async function updateSubscriptionPlan(
         throw new Error(`Erreur lors de l'ajout des limitations: ${limitationsError.message}`);
       }
 
-      console.log("✅ Limitations mises à jour avec succès");
+
     }
 
     // 8. Supprimer les anciennes fonctionnalités
@@ -444,7 +444,7 @@ export async function updateSubscriptionPlan(
         sort_order: index,
       }));
 
-      console.log("✨ Nouvelles fonctionnalités à insérer:", featuresToInsert);
+
 
       const { error: featuresError } = await supabase
         .from("subscription_plan_features")
@@ -455,7 +455,7 @@ export async function updateSubscriptionPlan(
         throw new Error(`Erreur lors de l'ajout des fonctionnalités: ${featuresError.message}`);
       }
 
-      console.log("✅ Fonctionnalités mises à jour avec succès");
+
     }
 
     // 10. Insérer les nouveaux points forts
@@ -467,7 +467,7 @@ export async function updateSubscriptionPlan(
         sort_order: index,
       }));
 
-      console.log("🎯 Nouveaux points forts à insérer:", highlightsToInsert);
+
 
       const { error: highlightsError } = await supabase
         .from("subscription_plan_features")
@@ -478,10 +478,10 @@ export async function updateSubscriptionPlan(
         throw new Error(`Erreur lors de l'ajout des points forts: ${highlightsError.message}`);
       }
 
-      console.log("✅ Points forts mis à jour avec succès");
+
     }
 
-    console.log("🎉 Plan d'abonnement mis à jour avec succès !");
+
     return { success: true, planId };
 
   } catch (error: any) {

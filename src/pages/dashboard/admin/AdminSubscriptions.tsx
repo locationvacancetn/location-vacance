@@ -147,7 +147,7 @@ const AdminSubscriptions = () => {
 
   const handleDeletePlan = async (planId: string, planName: string) => {
     try {
-      console.log("🗑️ Suppression du plan:", planName, "ID:", planId);
+
 
       // 1. Supprimer les fonctionnalités liées
       const { error: featuresError } = await (supabase as any)
@@ -182,7 +182,7 @@ const AdminSubscriptions = () => {
         throw new Error("Erreur lors de la suppression du plan");
       }
 
-      console.log("✅ Plan supprimé avec succès");
+
 
       toast({
         title: "Succès",

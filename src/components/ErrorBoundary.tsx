@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
     // Tracking Google Analytics pour les erreurs critiques
     try {
       // Note: Le service Google Analytics sera implémenté plus tard
-      console.log('Error Boundary tracked for analytics:', `${context || 'unknown'}:${error.message}`);
+
     } catch (analyticsError) {
       console.warn('Analytics tracking failed:', analyticsError);
     }

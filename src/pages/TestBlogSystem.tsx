@@ -39,24 +39,24 @@ const TestBlogSystem: React.FC = () => {
 
     try {
       // Test 1: Récupération des catégories
-      console.log("🧪 Test 1: Récupération des catégories...");
+
       const categories = await BlogService.getBlogCategories();
-      console.log("✅ Catégories récupérées:", categories);
+
       
       // Test 2: Récupération des blogs publiés
-      console.log("🧪 Test 2: Récupération des blogs publiés...");
+
       const publishedBlogs = await BlogService.getPublishedBlogs();
-      console.log("✅ Blogs publiés récupérés:", publishedBlogs);
+
       
       // Test 3: Récupération des blogs mis en avant
-      console.log("🧪 Test 3: Récupération des blogs mis en avant...");
+
       const featuredBlogs = await BlogService.getFeaturedBlogs();
-      console.log("✅ Blogs mis en avant récupérés:", featuredBlogs);
+
       
       // Test 4: Statistiques
-      console.log("🧪 Test 4: Récupération des statistiques...");
+
       const stats = await BlogService.getBlogStats();
-      console.log("✅ Statistiques récupérées:", stats);
+
 
       setTestResults({
         categories: categories && categories.length > 0,

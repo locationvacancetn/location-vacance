@@ -93,7 +93,7 @@ const TenantProfile = () => {
       if (avatarUrl) {
         const oldFileName = avatarUrl.split('/').pop();
         if (oldFileName) {
-          console.log('Deleting old file:', oldFileName);
+
           const { error: deleteError } = await supabase.storage
             .from('avatars')
             .remove([oldFileName]);
@@ -102,7 +102,7 @@ const TenantProfile = () => {
             console.warn('Warning: Could not delete old file:', deleteError);
             // Ne pas arrêter le processus pour cette erreur
           } else {
-            console.log('Old file deleted successfully');
+
           }
         }
       }
@@ -123,11 +123,11 @@ const TenantProfile = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      console.log('Generated public URL:', publicUrl);
+
       
       // Sauvegarder l'URL dans la base de données
       if (user) {
-        console.log('Saving avatar URL to database:', publicUrl);
+
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ avatar_url: publicUrl })
@@ -142,7 +142,7 @@ const TenantProfile = () => {
           
           throw new Error(`Database update failed: ${updateError.message}`);
         } else {
-          console.log('Avatar URL saved successfully');
+
           // Mettre à jour l'état local seulement après succès complet
           setAvatarUrl(publicUrl);
           // Rafraîchir les données utilisateur
@@ -164,7 +164,7 @@ const TenantProfile = () => {
           await supabase.storage
             .from('avatars')
             .remove([uploadedFilePath]);
-          console.log('Rollback: Uploaded file removed due to error');
+
         } catch (rollbackError) {
           console.error('Rollback failed:', rollbackError);
         }

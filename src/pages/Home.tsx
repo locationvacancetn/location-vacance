@@ -247,7 +247,7 @@ const HomePage = () => {
                     className="rounded-lg w-full"
                     value={selectedLocation}
                     onLocationSelect={(location) => {
-                      console.log('Localisation sélectionnée:', location);
+
                       setSelectedLocation(location);
                     }}
                   />
@@ -994,7 +994,7 @@ const HomePage = () => {
                 className="h-12 rounded-xl"
                 value={selectedLocation}
                 onLocationSelect={(location) => {
-                  console.log('Localisation sélectionnée:', location);
+
                   setSelectedLocation(location);
                 }}
               />

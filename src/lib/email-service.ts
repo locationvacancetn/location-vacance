@@ -42,13 +42,6 @@ export class EmailService {
           message: 'Aucune configuration email active. Veuillez configurer l\'envoi d\'emails.'
         };
       }
-
-      console.log('🚀 Envoi d\'email via API PHP avec config dynamique...', {
-        to: emailData.to,
-        subject: emailData.subject,
-        smtp_host: emailConfig.smtp_host,
-        smtp_user: emailConfig.smtp_user
-      });
       
       const response = await fetch('https://location-vacance.tn/send-email.php', {
         method: 'POST',
@@ -70,7 +63,7 @@ export class EmailService {
         }),
       });
       
-      console.log('📡 Réponse PHP reçue:', response.status, response.statusText);
+
 
       const result = await response.json();
       

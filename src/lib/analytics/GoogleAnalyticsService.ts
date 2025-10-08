@@ -95,7 +95,7 @@ export class GoogleAnalyticsService {
     
     // Vérifier le cache
     if (this.isCacheValid(cacheKey)) {
-      console.log('📦 Utilisation du cache pour:', cacheKey);
+
       return this.cache.get(cacheKey)!.data;
     }
 

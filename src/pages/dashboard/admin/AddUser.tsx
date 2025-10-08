@@ -191,8 +191,8 @@ const AddUser = () => {
         throw new Error('Vous devez être connecté pour créer un utilisateur');
       }
 
-      console.log('🔑 Token d\'authentification:', session.access_token ? 'Présent' : 'Manquant');
-      console.log('🌐 URL de la fonction:', `${config.supabase.url}/functions/v1/create-user`);
+
+
 
       // Données à envoyer
       const requestData = {
@@ -216,10 +216,10 @@ const AddUser = () => {
         twitter_url: formData.twitter_url || undefined,
       };
 
-      console.log('📤 Données à envoyer:', requestData);
+
 
       // Appel à la Edge Function sécurisée pour créer l'utilisateur
-      console.log('🚀 Envoi de la requête...');
+
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondes timeout
@@ -235,7 +235,7 @@ const AddUser = () => {
       });
       
       clearTimeout(timeoutId);
-      console.log('📥 Réponse reçue:', response.status, response.statusText);
+
 
       // Vérifier si la réponse est valide
       if (!response.ok) {

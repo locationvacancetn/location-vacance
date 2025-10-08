@@ -48,7 +48,7 @@ export const AnalyticsDashboard = () => {
           <Button 
             onClick={() => {
               googleAnalyticsService.clearCache();
-              console.log('🗑️ Cache vidé - prochain appel sera frais');
+
               refresh();
             }} 
             size="sm" 

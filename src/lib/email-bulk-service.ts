@@ -134,7 +134,7 @@ export class EmailBulkService {
       }
 
       // Envoyer les emails un par un
-      console.log(`📧 Envoi de ${recipients.length} emails...`);
+
       
       for (const email of recipients) {
         try {
@@ -148,7 +148,7 @@ export class EmailBulkService {
 
           if (result.success) {
             sent.push(email);
-            console.log(`✅ Email envoyé à ${email}`);
+
           } else {
             failed.push({ email, error: result.error || 'Erreur inconnue' });
             console.error(`❌ Échec envoi à ${email}:`, result.error);

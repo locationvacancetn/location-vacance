@@ -72,7 +72,7 @@ export const testSlugGeneration = (): { passed: number; failed: number; results:
   let passed = 0;
   let failed = 0;
 
-  console.log('🧪 Test de génération de slugs...\n');
+
 
   SLUG_TEST_CASES.forEach((testCase, index) => {
     try {
@@ -102,15 +102,15 @@ export const testSlugGeneration = (): { passed: number; failed: number; results:
 
       if (result.passed) {
         passed++;
-        console.log(`✅ Test ${index + 1}: ${testCase.name}`);
-        console.log(`   Généré: ${generatedSlug}`);
+
+
       } else {
         failed++;
-        console.log(`❌ Test ${index + 1}: ${testCase.name}`);
-        console.log(`   Généré: ${generatedSlug}`);
-        console.log(`   Attendu: ${testCase.expectedSlug || 'N/A'}`);
+
+
+
         if (!isValid.isValid) {
-          console.log(`   Erreurs: ${isValid.errors.join(', ')}`);
+
         }
       }
     } catch (error) {
@@ -122,11 +122,11 @@ export const testSlugGeneration = (): { passed: number; failed: number; results:
         passed: false
       };
       results.push(result);
-      console.log(`❌ Test ${index + 1}: ${testCase.name} - ERREUR: ${result.error}`);
+
     }
   });
 
-  console.log(`\n📊 Résultats: ${passed} réussis, ${failed} échoués\n`);
+
   return { passed, failed, results };
 };
 
@@ -151,7 +151,7 @@ export const testSlugValidation = (): { passed: number; failed: number; results:
   let passed = 0;
   let failed = 0;
 
-  console.log('🧪 Test de validation de slugs...\n');
+
 
   testSlugs.forEach((test, index) => {
     const validation = SlugService.validateSlug(test.slug);
@@ -171,20 +171,20 @@ export const testSlugValidation = (): { passed: number; failed: number; results:
 
     if (testPassed) {
       passed++;
-      console.log(`✅ Test ${index + 1}: ${test.description}`);
+
     } else {
       failed++;
-      console.log(`❌ Test ${index + 1}: ${test.description}`);
-      console.log(`   Slug: "${test.slug}"`);
-      console.log(`   Attendu: ${test.shouldPass ? 'valide' : 'invalide'}`);
-      console.log(`   Obtenu: ${validation.isValid ? 'valide' : 'invalide'}`);
+
+
+
+
       if (validation.errors.length > 0) {
-        console.log(`   Erreurs: ${validation.errors.join(', ')}`);
+
       }
     }
   });
 
-  console.log(`\n📊 Résultats: ${passed} réussis, ${failed} échoués\n`);
+
   return { passed, failed, results };
 };
 
@@ -192,7 +192,7 @@ export const testSlugValidation = (): { passed: number; failed: number; results:
  * Teste la génération de suggestions
  */
 export const testSlugSuggestions = (): void => {
-  console.log('🧪 Test de génération de suggestions...\n');
+
 
   const testCase = SLUG_TEST_CASES[0];
   const suggestions = SlugService.generateSlugSuggestions(
@@ -203,19 +203,19 @@ export const testSlugSuggestions = (): void => {
     3
   );
 
-  console.log(`Suggestions pour "${testCase.propertyType} - ${testCase.city} - ${testCase.title}":`);
+
   suggestions.forEach((suggestion, index) => {
-    console.log(`  ${index + 1}. ${suggestion}`);
+
   });
-  console.log('');
+
 };
 
 /**
  * Lance tous les tests
  */
 export const runAllSlugTests = (): void => {
-  console.log('🚀 Lancement de tous les tests du système de slugs\n');
-  console.log('=' .repeat(60));
+
+
 
   const generationResults = testSlugGeneration();
   const validationResults = testSlugValidation();
@@ -224,17 +224,17 @@ export const runAllSlugTests = (): void => {
   const totalPassed = generationResults.passed + validationResults.passed;
   const totalFailed = generationResults.failed + validationResults.failed;
 
-  console.log('=' .repeat(60));
-  console.log(`🎯 RÉSULTATS FINAUX:`);
-  console.log(`   ✅ Tests réussis: ${totalPassed}`);
-  console.log(`   ❌ Tests échoués: ${totalFailed}`);
-  console.log(`   📊 Taux de réussite: ${((totalPassed / (totalPassed + totalFailed)) * 100).toFixed(1)}%`);
-  console.log('=' .repeat(60));
+
+
+
+
+
+
 
   if (totalFailed === 0) {
-    console.log('🎉 Tous les tests sont passés avec succès !');
+
   } else {
-    console.log('⚠️  Certains tests ont échoué. Vérifiez les détails ci-dessus.');
+
   }
 };
 
@@ -242,7 +242,7 @@ export const runAllSlugTests = (): void => {
  * Teste l'intégration avec la base de données (nécessite une connexion)
  */
 export const testDatabaseIntegration = async (): Promise<void> => {
-  console.log('🧪 Test d\'intégration avec la base de données...\n');
+
 
   try {
     // Test de vérification d'unicité
@@ -250,9 +250,9 @@ export const testDatabaseIntegration = async (): Promise<void> => {
     const isAvailable = await PropertyService.checkSlugAvailability(testSlug);
     
     if (isAvailable) {
-      console.log('✅ Vérification d\'unicité: OK');
+
     } else {
-      console.log('❌ Vérification d\'unicité: ÉCHEC');
+
     }
 
     // Test de génération de slug unique
@@ -263,9 +263,9 @@ export const testDatabaseIntegration = async (): Promise<void> => {
       'Test Region'
     );
     
-    console.log(`✅ Génération de slug unique: ${uniqueSlug}`);
+
 
   } catch (error) {
-    console.log(`❌ Erreur lors du test d'intégration: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+
   }
 };

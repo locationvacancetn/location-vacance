@@ -482,11 +482,11 @@ const AddPropertyWizard = () => {
     try {
       if (isEditMode && propertyId) {
         // Mode édition
-        console.log("Modification de la propriété avec les données:", formData);
+
         
         const updatedProperty = await PropertyService.updateProperty(propertyId, formData, finalImageUrls);
         
-        console.log("Propriété modifiée avec succès:", updatedProperty);
+
         
         showSuccess({
           title: "Succès",

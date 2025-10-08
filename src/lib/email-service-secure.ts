@@ -35,11 +35,6 @@ export class EmailServiceSecure {
    */
   static async sendEmail(emailData: EmailRequest): Promise<EmailResponse> {
     try {
-      console.log('🔒 Envoi email via Edge Function sécurisée...', {
-        to: emailData.to,
-        subject: emailData.subject,
-      });
-
       // Récupérer le token d'authentification pour l'Edge Function
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -57,7 +52,7 @@ export class EmailServiceSecure {
         throw error;
       }
 
-      console.log('✅ Email envoyé avec succès via Edge Function sécurisée');
+
       
       return data as EmailResponse;
       

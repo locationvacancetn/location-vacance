@@ -17,7 +17,7 @@ export const DatabaseTest = () => {
 
     try {
       // Test 1: Vérifier la table profiles
-      console.log('Testing profiles table...');
+
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -31,7 +31,7 @@ export const DatabaseTest = () => {
       };
 
       // Test 2: Vérifier le profil de l'utilisateur actuel
-      console.log('Testing current user profile...');
+
       const { data: userProfile, error: userProfileError } = await supabase
         .from('profiles')
         .select('*')
@@ -45,7 +45,7 @@ export const DatabaseTest = () => {
       };
 
       // Test 3: Vérifier les métadonnées de l'utilisateur
-      console.log('Testing user metadata...');
+
       results.userMetadata = {
         user_id: user.id,
         email: user.email,

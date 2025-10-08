@@ -35,7 +35,7 @@ const BlogDetails: React.FC = () => {
         setLoading(true);
         setPreviousBlog(null);
         setNextBlog(null);
-        console.log(`Tentative de récupération de l'article avec slug: ${slug}`);
+
         
         // Vérifier si le slug contient des caractères spéciaux
         if (slug.includes(':')) {
@@ -52,7 +52,7 @@ const BlogDetails: React.FC = () => {
           return;
         }
         
-        console.log("Article récupéré avec succès:", blogData.id);
+
         setBlog(blogData as Blog);
         
         // Récupérer les articles précédent et suivant

@@ -135,7 +135,7 @@ serve(async (req) => {
       }),
     });
 
-    console.log('📡 Réponse API PHP:', response.status, response.statusText);
+
 
     const result = await response.json();
 

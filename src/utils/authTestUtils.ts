@@ -33,7 +33,7 @@ export const simulateRefreshTokenError = () => {
   };
 
   localStorage.setItem(getAuthTokenKey(), JSON.stringify(corruptedToken));
-  console.log('Simulated refresh token error - corrupted localStorage');
+
 };
 
 /**
@@ -58,7 +58,7 @@ export const simulateExpiredSession = () => {
   };
 
   localStorage.setItem(getAuthTokenKey(), JSON.stringify(expiredToken));
-  console.log('Simulated expired session');
+
 };
 
 /**
@@ -67,7 +67,7 @@ export const simulateExpiredSession = () => {
 export const clearAllAuthData = () => {
   localStorage.removeItem(getAuthTokenKey());
   localStorage.removeItem('supabase.auth.token');
-  console.log('Cleared all auth data from localStorage');
+
 };
 
 /**
@@ -77,13 +77,6 @@ export const checkLocalStorageState = () => {
   const authTokenKey = getAuthTokenKey();
   const supabaseToken = localStorage.getItem(authTokenKey);
   const altToken = localStorage.getItem('supabase.auth.token');
-  
-  console.log('LocalStorage state:', {
-    authTokenKey,
-    supabaseToken: supabaseToken ? 'Present' : 'Missing',
-    altToken: altToken ? 'Present' : 'Missing',
-    supabaseTokenData: supabaseToken ? JSON.parse(supabaseToken) : null
-  });
   
   return {
     supabaseToken: !!supabaseToken,

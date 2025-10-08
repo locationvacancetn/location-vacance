@@ -736,7 +736,7 @@ export class PropertyService {
             propertyType = typeData.name;
           }
         } catch (e) {
-          console.log('Impossible de récupérer le type de propriété:', e);
+
         }
       }
 
@@ -752,7 +752,7 @@ export class PropertyService {
             cityName = cityData.name;
           }
         } catch (e) {
-          console.log('Impossible de récupérer la ville:', e);
+
         }
       }
 
@@ -768,7 +768,7 @@ export class PropertyService {
             regionName = regionData.name;
           }
         } catch (e) {
-          console.log('Impossible de récupérer la région:', e);
+
         }
       }
 
@@ -784,7 +784,7 @@ export class PropertyService {
           characteristicIds = characteristicsData.map(item => item.characteristic_id);
         }
       } catch (e) {
-        console.log('Impossible de récupérer les caractéristiques:', e);
+
       }
 
       // Récupérer les informations du propriétaire
@@ -803,7 +803,7 @@ export class PropertyService {
             
           
           if (ownerError) {
-            console.log('Erreur lors de la récupération du profil:', ownerError);
+
           } else if (ownerData?.full_name) {
             ownerName = ownerData.full_name;
           }
@@ -814,7 +814,7 @@ export class PropertyService {
             ownerLanguages = ownerData.spoken_languages;
           }
         } catch (e) {
-          console.log('Impossible de récupérer les informations du propriétaire:', e);
+
         }
       }
 
@@ -1020,7 +1020,7 @@ export class PropertyService {
             propertyType = typeData.name;
           }
         } catch (e) {
-          console.log('Impossible de récupérer le type de propriété:', e);
+
         }
       }
 
@@ -1036,7 +1036,7 @@ export class PropertyService {
             cityName = cityData.name;
           }
         } catch (e) {
-          console.log('Impossible de récupérer la ville:', e);
+
         }
       }
 
@@ -1052,7 +1052,7 @@ export class PropertyService {
             regionName = regionData.name;
           }
         } catch (e) {
-          console.log('Impossible de récupérer la région:', e);
+
         }
       }
 
@@ -1068,7 +1068,7 @@ export class PropertyService {
           characteristicIds = characteristicsData.map(item => item.characteristic_id);
         }
       } catch (e) {
-        console.log('Impossible de récupérer les caractéristiques:', e);
+
       }
 
       // Récupérer les informations du propriétaire
@@ -1085,7 +1085,7 @@ export class PropertyService {
             .single();
             
           if (ownerError) {
-            console.log('Erreur lors de la récupération du profil:', ownerError);
+
           } else if (ownerData?.full_name) {
             ownerName = ownerData.full_name;
           }
@@ -1096,7 +1096,7 @@ export class PropertyService {
             ownerLanguages = ownerData.spoken_languages;
           }
         } catch (e) {
-          console.log('Impossible de récupérer les informations du propriétaire:', e);
+
         }
       }
 

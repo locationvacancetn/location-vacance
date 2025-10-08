@@ -13,12 +13,12 @@ export const GoogleAnalyticsTest = () => {
       event_label: 'bouton_test',
       value: 1
     });
-    console.log('✅ Événement de test envoyé à Google Analytics');
+
   };
 
   const handleTestConversion = () => {
     trackConversion('test_conversion', 100);
-    console.log('✅ Conversion de test envoyée à Google Analytics');
+
   };
 
   return (

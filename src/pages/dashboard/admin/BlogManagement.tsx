@@ -278,7 +278,7 @@ const BlogManagement: React.FC = () => {
       
       try {
         setLoadingData(true);
-        console.log("Chargement du blog avec ID:", id);
+
         const blog = await BlogService.getBlogById(parseInt(id));
         
         // Remplir les états avec les données du blog
@@ -315,7 +315,7 @@ const BlogManagement: React.FC = () => {
 
         // Charger les images supplémentaires
         if (blog.blog_images && blog.blog_images.length > 0) {
-          console.log("Images supplémentaires récupérées:", blog.blog_images);
+
           setAdditionalImages(blog.blog_images.map(image => ({
             id: image.id.toString(),
             url: image.url,
@@ -488,9 +488,9 @@ const BlogManagement: React.FC = () => {
         twitter_image: null
       };
       
-      console.log("Données du blog à sauvegarder:", blogData);
-      console.log("FAQs à sauvegarder:", faqsForApi);
-      console.log("Images à sauvegarder:", imagesForApi);
+
+
+
       
       // Traiter les tags saisis
       const processedTags = await processTagsInput(tagsInput);
@@ -499,14 +499,14 @@ const BlogManagement: React.FC = () => {
       
       if (id) {
         // Mise à jour
-        console.log(`Début de la mise à jour du blog (ID: ${id})`);
+
         result = await BlogService.updateBlog(parseInt(id), blogData, faqsForApi, processedTags, imagesForApi);
-        console.log("Résultat de la mise à jour:", result);
+
       } else {
         // Création du blog
-        console.log("Début de la création du blog");
+
         result = await BlogService.createBlog(blogData, faqsForApi, processedTags, imagesForApi);
-        console.log("Résultat de la création:", result);
+
       }
       
       if (result.error) {
@@ -593,7 +593,7 @@ const BlogManagement: React.FC = () => {
         // Utiliser le service StorageService pour l'upload
         const fileName = `blog-additional-${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
         
-        console.log('Tentative d\'upload d\'image supplémentaire vers Supabase...');
+
         // Essayer l'upload direct avec Supabase
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('blogs')
@@ -695,7 +695,7 @@ const BlogManagement: React.FC = () => {
       // Utiliser le service StorageService pour l'upload (avec un nom de fichier plus simple)
       const fileName = `blog-${Date.now()}.${file.name.split('.').pop()}`;
       
-      console.log('Tentative d\'upload direct vers Supabase...');
+
       // Essayer l'upload direct avec Supabase
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('blogs')

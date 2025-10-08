@@ -145,21 +145,19 @@ export const validateRoutes = () => {
 export const printRouteValidationReport = () => {
   const { errors, warnings } = validateRoutes();
   
-  console.log('🔍 Validation des Routes du Dashboard');
-  console.log('=====================================');
+
+
   
   if (errors.length === 0) {
-    console.log('✅ Toutes les routes sont correctement définies !');
+
   } else {
-    console.log('❌ Erreurs trouvées :');
-    errors.forEach(error => console.log(`  - ${error}`));
+
   }
   
   if (warnings.length > 0) {
-    console.log('⚠️  Avertissements :');
-    warnings.forEach(warning => console.log(`  - ${warning}`));
+
   }
   
-  console.log('=====================================');
+
   return { errors, warnings };
 };

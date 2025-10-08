@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,7 @@ import { PropertyService, Property } from '@/lib/propertyService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-// Interface pour les donnÃ©es SEO (optimisÃ©e)
+// Interface pour les données SEO (optimisée)
 interface SEOData {
   // Meta Tags
   titleTag: string;
@@ -49,9 +49,9 @@ interface SEOData {
   primaryKeywords: string;
   secondaryKeywords: string;
   localKeywords: string;
-  longTailKeywords: string; // Nouveau : fusion des 4 types de mots-clÃ©s
+  longTailKeywords: string; // Nouveau : fusion des 4 types de mots-clés
   
-  // DonnÃ©es StructurÃ©es
+  // Données Structurées
   propertyType: string;
   capacity: string;
   mainEquipments: string;
@@ -71,10 +71,10 @@ interface SEOData {
   ogImage: string;
   ogType: string;
   
-  // Optimisation Technique (simplifiÃ©e)
+  // Optimisation Technique (simplifiée)
   lastUpdateDate: string;
   
-  // Champs conservÃ©s pour compatibilitÃ© (masquÃ©s dans l'UI)
+  // Champs conservés pour compatibilité (masqués dans l'UI)
   seasonalKeywords: string;
   activityKeywords: string;
   comfortKeywords: string;
@@ -99,7 +99,7 @@ const calculateSEOScore = (seoData: SEOData): number => {
   if (seoData.secondaryKeywords && seoData.secondaryKeywords.length > 0) score += 3;
   if (seoData.localKeywords && seoData.localKeywords.length > 0) score += 2;
   
-  // DonnÃ©es StructurÃ©es (20 points)
+  // Données Structurées (20 points)
   if (seoData.propertyType) score += 3;
   if (seoData.capacity) score += 2;
   if (seoData.mainEquipments && seoData.mainEquipments.length > 0) score += 5;
@@ -144,9 +144,9 @@ const getScoreStatus = (score: number) => {
   }
 };
 
-// Fonction pour extraire les informations de la propriÃ©tÃ©
+// Fonction pour extraire les informations de la propriété
 const extractPropertyInfo = async (property: Property) => {
-  // RÃ©cupÃ©rer les Ã©quipements depuis la base de donnÃ©es
+  // Récupérer les équipements depuis la base de données
   const { data: equipments } = await supabase
     .from('equipments')
     .select('name')
@@ -154,16 +154,16 @@ const extractPropertyInfo = async (property: Property) => {
 
   const equipmentNames = equipments?.map(eq => eq.name) || [];
   
-  const mainEquipments = equipmentNames.length > 0 ? equipmentNames.join(', ') : 'Aucun Ã©quipement spÃ©cifiÃ©';
-  const includedServices = equipmentNames.length > 0 ? equipmentNames.join(', ') : 'Aucun service spÃ©cifiÃ©';
+  const mainEquipments = equipmentNames.length > 0 ? equipmentNames.join(', ') : 'Aucun équipement spécifié';
+  const includedServices = equipmentNames.length > 0 ? equipmentNames.join(', ') : 'Aucun service spécifié';
 
-  const cancellationPolicy = `Annulation gratuite jusqu'Ã  3 jours avant l'arrivÃ©e. Check-in: ${property.check_in_time || '14:00'}, Check-out: ${property.check_out_time || '12:00'}`;
+  const cancellationPolicy = `Annulation gratuite jusqu'à 3 jours avant l'arrivée. Check-in: ${property.check_in_time || '14:00'}, Check-out: ${property.check_out_time || '12:00'}`;
 
-  const spokenLanguages = 'Anglais, FranÃ§ais, Arabe';
+  const spokenLanguages = 'Anglais, Français, Arabe';
 
-  const seasonalKeywords = ['location Ã©tÃ©', 'location vacances', 'location saisonniÃ¨re', 'location Ã©tÃ© ' + property.location].join(', ');
-  const activityKeywords = ['plage', 'randonnÃ©e', 'culture', 'dÃ©tente', 'famille'].join(', ');
-  const comfortKeywords = ['confort', 'luxe', 'moderne', 'Ã©quipÃ©', 'climatisÃ©'].join(', ');
+  const seasonalKeywords = ['location été', 'location vacances', 'location saisonnière', 'location été ' + property.location].join(', ');
+  const activityKeywords = ['plage', 'randonnée', 'culture', 'détente', 'famille'].join(', ');
+  const comfortKeywords = ['confort', 'luxe', 'moderne', 'équipé', 'climatisé'].join(', ');
   const geographicKeywords = ['centre-ville', 'bord mer', 'montagne', 'campagne', property.location].join(', ');
 
   return {
@@ -178,11 +178,11 @@ const extractPropertyInfo = async (property: Property) => {
   };
 };
 
-// Fonctions de gÃ©nÃ©ration automatique (amÃ©liorÃ©es)
+// Fonctions de génération automatique (améliorées)
 const generatePrimaryKeywords = (property: Property): string => {
-  const baseKeywords = ['location', 'vacances', property.property_type?.toLowerCase() || 'propriÃ©tÃ©'];
+  const baseKeywords = ['location', 'vacances', property.property_type?.toLowerCase() || 'propriété'];
   const locationKeywords = property.location ? [property.location.toLowerCase()] : [];
-  const featureKeywords = property.equipment_ids ? ['Ã©quipÃ©', 'moderne'] : [];
+  const featureKeywords = property.equipment_ids ? ['équipé', 'moderne'] : [];
   
   return [...baseKeywords, ...locationKeywords, ...featureKeywords].join(', ');
 };
@@ -201,29 +201,29 @@ const generateLocalKeywords = (property: Property): string => {
     `location ${property.location}`,
     `vacances ${property.location}`,
     `location vacances ${property.location}`,
-    `location saisonniÃ¨re ${property.location}`
+    `location saisonnière ${property.location}`
   ];
   
   return localTerms.join(', ');
 };
 
-// Nouvelle fonction : gÃ©nÃ©ration intelligente des mots-clÃ©s long-tail
+// Nouvelle fonction : génération intelligente des mots-clés long-tail
 const generateLongTailKeywords = (property: Property): string => {
   const base = property.title || 'Location de vacances';
   const location = property.location || '';
   const type = property.property_type || '';
   const capacity = property.max_guests ? `pour ${property.max_guests} personnes` : '';
   
-  // Mots-clÃ©s saisonniers
-  const seasonal = ['location Ã©tÃ©', 'vacances Ã©tÃ©', 'location saisonniÃ¨re', 'location Ã©tÃ© ' + location];
+  // Mots-clés saisonniers
+  const seasonal = ['location été', 'vacances été', 'location saisonnière', 'location été ' + location];
   
-  // Mots-clÃ©s d'activitÃ©s
-  const activities = ['plage', 'randonnÃ©e', 'culture', 'dÃ©tente', 'famille', 'couple'];
+  // Mots-clés d'activités
+  const activities = ['plage', 'randonnée', 'culture', 'détente', 'famille', 'couple'];
   
-  // Mots-clÃ©s de confort
-  const comfort = ['confort', 'luxe', 'moderne', 'Ã©quipÃ©', 'climatisÃ©', 'piscine'];
+  // Mots-clés de confort
+  const comfort = ['confort', 'luxe', 'moderne', 'équipé', 'climatisé', 'piscine'];
   
-  // Mots-clÃ©s gÃ©ographiques
+  // Mots-clés géographiques
   const geographic = ['centre-ville', 'bord mer', 'montagne', 'campagne', location];
   
   // Combinaisons intelligentes
@@ -241,11 +241,11 @@ const generateLongTailKeywords = (property: Property): string => {
 };
 
 const generateMainImageAltText = (property: Property): string => {
-  const baseDescription = property.property_type || 'PropriÃ©tÃ©';
+  const baseDescription = property.property_type || 'Propriété';
   const location = property.location || '';
-  const features = property.equipment_ids ? ' avec Ã©quipements modernes' : '';
+  const features = property.equipment_ids ? ' avec équipements modernes' : '';
   
-  return `${baseDescription} ${location}${features} - Vue extÃ©rieure`;
+  return `${baseDescription} ${location}${features} - Vue extérieure`;
 };
 
 const generateGalleryAltTexts = (property: Property): string[] => {
@@ -260,18 +260,18 @@ const generateGalleryAltTexts = (property: Property): string[] => {
 
 const generateOpenGraphTitle = (property: Property): string => {
   const baseTitle = property.title || 'Location de vacances';
-  const location = property.location ? ` Ã  ${property.location}` : '';
+  const location = property.location ? ` à ${property.location}` : '';
   const type = property.property_type ? ` - ${property.property_type}` : '';
   
   return `${baseTitle}${location}${type}`;
 };
 
 const generateOpenGraphDescription = (property: Property): string => {
-  const baseDescription = property.description || 'PropriÃ©tÃ© de vacances';
-  const location = property.location ? ` situÃ©e Ã  ${property.location}` : '';
+  const baseDescription = property.description || 'Propriété de vacances';
+  const location = property.location ? ` située à ${property.location}` : '';
   const capacity = property.max_guests ? ` pour ${property.max_guests} personnes` : '';
   
-  return `${baseDescription}${location}${capacity}. RÃ©servez dÃ¨s maintenant !`;
+  return `${baseDescription}${location}${capacity}. Réservez dès maintenant !`;
 };
 
 const getOptimalOpenGraphType = (property: Property): string => {
@@ -306,7 +306,7 @@ const SEOManagement: React.FC = () => {
     ogImage: '',
     ogType: '',
     lastUpdateDate: '',
-    // Champs conservÃ©s pour compatibilitÃ©
+    // Champs conservés pour compatibilité
     seasonalKeywords: '',
     activityKeywords: '',
     comfortKeywords: '',
@@ -320,11 +320,11 @@ const SEOManagement: React.FC = () => {
     meta: true,
     content: false,
     images: false,
-    optimization: false // FusionnÃ© : social + technical simplifiÃ©
+    optimization: false // Fusionné : social + technical simplifié
   });
   const { toast } = useToast();
 
-  // Charger les propriÃ©tÃ©s au montage du composant
+  // Charger les propriétés au montage du composant
   useEffect(() => {
     const loadProperties = async () => {
         setIsLoading(true);
@@ -332,10 +332,10 @@ const SEOManagement: React.FC = () => {
         const data = await PropertyService.getPublicProperties();
         setProperties(data);
       } catch (error) {
-        console.error('Erreur lors du chargement des propriÃ©tÃ©s:', error);
+        console.error('Erreur lors du chargement des propriétés:', error);
         toast({
           title: "Erreur",
-          description: "Impossible de charger les propriÃ©tÃ©s",
+          description: "Impossible de charger les propriétés",
           variant: "destructive",
         });
       } finally {
@@ -346,7 +346,7 @@ const SEOManagement: React.FC = () => {
     loadProperties();
   }, [toast]);
 
-  // Charger les donnÃ©es SEO d'une propriÃ©tÃ©
+  // Charger les données SEO d'une propriété
   const loadSEOData = async (property: Property) => {
     try {
       const { data: seoData, error } = await supabase
@@ -360,7 +360,7 @@ const SEOManagement: React.FC = () => {
       }
 
       if (seoData) {
-        // Charger les donnÃ©es existantes
+        // Charger les données existantes
         const seoDataTyped = seoData as any;
         setSeoData({
           titleTag: seoDataTyped.title_tag || '',
@@ -387,7 +387,7 @@ const SEOManagement: React.FC = () => {
           ogImage: seoDataTyped.og_image || '',
           ogType: seoDataTyped.og_type || '',
           lastUpdateDate: seoDataTyped.last_update_date || '',
-          // Champs conservÃ©s pour compatibilitÃ©
+          // Champs conservés pour compatibilité
           seasonalKeywords: seoDataTyped.seasonal_keywords || '',
           activityKeywords: seoDataTyped.activity_keywords || '',
           comfortKeywords: seoDataTyped.comfort_keywords || '',
@@ -396,20 +396,20 @@ const SEOManagement: React.FC = () => {
           redirects: seoDataTyped.redirects || ''
         });
       } else {
-        // GÃ©nÃ©rer automatiquement les donnÃ©es SEO pour une nouvelle propriÃ©tÃ©
+        // Générer automatiquement les données SEO pour une nouvelle propriété
         await generateNewSEOData(property);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des donnÃ©es SEO:', error);
+      console.error('Erreur lors du chargement des données SEO:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les donnÃ©es SEO",
+        description: "Impossible de charger les données SEO",
         variant: "destructive",
       });
     }
   };
 
-  // GÃ©nÃ©rer de nouvelles donnÃ©es SEO
+  // Générer de nouvelles données SEO
   const generateNewSEOData = async (property: Property) => {
     const propertyInfo = await extractPropertyInfo(property);
     const images = property.images || [];
@@ -443,7 +443,7 @@ const SEOManagement: React.FC = () => {
       cancellationPolicy: propertyInfo.cancellationPolicy,
       spokenLanguages: propertyInfo.spokenLanguages,
       lastUpdateDate: new Date().toISOString().split('T')[0],
-      // Champs conservÃ©s pour compatibilitÃ©
+      // Champs conservés pour compatibilité
       seasonalKeywords: propertyInfo.seasonalKeywords,
       activityKeywords: propertyInfo.activityKeywords,
       comfortKeywords: propertyInfo.comfortKeywords,
@@ -453,13 +453,13 @@ const SEOManagement: React.FC = () => {
     });
   };
 
-  // GÃ©rer la sÃ©lection d'une propriÃ©tÃ©
+  // Gérer la sélection d'une propriété
   const handlePropertySelect = async (property: Property) => {
     setSelectedProperty(property);
     await loadSEOData(property);
   };
 
-  // GÃ©nÃ©rer automatiquement tous les mots-clÃ©s
+  // Générer automatiquement tous les mots-clés
   const generateAllKeywords = () => {
     if (!selectedProperty) return;
 
@@ -477,12 +477,12 @@ const SEOManagement: React.FC = () => {
     }));
 
     toast({
-      title: "Mots-clÃ©s gÃ©nÃ©rÃ©s",
-      description: "Tous les mots-clÃ©s ont Ã©tÃ© gÃ©nÃ©rÃ©s automatiquement",
+      title: "Mots-clés générés",
+      description: "Tous les mots-clés ont été générés automatiquement",
     });
   };
 
-  // GÃ©nÃ©rer automatiquement les alt texts d'images
+  // Générer automatiquement les alt texts d'images
   const generateAllImageAltTexts = () => {
     if (!selectedProperty) return;
 
@@ -500,12 +500,12 @@ const SEOManagement: React.FC = () => {
     }));
 
     toast({
-      title: "Alt texts gÃ©nÃ©rÃ©s",
-      description: "Tous les alt texts d'images ont Ã©tÃ© gÃ©nÃ©rÃ©s automatiquement",
+      title: "Alt texts générés",
+      description: "Tous les alt texts d'images ont été générés automatiquement",
     });
   };
 
-  // GÃ©nÃ©rer automatiquement les balises Open Graph
+  // Générer automatiquement les balises Open Graph
   const generateOpenGraphTags = () => {
     if (!selectedProperty) return;
     
@@ -521,12 +521,12 @@ const SEOManagement: React.FC = () => {
     }));
     
     toast({
-      title: "Balises Open Graph gÃ©nÃ©rÃ©es",
-      description: "Les balises Open Graph ont Ã©tÃ© gÃ©nÃ©rÃ©es automatiquement",
+      title: "Balises Open Graph générées",
+      description: "Les balises Open Graph ont été générées automatiquement",
     });
   };
 
-  // GÃ©nÃ©rer automatiquement les Ã©quipements et services
+  // Générer automatiquement les équipements et services
   const generateAutoEquipmentsAndServices = async () => {
     if (!selectedProperty) return;
     
@@ -545,8 +545,8 @@ const SEOManagement: React.FC = () => {
     }));
     
     toast({
-      title: "Ã‰quipements et services gÃ©nÃ©rÃ©s",
-      description: "Les Ã©quipements et services ont Ã©tÃ© gÃ©nÃ©rÃ©s automatiquement",
+      title: "Équipements et services générés",
+      description: "Les équipements et services ont été générés automatiquement",
     });
   };
 
@@ -554,7 +554,7 @@ const SEOManagement: React.FC = () => {
   const seoScore = calculateSEOScore(seoData);
   const scoreStatus = getScoreStatus(seoScore);
 
-  // GÃ©rer l'ouverture/fermeture des panneaux
+  // Gérer l'ouverture/fermeture des panneaux
   const togglePanel = (panel: keyof typeof openPanels) => {
     setOpenPanels(prev => ({
       ...prev,
@@ -562,13 +562,13 @@ const SEOManagement: React.FC = () => {
     }));
   };
 
-  // Sauvegarder les donnÃ©es SEO
+  // Sauvegarder les données SEO
   const handleSaveSEO = async () => {
     if (!selectedProperty) return;
 
     setIsSaving(true);
     try {
-      // PrÃ©parer les donnÃ©es pour la sauvegarde
+      // Préparer les données pour la sauvegarde
       const seoDataToSave = {
         property_id: selectedProperty.id,
         title_tag: seoData.titleTag,
@@ -595,7 +595,7 @@ const SEOManagement: React.FC = () => {
         og_image: seoData.ogImage,
         og_type: seoData.ogType,
         last_update_date: new Date().toISOString().split('T')[0],
-        // Champs conservÃ©s pour compatibilitÃ©
+        // Champs conservés pour compatibilité
         seasonal_keywords: seoData.seasonalKeywords,
         activity_keywords: seoData.activityKeywords,
         comfort_keywords: seoData.comfortKeywords,
@@ -605,7 +605,7 @@ const SEOManagement: React.FC = () => {
         updated_at: new Date().toISOString()
       };
 
-      // VÃ©rifier si des donnÃ©es SEO existent dÃ©jÃ 
+      // Vérifier si des données SEO existent déjà
       const { data: existingData } = await supabase
         .from('property_seo_data' as any)
         .select('id')
@@ -614,14 +614,14 @@ const SEOManagement: React.FC = () => {
 
       let error;
       if (existingData) {
-        // Mettre Ã  jour les donnÃ©es existantes
+        // Mettre à jour les données existantes
         const { error: updateError } = await supabase
           .from('property_seo_data' as any)
           .update(seoDataToSave)
           .eq('property_id', selectedProperty.id);
         error = updateError;
       } else {
-        // CrÃ©er de nouvelles donnÃ©es SEO
+        // Créer de nouvelles données SEO
         const { error: insertError } = await supabase
           .from('property_seo_data' as any)
           .insert(seoDataToSave);
@@ -631,14 +631,14 @@ const SEOManagement: React.FC = () => {
       if (error) throw error;
 
       toast({
-        title: "Sauvegarde rÃ©ussie",
-        description: "Les donnÃ©es SEO ont Ã©tÃ© sauvegardÃ©es avec succÃ¨s",
+        title: "Sauvegarde réussie",
+        description: "Les données SEO ont été sauvegardées avec succès",
       });
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       toast({
         title: "Erreur de sauvegarde",
-        description: "Impossible de sauvegarder les donnÃ©es SEO",
+        description: "Impossible de sauvegarder les données SEO",
         variant: "destructive",
       });
     } finally {
@@ -656,20 +656,20 @@ const SEOManagement: React.FC = () => {
               variant="outline" 
               size="sm"
               onClick={async () => {
-                // RÃ©initialiser les donnÃ©es SEO en gÃ©nÃ©rant de nouvelles donnÃ©es
+                // Réinitialiser les données SEO en générant de nouvelles données
                 if (selectedProperty) {
                   setIsLoading(true);
                   try {
                     await generateNewSEOData(selectedProperty);
                     toast({
-                      title: "DonnÃ©es rÃ©initialisÃ©es",
-                      description: "Les donnÃ©es SEO ont Ã©tÃ© rÃ©initialisÃ©es avec de nouvelles valeurs gÃ©nÃ©rÃ©es automatiquement",
+                      title: "Données réinitialisées",
+                      description: "Les données SEO ont été réinitialisées avec de nouvelles valeurs générées automatiquement",
                     });
                   } catch (error) {
-                    console.error('Erreur lors de la rÃ©initialisation:', error);
+                    console.error('Erreur lors de la réinitialisation:', error);
                     toast({
                       title: "Erreur",
-                      description: "Impossible de rÃ©initialiser les donnÃ©es SEO",
+                      description: "Impossible de réinitialiser les données SEO",
                       variant: "destructive",
                     });
                   } finally {
@@ -680,7 +680,7 @@ const SEOManagement: React.FC = () => {
               disabled={isLoading}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              {isLoading ? 'RÃ©initialisation...' : 'RÃ©initialiser'}
+              {isLoading ? 'Réinitialisation...' : 'Réinitialiser'}
             </Button>
             <Button 
               size="sm"
@@ -694,12 +694,12 @@ const SEOManagement: React.FC = () => {
         )}
       </div>
 
-      {/* SÃ©lection de propriÃ©tÃ© */}
+      {/* Sélection de propriété */}
           <Card>
             <CardHeader>
           <CardTitle className="flex items-center space-x-2">
                 <Target className="h-5 w-5" />
-            <span>SÃ©lectionner une propriÃ©tÃ©</span>
+            <span>Sélectionner une propriété</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -708,7 +708,7 @@ const SEOManagement: React.FC = () => {
             if (property) handlePropertySelect(property);
           }}>
             <SelectTrigger>
-              <SelectValue placeholder="Choisissez une propriÃ©tÃ© Ã  optimiser" />
+              <SelectValue placeholder="Choisissez une propriété à optimiser" />
             </SelectTrigger>
             <SelectContent>
               {properties.map((property) => (
@@ -750,11 +750,11 @@ const SEOManagement: React.FC = () => {
                       <scoreStatus.icon className="h-4 w-4" />
                       <span>
                         {seoScore >= 81 
-                          ? "Excellent ! Votre annonce est bien optimisÃ©e"
+                          ? "Excellent ! Votre annonce est bien optimisée"
                           : seoScore >= 61
-                          ? "Bon score, quelques amÃ©liorations possibles"
+                          ? "Bon score, quelques améliorations possibles"
                           : seoScore >= 31
-                          ? "Score moyen, plusieurs optimisations nÃ©cessaires"
+                          ? "Score moyen, plusieurs optimisations nécessaires"
                           : "Score faible, optimisations urgentes requises"
                         }
                       </span>
@@ -796,10 +796,10 @@ const SEOManagement: React.FC = () => {
                             id="titleTag"
                             value={seoData.titleTag}
                               onChange={(e) => setSeoData(prev => ({ ...prev, titleTag: e.target.value }))}
-                              placeholder="Titre de la page (30-60 caractÃ¨res)"
+                              placeholder="Titre de la page (30-60 caractères)"
                           />
                           <p className="text-xs text-muted-foreground">
-                            {seoData.titleTag.length}/60 caractÃ¨res
+                            {seoData.titleTag.length}/60 caractères
                           </p>
                         </div>
                         <div className="space-y-2">
@@ -819,11 +819,11 @@ const SEOManagement: React.FC = () => {
                             id="metaDescription"
                             value={seoData.metaDescription}
                             onChange={(e) => setSeoData(prev => ({ ...prev, metaDescription: e.target.value }))}
-                            placeholder="Description de la page (120-160 caractÃ¨res)"
+                            placeholder="Description de la page (120-160 caractères)"
                             rows={3}
                           />
                           <p className="text-xs text-muted-foreground">
-                            {seoData.metaDescription.length}/160 caractÃ¨res
+                            {seoData.metaDescription.length}/160 caractères
                           </p>
                         </div>
 
@@ -833,7 +833,7 @@ const SEOManagement: React.FC = () => {
                             id="metaKeywords"
                             value={seoData.metaKeywords}
                             onChange={(e) => setSeoData(prev => ({ ...prev, metaKeywords: e.target.value }))}
-                            placeholder="mots-clÃ©s, sÃ©parÃ©s, par, des, virgules"
+                            placeholder="mots-clés, séparés, par, des, virgules"
                           />
                         </div>
                       </CardContent>
@@ -862,22 +862,22 @@ const SEOManagement: React.FC = () => {
                     <CollapsibleContent>
                       <CardContent className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="detailedDescription">Description DÃ©taillÃ©e *</Label>
+                          <Label htmlFor="detailedDescription">Description Détaillée *</Label>
                           <Textarea
                             id="detailedDescription"
                             value={seoData.detailedDescription}
                             onChange={(e) => setSeoData(prev => ({ ...prev, detailedDescription: e.target.value }))}
-                            placeholder="Description complÃ¨te de la propriÃ©tÃ© (minimum 300 caractÃ¨res)"
+                            placeholder="Description complète de la propriété (minimum 300 caractères)"
                             rows={4}
                           />
                           <p className="text-xs text-muted-foreground">
-                            {seoData.detailedDescription.length}/300 caractÃ¨res minimum
+                            {seoData.detailedDescription.length}/300 caractères minimum
                           </p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="primaryKeywords">Mots-clÃ©s Principaux *</Label>
+                            <Label htmlFor="primaryKeywords">Mots-clés Principaux *</Label>
                             <Textarea
                               id="primaryKeywords"
                               value={seoData.primaryKeywords}
@@ -886,11 +886,11 @@ const SEOManagement: React.FC = () => {
                               rows={3}
                             />
                             <p className="text-xs text-muted-foreground">
-                              Mots-clÃ©s principaux pour le rÃ©fÃ©rencement
+                              Mots-clés principaux pour le référencement
                             </p>
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="secondaryKeywords">Mots-clÃ©s Secondaires</Label>
+                            <Label htmlFor="secondaryKeywords">Mots-clés Secondaires</Label>
                             <Textarea
                               id="secondaryKeywords"
                               value={seoData.secondaryKeywords}
@@ -899,14 +899,14 @@ const SEOManagement: React.FC = () => {
                               rows={3}
                             />
                             <p className="text-xs text-muted-foreground">
-                              Mots-clÃ©s complÃ©mentaires
+                              Mots-clés complémentaires
                             </p>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="localKeywords">Mots-clÃ©s Locaux</Label>
+                            <Label htmlFor="localKeywords">Mots-clés Locaux</Label>
                             <Textarea
                               id="localKeywords"
                               value={seoData.localKeywords}
@@ -915,20 +915,20 @@ const SEOManagement: React.FC = () => {
                               rows={3}
                             />
                             <p className="text-xs text-muted-foreground">
-                              Mots-clÃ©s gÃ©ographiques pour le SEO local
+                              Mots-clés géographiques pour le SEO local
                             </p>
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="longTailKeywords">Mots-clÃ©s Long-Tail *</Label>
+                            <Label htmlFor="longTailKeywords">Mots-clés Long-Tail *</Label>
                             <Textarea
                               id="longTailKeywords"
                               value={seoData.longTailKeywords}
                               onChange={(e) => setSeoData(prev => ({ ...prev, longTailKeywords: e.target.value }))}
-                              placeholder="location villa avec piscine Ã  Sousse, vacances Ã©tÃ© famille..."
+                              placeholder="location villa avec piscine à Sousse, vacances été famille..."
                               rows={3}
                             />
                             <p className="text-xs text-muted-foreground">
-                              Mots-clÃ©s spÃ©cifiques et combinÃ©s (gÃ©nÃ©rÃ©s automatiquement)
+                              Mots-clés spécifiques et combinés (générés automatiquement)
                             </p>
                           </div>
                         </div>
@@ -936,7 +936,7 @@ const SEOManagement: React.FC = () => {
                         <div className="flex justify-center">
                           <Button onClick={generateAllKeywords} className="flex items-center space-x-2">
                               <Wand2 className="h-4 w-4" />
-                            <span>GÃ©nÃ©rer Automatiquement</span>
+                            <span>Générer Automatiquement</span>
                             </Button>
                           </div>
                       </CardContent>
@@ -1007,7 +1007,7 @@ const SEOManagement: React.FC = () => {
                                 id="imageTitles"
                                 value={seoData.imageTitles}
                                 onChange={(e) => setSeoData(prev => ({ ...prev, imageTitles: e.target.value }))}
-                                placeholder="Titres sÃ©parÃ©s par des virgules"
+                                placeholder="Titres séparés par des virgules"
                                 rows={3}
                               />
                           </div>
@@ -1017,7 +1017,7 @@ const SEOManagement: React.FC = () => {
                                 id="imageDescriptions"
                                 value={seoData.imageDescriptions}
                                 onChange={(e) => setSeoData(prev => ({ ...prev, imageDescriptions: e.target.value }))}
-                                placeholder="Descriptions sÃ©parÃ©es par des virgules"
+                                placeholder="Descriptions séparées par des virgules"
                                 rows={3}
                               />
                         </div>
@@ -1027,7 +1027,7 @@ const SEOManagement: React.FC = () => {
                         <div className="flex justify-center">
                           <Button onClick={generateAllImageAltTexts} className="flex items-center space-x-2">
                             <Wand2 className="h-4 w-4" />
-                            <span>GÃ©nÃ©rer Automatiquement</span>
+                            <span>Générer Automatiquement</span>
                           </Button>
                         </div>
                       </CardContent>
@@ -1035,7 +1035,7 @@ const SEOManagement: React.FC = () => {
                   </Card>
                 </Collapsible>
 
-                    {/* Optimisation (FusionnÃ© : Social + Technique) */}
+                    {/* Optimisation (Fusionné : Social + Technique) */}
                 <Collapsible open={openPanels.optimization} onOpenChange={() => togglePanel('optimization')}>
                   <Card>
                     <CollapsibleTrigger asChild>
@@ -1061,7 +1061,7 @@ const SEOManagement: React.FC = () => {
                           <div className="flex justify-center mb-4">
                             <Button onClick={generateOpenGraphTags} className="flex items-center space-x-2">
                               <Wand2 className="h-4 w-4" />
-                              <span>GÃ©nÃ©rer les Balises Open Graph</span>
+                              <span>Générer les Balises Open Graph</span>
                             </Button>
                           </div>
                           
@@ -1072,7 +1072,7 @@ const SEOManagement: React.FC = () => {
                                 id="ogTitle"
                                 value={seoData.ogTitle}
                                 onChange={(e) => setSeoData(prev => ({ ...prev, ogTitle: e.target.value }))}
-                                placeholder="Titre pour les rÃ©seaux sociaux"
+                                placeholder="Titre pour les réseaux sociaux"
                               />
                             </div>
                             <div className="space-y-2">
@@ -1092,7 +1092,7 @@ const SEOManagement: React.FC = () => {
                               id="ogDescription"
                               value={seoData.ogDescription}
                               onChange={(e) => setSeoData(prev => ({ ...prev, ogDescription: e.target.value }))}
-                              placeholder="Description pour les rÃ©seaux sociaux"
+                              placeholder="Description pour les réseaux sociaux"
                               rows={3}
                             />
                           </div>
@@ -1103,17 +1103,17 @@ const SEOManagement: React.FC = () => {
                               id="ogImage"
                               value={seoData.ogImage}
                               onChange={(e) => setSeoData(prev => ({ ...prev, ogImage: e.target.value }))}
-                              placeholder="URL de l'image pour les rÃ©seaux sociaux"
+                              placeholder="URL de l'image pour les réseaux sociaux"
                             />
                           </div>
                         </div>
 
-                        {/* Section DonnÃ©es StructurÃ©es */}
+                        {/* Section Données Structurées */}
                         <div className="space-y-4">
-                          <h4 className="text-sm font-medium text-muted-foreground">DonnÃ©es StructurÃ©es</h4>
+                          <h4 className="text-sm font-medium text-muted-foreground">Données Structurées</h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor="propertyType">Type de PropriÃ©tÃ©</Label>
+                              <Label htmlFor="propertyType">Type de Propriété</Label>
                               <Input
                                 id="propertyType"
                                 value={seoData.propertyType}
@@ -1122,7 +1122,7 @@ const SEOManagement: React.FC = () => {
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="capacity">CapacitÃ©</Label>
+                              <Label htmlFor="capacity">Capacité</Label>
                               <Input
                                 id="capacity"
                                 value={seoData.capacity}
@@ -1133,7 +1133,7 @@ const SEOManagement: React.FC = () => {
                           </div>
                           
                           <div className="space-y-2">
-                            <Label htmlFor="mainEquipments">Ã‰quipements Principaux</Label>
+                            <Label htmlFor="mainEquipments">Équipements Principaux</Label>
                             <Textarea
                               id="mainEquipments"
                               value={seoData.mainEquipments}
@@ -1166,12 +1166,12 @@ const SEOManagement: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="spokenLanguages">Langues ParlÃ©es</Label>
+                            <Label htmlFor="spokenLanguages">Langues Parlées</Label>
                             <Input
                               id="spokenLanguages"
                               value={seoData.spokenLanguages}
                               onChange={(e) => setSeoData(prev => ({ ...prev, spokenLanguages: e.target.value }))}
-                              placeholder="FranÃ§ais, Anglais, Arabe..."
+                              placeholder="Français, Anglais, Arabe..."
                             />
                           </div>
                         </div>
@@ -1180,7 +1180,7 @@ const SEOManagement: React.FC = () => {
                         <div className="space-y-4">
                           <h4 className="text-sm font-medium text-muted-foreground">Optimisation Technique</h4>
                           <div className="space-y-2">
-                            <Label htmlFor="lastUpdateDate">DerniÃ¨re Mise Ã  Jour</Label>
+                            <Label htmlFor="lastUpdateDate">Dernière Mise à Jour</Label>
                             <Input
                               id="lastUpdateDate"
                               type="date"
@@ -1188,7 +1188,7 @@ const SEOManagement: React.FC = () => {
                               onChange={(e) => setSeoData(prev => ({ ...prev, lastUpdateDate: e.target.value }))}
                             />
                             <p className="text-xs text-muted-foreground">
-                              Date de la derniÃ¨re mise Ã  jour du contenu (important pour Google)
+                              Date de la dernière mise à jour du contenu (important pour Google)
                             </p>
                           </div>
                         </div>
@@ -1196,7 +1196,7 @@ const SEOManagement: React.FC = () => {
                         <div className="flex justify-center">
                           <Button onClick={generateAutoEquipmentsAndServices} className="flex items-center space-x-2">
                             <Wand2 className="h-4 w-4" />
-                            <span>GÃ©nÃ©rer Automatiquement</span>
+                            <span>Générer Automatiquement</span>
                           </Button>
                         </div>
                       </CardContent>
@@ -1207,13 +1207,13 @@ const SEOManagement: React.FC = () => {
                         </div>
                       </div>
 
-          {/* Liste des propriÃ©tÃ©s - Droite */}
+          {/* Liste des propriétés - Droite */}
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <SearchIcon className="h-5 w-5" />
-                  <span>PropriÃ©tÃ©s</span>
+                  <span>Propriétés</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
