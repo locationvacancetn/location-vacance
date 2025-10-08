@@ -2,8 +2,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://snrlnfldhbopiyjwnjlu.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNucmxuZmxkaGJvcGl5anduamx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMDQ4MTEsImV4cCI6MjA3MTc4MDgxMX0.AhPDCWgV7CL0yWOI_lIi4RQd__aTsP0jmFx7ZA9GCng";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Validation de la configuration
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error(
+    '⚠️ Configuration Supabase manquante.\n' +
+    'Veuillez créer un fichier .env.local à la racine du projet avec :\n' +
+    '- VITE_SUPABASE_URL=votre-url-supabase\n' +
+    '- VITE_SUPABASE_ANON_KEY=votre-cle-anon'
+  );
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

@@ -20,6 +20,11 @@ export const AuthDebugger = () => {
   const [debugInfo, setDebugInfo] = useState<any>(null);
 
   const refreshDebugInfo = () => {
+    // Générer dynamiquement la clé localStorage
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+    const authTokenKey = projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token';
+    
     const info = {
       user: user ? {
         id: user.id,
@@ -36,8 +41,9 @@ export const AuthDebugger = () => {
         token_type: session.token_type
       } : null,
       localStorage: {
-        supabase_auth_token: localStorage.getItem('sb-snrlnfldhbopiyjwnjlu-auth-token') ? 'Present' : 'Missing',
-        supabase_auth_token_alt: localStorage.getItem('supabase.auth.token') ? 'Present' : 'Missing'
+        supabase_auth_token: localStorage.getItem(authTokenKey) ? 'Present' : 'Missing',
+        supabase_auth_token_alt: localStorage.getItem('supabase.auth.token') ? 'Present' : 'Missing',
+        authTokenKey // Afficher la clé utilisée pour debug
       },
       timestamp: new Date().toLocaleString()
     };
@@ -60,7 +66,12 @@ export const AuthDebugger = () => {
   };
 
   const handleClearLocalStorage = () => {
-    localStorage.removeItem('sb-snrlnfldhbopiyjwnjlu-auth-token');
+    // Générer dynamiquement la clé localStorage
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+    const authTokenKey = projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token';
+    
+    localStorage.removeItem(authTokenKey);
     localStorage.removeItem('supabase.auth.token');
     refreshDebugInfo();
   };

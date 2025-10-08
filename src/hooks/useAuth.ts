@@ -141,8 +141,14 @@ export function useAuth() {
 
   const clearInvalidSession = async () => {
     try {
+      // Générer dynamiquement la clé localStorage à partir de l'URL Supabase
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+      
       // Nettoyer le localStorage des tokens invalides
-      localStorage.removeItem('sb-snrlnfldhbopiyjwnjlu-auth-token');
+      if (projectRef) {
+        localStorage.removeItem(`sb-${projectRef}-auth-token`);
+      }
       localStorage.removeItem('supabase.auth.token');
       
       // Forcer la déconnexion côté Supabase

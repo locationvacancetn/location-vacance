@@ -27,6 +27,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 import slugify from 'slugify';
 import { supabase } from "@/integrations/supabase/client";
+import { AIBlogService } from "@/lib/aiBlogService";
+import { AIGenerateButton } from "@/components/ui/ai-generate-button";
 
 // Interface pour les images supplémentaires
 interface AdditionalImage {
@@ -93,6 +95,9 @@ const BlogManagement: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingData, setLoadingData] = useState<boolean>(id ? true : false);
   
+  // État pour la génération IA
+  const [aiGenerating, setAiGenerating] = useState<boolean>(false);
+  
   // État pour les catégories
   const [categories, setCategories] = useState<BlogCategory[]>([]);
 
@@ -131,6 +136,47 @@ const BlogManagement: React.FC = () => {
       }
     }
   }, [title, id, metaTitle]);
+  
+  // Fonction pour générer l'extrait avec IA
+  const generateExcerptWithAI = async () => {
+    if (!title.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez d'abord saisir un titre pour générer l'extrait.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setAiGenerating(true);
+    try {
+      const response = await AIBlogService.generateExcerpt({ title });
+      
+      if (response.success) {
+        setExcerpt(response.content);
+        toast({
+          title: "Succès",
+          description: "Extrait généré avec succès !",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: response.error || "Erreur lors de la génération de l'extrait.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la génération:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la génération de l'extrait.",
+        variant: "destructive"
+      });
+    } finally {
+      setAiGenerating(false);
+    }
+  };
   
   // Fonction pour traiter les tags saisis et les convertir en IDs
   const processTagsInput = async (tagsText: string): Promise<number[]> => {
@@ -746,7 +792,17 @@ const BlogManagement: React.FC = () => {
                </div>
                
                <div className="space-y-2">
-                 <Label htmlFor="excerpt">Extrait</Label>
+                 <div className="flex items-center justify-between">
+                   <Label htmlFor="excerpt">Extrait</Label>
+                   <AIGenerateButton
+                     onGenerate={generateExcerptWithAI}
+                     loading={aiGenerating}
+                     disabled={!title.trim()}
+                     size="sm"
+                   >
+                     Générer
+                   </AIGenerateButton>
+                 </div>
                  <Textarea 
                    id="excerpt" 
                    placeholder="Bref résumé de l'article..." 
@@ -755,7 +811,7 @@ const BlogManagement: React.FC = () => {
                    onChange={(e) => setExcerpt(e.target.value)}
                  />
                  <p className="text-xs text-muted-foreground">
-                   Un résumé engageant de 150-160 caractères qui incite à la lecture.
+                   Un résumé engageant de 150-160 caractères maximum (optimisé SEO) qui incite à la lecture.
                  </p>
                </div>
                
@@ -842,7 +898,17 @@ const BlogManagement: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="excerpt">Extrait</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="excerpt">Extrait</Label>
+                  <AIGenerateButton
+                    onGenerate={generateExcerptWithAI}
+                    loading={aiGenerating}
+                    disabled={!title.trim()}
+                    size="sm"
+                  >
+                    Générer
+                  </AIGenerateButton>
+                </div>
                 <Textarea 
                   id="excerpt" 
                   placeholder="Bref résumé de l'article..." 
@@ -851,7 +917,7 @@ const BlogManagement: React.FC = () => {
                   onChange={(e) => setExcerpt(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Un résumé engageant de 150-160 caractères qui incite à la lecture.
+                  Un résumé engageant de 150-160 caractères maximum (optimisé SEO) qui incite à la lecture.
                 </p>
               </div>
               

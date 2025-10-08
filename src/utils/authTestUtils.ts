@@ -3,6 +3,13 @@
  * Permet de simuler des erreurs de token de rafraîchissement
  */
 
+// Générer dynamiquement la clé localStorage
+const getAuthTokenKey = () => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+  return projectRef ? `sb-${projectRef}-auth-token` : 'sb-auth-token';
+};
+
 /**
  * Simule une erreur de token de rafraîchissement en corrompant le localStorage
  */
@@ -25,7 +32,7 @@ export const simulateRefreshTokenError = () => {
     }
   };
 
-  localStorage.setItem('sb-snrlnfldhbopiyjwnjlu-auth-token', JSON.stringify(corruptedToken));
+  localStorage.setItem(getAuthTokenKey(), JSON.stringify(corruptedToken));
   console.log('Simulated refresh token error - corrupted localStorage');
 };
 
@@ -50,7 +57,7 @@ export const simulateExpiredSession = () => {
     }
   };
 
-  localStorage.setItem('sb-snrlnfldhbopiyjwnjlu-auth-token', JSON.stringify(expiredToken));
+  localStorage.setItem(getAuthTokenKey(), JSON.stringify(expiredToken));
   console.log('Simulated expired session');
 };
 
@@ -58,7 +65,7 @@ export const simulateExpiredSession = () => {
  * Nettoie complètement le localStorage
  */
 export const clearAllAuthData = () => {
-  localStorage.removeItem('sb-snrlnfldhbopiyjwnjlu-auth-token');
+  localStorage.removeItem(getAuthTokenKey());
   localStorage.removeItem('supabase.auth.token');
   console.log('Cleared all auth data from localStorage');
 };
@@ -67,10 +74,12 @@ export const clearAllAuthData = () => {
  * Vérifie l'état du localStorage
  */
 export const checkLocalStorageState = () => {
-  const supabaseToken = localStorage.getItem('sb-snrlnfldhbopiyjwnjlu-auth-token');
+  const authTokenKey = getAuthTokenKey();
+  const supabaseToken = localStorage.getItem(authTokenKey);
   const altToken = localStorage.getItem('supabase.auth.token');
   
   console.log('LocalStorage state:', {
+    authTokenKey,
     supabaseToken: supabaseToken ? 'Present' : 'Missing',
     altToken: altToken ? 'Present' : 'Missing',
     supabaseTokenData: supabaseToken ? JSON.parse(supabaseToken) : null

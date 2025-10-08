@@ -1,13 +1,13 @@
 // Configuration sécurisée de l'application
 export const config = {
   supabase: {
-    url: import.meta.env.VITE_SUPABASE_URL || 'https://snrlnfldhbopiyjwnjlu.supabase.co',
-    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNucmxuZmxkaGJvcGl5anduamx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMDQ4MTEsImV4cCI6MjA3MTc4MDgxMX0.AhPDCWgV7CL0yWOI_lIi4RQd__aTsP0jmFx7ZA9GCng',
+    url: import.meta.env.VITE_SUPABASE_URL,
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
     // ✅ Sécurité : La clé service_role ne doit JAMAIS être exposée côté client
     // Utiliser des Edge Functions pour les opérations admin
   },
   api: {
-    baseUrl: 'https://snrlnfldhbopiyjwnjlu.supabase.co',
+    baseUrl: import.meta.env.VITE_SUPABASE_URL,
     timeout: 10000, // 10 secondes
   },
   pagination: {
@@ -47,9 +47,13 @@ export const isUsingEnvVars = () => {
   const hasEnvKey = !!import.meta.env.VITE_SUPABASE_ANON_KEY;
   
   if (!hasEnvUrl || !hasEnvKey) {
-    console.warn('⚠️ Variables d\'environnement manquantes. Utilisation des valeurs par défaut.');
-    console.warn('📝 Créez un fichier .env.local avec VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY');
+    throw new Error(
+      '⚠️ Variables d\'environnement manquantes.\n' +
+      'Créez un fichier .env.local avec :\n' +
+      '- VITE_SUPABASE_URL\n' +
+      '- VITE_SUPABASE_ANON_KEY'
+    );
   }
   
-  return hasEnvUrl && hasEnvKey;
+  return true;
 };

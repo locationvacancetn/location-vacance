@@ -17,5 +17,5 @@ export const USER_ROLES = {
 } as const;
 
 export const API_ENDPOINTS = {
-  SUPABASE_AUTH: 'https://snrlnfldhbopiyjwnjlu.supabase.co/auth/v1/admin/users'
+  SUPABASE_AUTH: `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/admin/users`
 } as const;

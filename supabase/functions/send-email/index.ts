@@ -170,10 +170,24 @@ serve(async (req) => {
 
   try {
     // Get SMTP configuration from environment variables
-    const smtpHost = Deno.env.get('SMTP_HOST') || 'mail.ledevellopeur.tn';
+    const smtpHost = Deno.env.get('SMTP_HOST');
     const smtpPort = parseInt(Deno.env.get('SMTP_PORT') || '465');
-    const smtpUser = Deno.env.get('SMTP_USER') || 'test@ledevellopeur.tn';
-    const smtpPassword = Deno.env.get('SMTP_PASSWORD') || 'e)1q6n3{u@#g';
+    const smtpUser = Deno.env.get('SMTP_USER');
+    const smtpPassword = Deno.env.get('SMTP_PASSWORD');
+
+    // Validate required SMTP configuration
+    if (!smtpHost || !smtpUser || !smtpPassword) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Configuration SMTP manquante',
+          details: 'Les variables SMTP_HOST, SMTP_USER et SMTP_PASSWORD doivent être configurées dans les Secrets Supabase'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     // Parse request body
     const { to, subject, message, isTest = false }: EmailRequest = await req.json();
