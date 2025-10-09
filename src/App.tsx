@@ -13,11 +13,18 @@ import ScrollToTop from "./components/ScrollToTop";
 import HomePage from "./pages/Home";
 import SignupPage from "./pages/Signup";
 import LoginPage from "./pages/Login";
+import ForgotPasswordPage from "./pages/ForgotPassword";
+import ResetPasswordPage from "./pages/ResetPassword";
 import PropertyDetail from "./pages/PropertyDetail";
 import BlogPage from "./pages/Blog";
 import BlogDetailsPage from "./pages/BlogDetails";
-import TestAuth from "./pages/TestAuth";
 import TestSlugSystem from "./pages/TestSlugSystem";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
+import BecomeHost from "./pages/BecomeHost";
+import BecomePartner from "./pages/BecomePartner";
 import NotFound from "./pages/NotFound";
 import { DashboardRouter } from "./pages/dashboard/DashboardRouter";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -62,11 +69,20 @@ const AppContent = () => {
                 <Route path={ROUTES.HOME} element={<HomePage />} />
                 <Route path={ROUTES.SIGNUP} element={<SignupPage />} />
                 <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+                <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+                <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
                 <Route path={ROUTES.PROPERTY_DETAIL} element={<PropertyDetail />} />
                 <Route path={ROUTES.BLOG} element={<BlogPage />} />
                 <Route path={ROUTES.BLOG_DETAIL} element={<BlogDetailsPage />} />
-                <Route path={ROUTES.TEST_AUTH} element={<TestAuth />} />
                 <Route path={ROUTES.TEST_SLUG_SYSTEM} element={<TestSlugSystem />} />
+                <Route path={ROUTES.CONTACT} element={<Contact />} />
+                <Route path={ROUTES.FAQ} element={<FAQ />} />
+                <Route path={ROUTES.BECOME_HOST} element={<BecomeHost />} />
+                <Route path={ROUTES.BECOME_PARTNER} element={<BecomePartner />} />
+                
+                {/* Pages légales */}
+                <Route path={ROUTES.TERMS} element={<TermsOfService />} />
+                <Route path={ROUTES.PRIVACY} element={<PrivacyPolicy />} />
                 
                 {/* Route dashboard protégée */}
                 <Route 

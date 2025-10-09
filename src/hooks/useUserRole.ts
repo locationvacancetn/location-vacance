@@ -175,32 +175,32 @@ export const useUserRole = () => {
         });
         setUserRole(profile.role as UserRole);
       } else {
-        // 2. Fallback vers les métadonnées du user auth
-        const roleFromAuth = user.user_metadata?.role as UserRole || 'tenant';
-        logger.debug('Using auth metadata role', { role: roleFromAuth });
-        setUserRole(roleFromAuth);
+        // ✅ IMP-001 : Plus de fallback vers user_metadata
+        // Le profil DOIT exister dans la table profiles (source unique de vérité)
+        logger.error('Profile not found in database', { userId: user.id });
+        setError('Profil utilisateur introuvable. Veuillez contacter le support.');
         
-        // Créer un profil minimal depuis les données auth
+        // Définir un rôle par défaut temporaire
+        setUserRole('tenant');
         setUserProfile({
           id: user.id,
-          full_name: user.user_metadata?.full_name || user.email || '',
+          full_name: user.email || 'Utilisateur',
           email: user.email || '',
-          role: roleFromAuth,
-          avatar_url: user.user_metadata?.avatar_url,
+          role: 'tenant',
+          avatar_url: undefined,
         });
       }
     } catch (err) {
       logger.error('Error loading user data', { error: err });
       setError('Erreur lors du chargement des données utilisateur');
       
-      // Fallback en cas d'erreur
-      const fallbackRole: UserRole = 'tenant';
-      setUserRole(fallbackRole);
+      // En cas d'erreur, profil minimal temporaire
+      setUserRole('tenant');
       setUserProfile({
         id: user.id,
-        full_name: user.email || '',
+        full_name: user.email || 'Utilisateur',
         email: user.email || '',
-        role: fallbackRole,
+        role: 'tenant',
       });
     } finally {
       setLoading(false);

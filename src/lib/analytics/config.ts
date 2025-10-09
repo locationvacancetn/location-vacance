@@ -4,8 +4,8 @@
  */
 
 export const ANALYTICS_CONFIG = {
-  // ID de la propriété Google Analytics
-  PROPERTY_ID: '507427571',
+  // ✅ CODE-004 : ID depuis variable d'environnement
+  PROPERTY_ID: import.meta.env.VITE_GA_PROPERTY_ID || '507427571',
   
   // Dimensions disponibles
   DIMENSIONS: {

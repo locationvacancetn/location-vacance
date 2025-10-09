@@ -15,7 +15,7 @@ export const useGoogleAnalytics = () => {
   // Fonction pour tracker une page vue
   const trackPageView = (pagePath: string, pageTitle?: string) => {
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('config', 'G-59S7Q6K1HF', {
+      window.gtag('config', import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-59S7Q6K1HF', {
         page_path: pagePath,
         page_title: pageTitle,
       });
@@ -33,7 +33,7 @@ export const useGoogleAnalytics = () => {
   const trackConversion = (conversionName: string, value?: number) => {
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('event', 'conversion', {
-        send_to: 'G-59S7Q6K1HF',
+        send_to: import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-59S7Q6K1HF',
         event_category: 'conversion',
         event_label: conversionName,
         value: value,

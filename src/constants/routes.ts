@@ -8,11 +8,21 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   SIGNUP: '/signup',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
   PROPERTY_DETAIL: '/property/:slug',
   BLOG: '/blog',
   BLOG_DETAIL: '/blog/:slug',
-  TEST_AUTH: '/test-auth',
   TEST_SLUG_SYSTEM: '/test-slug-system',
+  CONTACT: '/contact',
+  FAQ: '/faq',
+  BECOME_HOST: '/devenir-hote',
+  BECOME_PARTNER: '/devenir-partenaire',
+  
+  // Pages légales
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
+  
   NOT_FOUND: '*',
 
   // Routes dashboard

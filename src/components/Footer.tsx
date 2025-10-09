@@ -51,16 +51,15 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
 
   const informationLinks: NavigationLink[] = [
     { to: "/terms", label: "Conditions générales" },
-    { to: "/cancellation", label: "Politique d'annulation" },
     { to: "/privacy", label: "Confidentialité" }
   ];
 
   const hostLinks: NavigationLink[] = [
-    { to: "/host", label: "Proposer mon bien" }
+    { to: "/devenir-hote", label: "Proposer mon bien" }
   ];
 
   const partnerLinks: NavigationLink[] = [
-    { to: "/advertiser", label: "Publier mon annonce" }
+    { to: "/devenir-partenaire", label: "Devenir partenaire" }
   ];
 
   /**
@@ -123,7 +122,7 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
   );
 
   return (
-    <footer className={`mt-16 py-12 px-4 md:px-6 bg-white ${className || ''}`}>
+    <footer className={`mt-8 py-6 px-4 md:px-6 bg-white ${className || ''}`}>
       <div className="max-w-6xl mx-auto">
         {/* Section principale du footer */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -228,7 +227,7 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
             {/* Sélecteurs de langue et devise */}
             <div className="flex items-center gap-6">                
               <div className="flex items-center gap-4 text-sm">
-                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as Language)}>
                   <SelectTrigger className="w-24 bg-transparent text-gray-500 hover:text-gray-900 h-auto px-2 py-1 text-sm [&>svg]:ml-2 rounded" style={{ border: '1px solid hsl(214.3 31.8% 91.4%)' }}>
                     <SelectValue />
                   </SelectTrigger>
@@ -237,7 +236,7 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
                     <SelectItem value="anglais">Anglais</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+                <Select value={selectedCurrency} onValueChange={(value) => setSelectedCurrency(value as Currency)}>
                   <SelectTrigger className="w-24 bg-transparent text-gray-500 hover:text-gray-900 h-auto px-2 py-1 text-sm [&>svg]:ml-2 rounded" style={{ border: '1px solid hsl(214.3 31.8% 91.4%)' }}>
                     <span>{getCurrencyDisplay(selectedCurrency)}</span>
                   </SelectTrigger>

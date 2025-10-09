@@ -114,6 +114,32 @@ export function useAuth() {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      
+      return { error };
+    } catch (error: any) {
+      return { error };
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      return { error };
+    } catch (error: any) {
+      return { error };
+    }
+  };
+
   const checkSessionValidity = async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
@@ -192,6 +218,8 @@ export function useAuth() {
     signIn,
     signInWithGoogle,
     signOut,
+    resetPassword,
+    updatePassword,
     forceSignOut,
     checkSessionValidity,
     clearInvalidSession

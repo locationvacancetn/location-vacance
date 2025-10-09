@@ -1,6 +1,6 @@
-// Configuration Google Analytics
-const GA_PROPERTY_ID = '507427571';
-const GA_MEASUREMENT_ID = 'G-59S7Q6K1HF';
+// ✅ CODE-004 : Configuration depuis variables d'environnement
+const GA_PROPERTY_ID = import.meta.env.VITE_GA_PROPERTY_ID || '507427571';
+const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID || 'G-59S7Q6K1HF';
 
 // Interface pour les données analytics
 export interface AnalyticsData {
@@ -90,7 +90,7 @@ export class GoogleAnalyticsService {
         body: JSON.stringify({
           accessToken,
           config: {
-            propertyId: '507427571',
+            propertyId: GA_PROPERTY_ID,
             dimensions: ['pagePath', 'pageTitle', 'country'],
             metrics: ['activeUsers'],
             dateRanges: [{ startDate: 'today', endDate: 'today' }],

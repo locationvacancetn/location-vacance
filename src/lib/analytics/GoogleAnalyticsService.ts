@@ -140,7 +140,7 @@ export class GoogleAnalyticsService {
     topCountries: Array<{ country: string; activeUsers: number }>;
   }> {
     const config: AnalyticsConfig = {
-      propertyId: '507427571',
+      propertyId: import.meta.env.VITE_GA_PROPERTY_ID || '507427571',
       dimensions: ['pagePath', 'pageTitle', 'country'],
       metrics: ['activeUsers'],
       dateRanges: [{ startDate: 'today', endDate: 'today' }],
@@ -188,7 +188,7 @@ export class GoogleAnalyticsService {
     deviceCategories: Array<{ deviceCategory: string; users: number }>;
   }> {
     const config: AnalyticsConfig = {
-      propertyId: '507427571',
+      propertyId: import.meta.env.VITE_GA_PROPERTY_ID || '507427571',
       dimensions: ['pagePath', 'pageTitle', 'country', 'deviceCategory'],
       metrics: ['activeUsers', 'screenPageViews'],
       dateRanges: [{ 

@@ -132,9 +132,9 @@ const Navbar = () => {
     }
   }, [userProfile?.avatar_url]);
 
-  // Éviter les erreurs pendant le loading
+  // ✅ IMP-001 : Utiliser UNIQUEMENT userProfile (source unique de vérité)
   const displayName = loading ? "Chargement..." : 
-    userProfile?.full_name || (user?.user_metadata as any)?.full_name || user?.email || "Utilisateur";
+    userProfile?.full_name || user?.email || "Utilisateur";
 
   const initials = loading ? "..." : displayName
     .split(" ")
@@ -597,7 +597,7 @@ const Navbar = () => {
                     <LoginForm 
                       onSuccess={() => setIsMobileMenuOpen(false)} 
                       showTitle={false}
-                      showForgotPassword={false}
+                      showForgotPassword={true}
                     />
                   )}
 

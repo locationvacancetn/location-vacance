@@ -1,11 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { validateEmail } from '../_shared/validation.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, getPreflightHeaders } from '../_shared/cors.ts';
 
 // Interface pour les données de création d'utilisateur
 // Correspond EXACTEMENT aux champs de votre table profiles
@@ -38,9 +34,11 @@ interface CreateUserResponse {
 }
 
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get('origin');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: getPreflightHeaders(origin) });
   }
   
   // Vérifier que la méthode est POST
@@ -49,7 +47,7 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({ success: false, error: 'Méthode non autorisée' }),
       { 
         status: 405, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } 
       }
     );
   }
@@ -167,30 +165,13 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Créer l'utilisateur avec l'API admin Supabase
-    // Suivant exactement la documentation: https://supabase.com/docs/reference/javascript/auth-admin-createuser
+    // ✅ IMP-001 : Créer l'utilisateur Auth SANS user_metadata métier
+    // user_metadata ne doit contenir que des données Auth, pas des données métier
     const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
       email: userData.email,
       password: userData.password,
       email_confirm: true, // Auto-confirmer l'email
-      user_metadata: {
-        full_name: userData.full_name,
-        role: userData.role,
-        phone: userData.phone,
-        bio: userData.bio,
-        whatsapp_number: userData.whatsapp_number,
-        website_url: userData.website_url,
-        facebook_url: userData.facebook_url,
-        instagram_url: userData.instagram_url,
-        tiktok_url: userData.tiktok_url,
-        messenger_url: userData.messenger_url,
-        company_name: userData.company_name,
-        company_website: userData.company_website,
-        business_phone: userData.business_phone,
-        business_email: userData.business_email,
-        linkedin_url: userData.linkedin_url,
-        twitter_url: userData.twitter_url
-      }
+      user_metadata: {} // ✅ Vide - Les données métier vont dans profiles
     });
 
     if (authError) {
@@ -220,18 +201,48 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Le trigger handle_new_user() va automatiquement créer le profil
-    // Vérifier que le profil a été créé
+    // ✅ IMP-001 : Créer le profil DIRECTEMENT avec TOUS les champs
+    // Le trigger handle_new_user() créera un profil minimal (pour inscription normale)
+    // mais on le remplace ici avec les données complètes (pour création admin)
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('user_id', authUser.user.id)
+      .upsert({
+        user_id: authUser.user.id,
+        email: userData.email,
+        full_name: userData.full_name,
+        role: userData.role,
+        phone: userData.phone || null,
+        bio: userData.bio || null,
+        whatsapp_number: userData.whatsapp_number || null,
+        website_url: userData.website_url || null,
+        facebook_url: userData.facebook_url || null,
+        instagram_url: userData.instagram_url || null,
+        tiktok_url: userData.tiktok_url || null,
+        messenger_url: userData.messenger_url || null,
+        company_name: userData.company_name || null,
+        company_website: userData.company_website || null,
+        business_phone: userData.business_phone || null,
+        business_email: userData.business_email || null,
+        linkedin_url: userData.linkedin_url || null,
+        twitter_url: userData.twitter_url || null
+      }, {
+        onConflict: 'user_id' // Si le trigger a déjà créé un profil, on le met à jour
+      })
+      .select()
       .single();
 
     if (profileError) {
-      console.error('Erreur lors de la récupération du profil:', profileError);
-      // L'utilisateur a été créé mais le profil n'a pas été créé
-      // C'est un problème mais l'utilisateur existe quand même
+      console.error('Erreur lors de la création du profil:', profileError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Utilisateur créé mais erreur lors de la création du profil: ${profileError.message}` 
+        }),
+        { 
+          status: 500, 
+          headers: { 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     // Réponse de succès
@@ -253,7 +264,7 @@ Deno.serve(async (req: Request) => {
       { 
         status: 201, 
         headers: { 
-          ...corsHeaders,
+          ...getCorsHeaders(origin),
           'Content-Type': 'application/json'
         } 
       }

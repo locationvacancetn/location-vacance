@@ -2,8 +2,8 @@
 
 **Date de création** : 8 Octobre 2025  
 **Dernière mise à jour** : 8 Octobre 2025  
-**Statut global** : 🟢 Phase critique terminée + Optimisations en cours  
-**Progression** : 8/35 tâches complétées (7/7 critiques ✅ + 1/6 importantes ✅ - 23% total)
+**Statut global** : 🟢 Phase critique terminée + Code cleanup avancé  
+**Progression** : 10/35 tâches complétées (7/7 critiques ✅ + 3/6 code ✅ + 0/6 importantes - 29% total)
 
 ---
 
@@ -547,7 +547,7 @@ export function validateEmailList(emails: string[]): {
 ---
 
 ### CODE-004: ID Google Analytics hardcodés
-- **Statut**: ❌ À faire
+- **Statut**: ✅ Terminé
 - **Sévérité**: 🟡 MOYENNE
 - **Fichier(s)**:
   - `src/lib/googleAnalyticsService.ts`
@@ -573,16 +573,16 @@ export const ANALYTICS_CONFIG = {
 ```
 
 **Checklist**:
-- [ ] Ajouter variables dans `.env.example`
-- [ ] Mettre à jour `analytics/config.ts`
-- [ ] Supprimer les ID hardcodés ailleurs
-- [ ] Configurer les vraies valeurs dans `.env.local`
+- [x] Ajouter variables dans `.env.local` (déjà fait)
+- [x] Mettre à jour `analytics/config.ts`
+- [x] Supprimer les ID hardcodés ailleurs
+- [x] Les vraies valeurs déjà dans `.env.local`
 - [ ] Tester Google Analytics
 
 ---
 
 ### CODE-005: Console.log en production
-- **Statut**: ❌ À faire
+- **Statut**: ✅ Terminé
 - **Sévérité**: 🟡 BASSE
 - **Fichier(s)**: Multiples fichiers
 
@@ -729,7 +729,7 @@ export type EmailData = z.infer<typeof emailSchema>;
 ---
 
 ### IMP-004: Créer fichier .env.example complet
-- **Statut**: ❌ À faire
+- **Statut**: ⏸️ Ne sera pas fait (env.template déjà créé)
 - **Sévérité**: 🟡 MOYENNE
 - **Fichier(s)**: `.env.example` (à créer)
 

@@ -15,8 +15,10 @@ import {
   Upload,
   Save,
   X,
-  Shield
+  Shield,
+  Lock
 } from "lucide-react";
+import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 
 const AdminProfile = () => {
   const { userProfile, refreshUserData } = useUserRole();
@@ -1146,6 +1148,55 @@ const AdminProfile = () => {
         </div>
       </div>
 
+      {/* Actions */}
+      <div className="flex justify-end gap-4 sm:w-full">
+        <Button onClick={handleSave} disabled={isLoading} className="w-full sm:w-auto">
+          <Save className="w-4 h-4 mr-2" />
+          {isLoading ? "Enregistrement..." : "Enregistrer"}
+        </Button>
+      </div>
+
+      {/* Section Modifier le mot de passe - Version desktop */}
+      <Card className="hidden md:block">
+        <CardHeader>
+          <CardTitle className="text-lg">
+            Modifier le mot de passe
+          </CardTitle>
+          <CardDescription>
+            Choisissez un mot de passe sécurisé pour protéger votre compte
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm showButton={false} />
+        </CardContent>
+      </Card>
+
+      {/* Bouton Modifier le mot de passe - Version desktop */}
+      <div className="hidden md:flex justify-end gap-4 sm:w-full">
+        <Button 
+          onClick={() => {
+            // Déclencher la soumission du formulaire
+            const form = document.querySelector('form') as HTMLFormElement;
+            if (form) form.requestSubmit();
+          }}
+          className="w-full sm:w-auto"
+        >
+          <Lock className="w-4 h-4 mr-2" />
+          Modifier le mot de passe
+        </Button>
+      </div>
+
+      {/* Section Modifier le mot de passe - Version mobile */}
+      <div className="md:hidden">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold">Modifier le mot de passe</h3>
+          <p className="text-sm text-muted-foreground">
+            Choisissez un mot de passe sécurisé pour protéger votre compte
+          </p>
+        </div>
+        <ChangePasswordForm />
+      </div>
+
       {/* Section Informations système */}
       <Card>
         <CardHeader>
@@ -1166,14 +1217,6 @@ const AdminProfile = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Actions */}
-      <div className="flex justify-end gap-4 sm:w-full">
-        <Button onClick={handleSave} disabled={isLoading} className="w-full sm:w-auto">
-          <Save className="w-4 h-4 mr-2" />
-          {isLoading ? "Enregistrement..." : "Enregistrer"}
-        </Button>
-      </div>
     </div>
   );
 };

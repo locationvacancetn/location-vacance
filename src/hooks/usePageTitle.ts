@@ -7,7 +7,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/': 'Accueil',
   '/login': 'Connexion',
   '/signup': 'Inscription',
-  '/test-auth': 'Test d\'authentification',
   
   // Dashboard principal
   '/dashboard': 'Tableau de bord',
@@ -66,7 +65,6 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   '/': 'Découvrez les meilleures locations de vacances en Tunisie',
   '/login': 'Connectez-vous à votre compte Location-vacance.tn',
   '/signup': 'Créez votre compte pour louer ou proposer des locations',
-  '/test-auth': 'Page de test pour l\'authentification',
   
   '/dashboard': 'Vue d\'ensemble de votre compte',
   '/dashboard/profile': 'Gérez vos informations personnelles',

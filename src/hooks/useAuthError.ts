@@ -19,7 +19,7 @@ export const useAuthError = () => {
     });
   };
 
-  const handleAuthError = (error: any, context: 'login' | 'signup' | 'logout' | 'session') => {
+  const handleAuthError = (error: any, context: 'login' | 'signup' | 'logout' | 'session' | 'password-reset') => {
     console.error(`Auth error in ${context}:`, error);
 
     // Gestion spécifique par contexte
@@ -59,6 +59,20 @@ export const useAuthError = () => {
           showError(AUTH_MESSAGES.SESSION_EXPIRED);
         } else {
           showError(AUTH_MESSAGES.UNEXPECTED_ERROR);
+        }
+        break;
+      
+      case 'password-reset':
+        if (error?.message?.includes('session') && error?.message?.includes('missing')) {
+          showErrorToast({
+            title: "Lien expiré",
+            description: "Le lien de réinitialisation a expiré. Veuillez faire une nouvelle demande."
+          });
+        } else {
+          showErrorToast({
+            title: "Erreur de réinitialisation",
+            description: "Une erreur est survenue lors de la réinitialisation du mot de passe."
+          });
         }
         break;
       
